@@ -933,9 +933,12 @@ export default function TimeSimulation({
                   : activeAIEvent.direction === "surge"
                     ? (i18n.language === "es" ? "Subida" : "Surge")
                     : (i18n.language === "es" ? "Tensión" : "Volatile");
+                const stepIdx = activeAIEvent.step;
+                const tLabel = filteredLabels[stepIdx] || "";
                 const marker: EventMarker = {
                   pointIndex: Math.max(0, snap.points.length - 1),
                   label: dirLabel,
+                  timeLabel: tLabel,
                   direction: activeAIEvent.direction,
                 };
                 return (
