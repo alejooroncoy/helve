@@ -85,6 +85,18 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, onClose,
   const [currentPortfolio, setCurrentPortfolio] = useState(portfolio);
   const intervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Filter timeline steps based on selected period
+  const filteredIndices = useMemo(() => {
+    const indices: number[] = [];
+    for (let i = 0; i < timeMonths.length; i++) {
+      if (timeMonths[i] <= initialMonths) indices.push(i);
+    }
+    return indices;
+  }, [initialMonths]);
+  const filteredMonths = filteredIndices.map(i => timeMonths[i]);
+  const filteredLabels = filteredIndices.map(i => timeLabels[i]);
+  const totalSteps = filteredMonths.length - 1;
+
   const startBalance = 1000;
 
   // Calculate base monthly return from portfolio
