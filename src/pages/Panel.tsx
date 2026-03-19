@@ -614,48 +614,65 @@ const Panel = () => {
 
       {/* DnD Content */}
       <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-        <div className="flex-1 overflow-y-auto px-5 pb-4">
-          <DropZone id="nest">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-bold text-foreground uppercase tracking-wide" style={nunito}>{t("panel.myNest")}</h2>
-              <span className="text-xs text-muted-foreground" style={nunito}>{enrichedPortfolio.length}/4</span>
-            </div>
-            {enrichedPortfolio.length === 0 ? (
-              <div className="bg-card/50 rounded-3xl p-5 text-center border-2 border-dashed border-border flex flex-col items-center justify-center gap-2">
-                <Inbox className="w-8 h-8 text-muted-foreground/50" />
-                <p className="text-sm text-muted-foreground" style={nunito}>{t("panel.nestEmpty")}</p>
-                <p className="text-xs text-muted-foreground" style={nunito}>{t("panel.nestEmptyHint")}</p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <AnimatePresence>
-                  {enrichedPortfolio.map((inv) => (
-                    <motion.div key={inv.id} initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }} layout>
-                      <DraggableCard
-                        inv={inv}
-                        zone="nest"
-                        onClick={() => {}}
-                        onSell={() => removeInvestment(inv.id)}
-                        onAsk={() => { setCoachInitQ(`Tengo ${inv.name} en mi nido. ¿Es buena inversión? ¿Debería venderla o mantenerla?`); setCoachOpen(true); }}
-                        onInfo={() => { setCoachInitQ(`Dame un análisis detallado de ${inv.name}: riesgo, retorno histórico, y perspectiva futura.`); setCoachOpen(true); }}
-                      />
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
-              </div>
-            )}
-          </DropZone>
-
-          <DropZone id="scouted">
-            <h2 className="text-sm font-bold text-foreground uppercase tracking-wide mb-3 mt-4" style={nunito}>{t("panel.buy")}</h2>
-            <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide items-stretch" style={{ scrollSnapType: "x mandatory" }}>
-              {suggestions.map((inv) => (
-                <div key={inv.id} className="flex-shrink-0 flex" style={{ width: 190, scrollSnapAlign: "start" }}>
-                  <DraggableCard inv={inv} zone="scouted" onClick={() => tryBuyInvestment(inv)} onAsk={() => { setCoachInitQ(`Explica brevemente qué es ${inv.name} y si encaja con mi perfil`); setCoachOpen(true); }} />
+        <div className="flex-1 overflow-hidden px-5 pb-4">
+          <div className="flex flex-col lg:flex-row gap-4 h-full">
+            {/* Left: My Nest */}
+            <div className="flex-1 overflow-y-auto lg:pr-2">
+              <DropZone id="nest">
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="text-sm font-bold text-foreground uppercase tracking-wide" style={nunito}>{t("panel.myNest")}</h2>
+                  <span className="text-xs text-muted-foreground" style={nunito}>{enrichedPortfolio.length}/4</span>
                 </div>
-              ))}
+                {enrichedPortfolio.length === 0 ? (
+                  <div className="bg-card/50 rounded-3xl p-5 text-center border-2 border-dashed border-border flex flex-col items-center justify-center gap-2">
+                    <Inbox className="w-8 h-8 text-muted-foreground/50" />
+                    <p className="text-sm text-muted-foreground" style={nunito}>{t("panel.nestEmpty")}</p>
+                    <p className="text-xs text-muted-foreground" style={nunito}>{t("panel.nestEmptyHint")}</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <AnimatePresence>
+                      {enrichedPortfolio.map((inv) => (
+                        <motion.div key={inv.id} initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }} layout>
+                          <DraggableCard
+                            inv={inv}
+                            zone="nest"
+                            onClick={() => {}}
+                            onSell={() => removeInvestment(inv.id)}
+                            onAsk={() => { setCoachInitQ(`Tengo ${inv.name} en mi nido. ¿Es buena inversión? ¿Debería venderla o mantenerla?`); setCoachOpen(true); }}
+                            onInfo={() => { setCoachInitQ(`Dame un análisis detallado de ${inv.name}: riesgo, retorno histórico, y perspectiva futura.`); setCoachOpen(true); }}
+                          />
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
+                  </div>
+                )}
+              </DropZone>
             </div>
-          </DropZone>
+
+            {/* Right: Buy/Scouted — sidebar on desktop, horizontal scroll on mobile */}
+            <div className="lg:w-[280px] xl:w-[320px] lg:flex-shrink-0 lg:overflow-y-auto lg:border-l lg:border-border lg:pl-4">
+              <DropZone id="scouted">
+                <h2 className="text-sm font-bold text-foreground uppercase tracking-wide mb-3 lg:mt-0 mt-4" style={nunito}>{t("panel.buy")}</h2>
+                {/* Mobile: horizontal scroll */}
+                <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide items-stretch lg:hidden" style={{ scrollSnapType: "x mandatory" }}>
+                  {suggestions.map((inv) => (
+                    <div key={inv.id} className="flex-shrink-0 flex" style={{ width: 190, scrollSnapAlign: "start" }}>
+                      <DraggableCard inv={inv} zone="scouted" onClick={() => tryBuyInvestment(inv)} onAsk={() => { setCoachInitQ(`Explica brevemente qué es ${inv.name} y si encaja con mi perfil`); setCoachOpen(true); }} />
+                    </div>
+                  ))}
+                </div>
+                {/* Desktop: vertical list */}
+                <div className="hidden lg:flex lg:flex-col gap-2">
+                  {suggestions.map((inv) => (
+                    <div key={inv.id} className="w-full">
+                      <DraggableCard inv={inv} zone="scouted" onClick={() => tryBuyInvestment(inv)} onAsk={() => { setCoachInitQ(`Explica brevemente qué es ${inv.name} y si encaja con mi perfil`); setCoachOpen(true); }} />
+                    </div>
+                  ))}
+                </div>
+              </DropZone>
+            </div>
+          </div>
         </div>
 
         <DragOverlay>
