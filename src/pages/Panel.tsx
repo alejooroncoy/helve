@@ -137,6 +137,20 @@ function getSuggestions(profile: string, active: Investment[]): Investment[] {
   return scored.slice(0, Math.max(slotsLeft + 1, 4)).map((s) => s.inv);
 }
 
+const tagDescriptions: Record<string, string> = {
+  "AAA": "Máxima calidad crediticia",
+  "GOV": "Bono gubernamental",
+  "NESN": "Ticker: Nestlé",
+  "NOVN": "Ticker: Novartis",
+  "AAPL": "Ticker: Apple",
+  "MSFT": "Ticker: Microsoft",
+  "NVDA": "Ticker: NVIDIA",
+  "LOGN": "Ticker: Logitech",
+  "UBSG": "Ticker: UBS",
+  "AMZN": "Ticker: Amazon",
+  "HIGH RISK": "Riesgo elevado",
+};
+
 /* ---- Draggable investment card ---- */
 function DraggableCard({
   inv, zone, onClick, onAsk,
