@@ -264,6 +264,7 @@ const Panel = () => {
   );
   const [draggedItem, setDraggedItem] = useState<{ inv: Investment; zone: string } | null>(null);
   const [coachOpen, setCoachOpen] = useState(false);
+  const [coachInitQ, setCoachInitQ] = useState<string | undefined>(undefined);
   const [simulationOpen, setSimulationOpen] = useState(false);
   const isMobile = useIsMobile();
 
