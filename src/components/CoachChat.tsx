@@ -465,10 +465,11 @@ export default function CoachChat({ onClose, portfolio }: CoachChatProps) {
           onSubmit={(e) => { e.preventDefault(); send(); }}
           className="flex items-center gap-2"
         >
+          <MicButton onTranscript={(t) => setInput((prev) => prev + t)} disabled={loading} />
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Pregunta algo..."
+            placeholder="Escribe o usa el micrófono..."
             className="flex-1 bg-muted rounded-2xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30"
             disabled={loading}
           />
