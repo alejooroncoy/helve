@@ -183,10 +183,18 @@ function NestCard({ inv, overlay }: { inv: Investment; overlay?: boolean }) {
           {getInvestmentIcon(inv)}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-bold text-foreground truncate" style={nunito}>{inv.name}</p>
-          <p className="text-[11px] text-muted-foreground mt-0.5" style={nunito}>
-            {riskWord(inv.riskLevel)} · ~{inv.annualReturn}%/año
-          </p>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <p className="text-sm font-bold text-foreground" style={nunito}>{inv.name}</p>
+            {inv.flag && <span className="text-xs">{inv.flag}</span>}
+          </div>
+          <div className="flex items-center gap-2 mt-1 flex-wrap">
+            <span className="text-xs text-muted-foreground" style={nunito}>
+              Riesgo <span style={{ color: getRiskBarColor(inv.riskLevel), fontWeight: 700 }}>{inv.riskLevel}/10</span>
+            </span>
+            <span className="text-xs" style={{ ...nunito, color: CELESTE, fontWeight: 700 }}>
+              {inv.annualReturn}%/año
+            </span>
+          </div>
         </div>
         {!overlay && (
           <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
@@ -194,20 +202,15 @@ function NestCard({ inv, overlay }: { inv: Investment; overlay?: boolean }) {
           </div>
         )}
       </div>
-      <div className="mt-2.5 flex items-center gap-2">
-        <span className="text-[10px] text-muted-foreground font-medium w-8" style={nunito}>Risk</span>
-        <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
-          <div
-            className="h-full rounded-full transition-all"
-            style={{ width: `${inv.riskLevel * 10}%`, backgroundColor: getRiskBarColor(inv.riskLevel) }}
-          />
-        </div>
-        <span className={`text-[10px] font-bold ${getRiskColor(inv.riskLevel)}`} style={{ ...nunito, ...getRiskInlineColor(inv.riskLevel) }}>{inv.riskLevel}/10</span>
-      </div>
       {inv.tag && (
-        <span className="inline-block mt-2 text-[10px] font-bold bg-accent/15 text-accent px-2.5 py-0.5 rounded-full" style={nunito}>
-          {inv.tag}
-        </span>
+        <div className="mt-2 flex items-center gap-1.5">
+          <span className="text-[10px] font-bold bg-accent/15 text-accent px-2 py-0.5 rounded-full" style={nunito}>
+            {inv.tag}
+          </span>
+          {tagDescriptions[inv.tag] && (
+            <span className="text-[10px] text-muted-foreground" style={nunito}>{tagDescriptions[inv.tag]}</span>
+          )}
+        </div>
       )}
     </div>
   );
