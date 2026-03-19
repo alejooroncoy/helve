@@ -350,7 +350,7 @@ function BuyConfirmDialog({ inv, onConfirm, onCancel }: { inv: Investment; onCon
           <motion.img
             src="/perspectiva1.png"
             alt="Búho"
-            className="w-14 h-14 rounded-full shadow-md flex-shrink-0"
+            className="w-14 h-14 rounded-full shadow-md flex-shrink-0 object-cover"
             animate={{ rotate: [0, -8, 8, -4, 0] }}
             transition={{ duration: 0.8 }}
           />
