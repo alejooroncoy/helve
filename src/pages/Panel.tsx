@@ -1040,26 +1040,6 @@ const Panel = () => {
           )}
         </div>
 
-        {/* Active nest stats bar */}
-        {enrichedPortfolio.length > 0 && (
-          <div className="flex items-center gap-4 mt-2 px-1">
-            <div className="flex items-center gap-1.5">
-              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: totalRisk > 60 ? "hsl(var(--destructive))" : totalRisk > 30 ? "hsl(var(--accent))" : CELESTE }} />
-              <span className="text-[11px] text-muted-foreground" style={nunito}>
-                {t("panel.risk")}: <span className="font-bold text-foreground">{totalRisk}%</span>
-              </span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: CELESTE }} />
-              <span className="text-[11px] text-muted-foreground" style={nunito}>
-                {t("panel.returnLabel")}: <span className="font-bold text-foreground">{avgReturn}%/yr</span>
-              </span>
-            </div>
-            <span className="text-[11px] text-muted-foreground ml-auto" style={nunito}>
-              {enrichedPortfolio.length} {enrichedPortfolio.length === 1 ? "asset" : "assets"} · {totalAllocated}% {t("panel.allocated", { defaultValue: "allocated" })}
-            </span>
-          </div>
-        )}
       </div>
 
       {/* DnD Content */}
