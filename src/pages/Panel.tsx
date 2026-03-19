@@ -303,6 +303,14 @@ const Panel = () => {
             <p className="text-xs text-muted-foreground font-medium tracking-wide uppercase">My Nest</p>
             <h1 className="text-2xl font-bold text-foreground mt-0.5">Dashboard</h1>
           </div>
+          <div className="flex items-center gap-2">
+            <motion.button
+              onClick={handleSignOut}
+              className="w-10 h-10 rounded-full bg-card shadow-sm flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors"
+              whileTap={{ scale: 0.9 }}
+            >
+              <LogOut className="w-4 h-4" />
+            </motion.button>
           {isMobile ? (
             <Drawer open={coachOpen} onOpenChange={setCoachOpen}>
               <DrawerTrigger asChild>
