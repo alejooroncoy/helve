@@ -230,7 +230,7 @@ function DropZone({
   return (
     <div
       ref={setNodeRef}
-      className={`flex-1 min-w-0 rounded-3xl transition-all duration-200 p-1 -m-1 ${
+      className={`flex-1 min-w-0 rounded-3xl transition-all duration-200 p-1 -m-1 flex flex-col ${
         active ? "bg-primary/5 ring-2 ring-primary/20 ring-dashed" : ""
       }`}
     >
