@@ -718,7 +718,7 @@ const Panel = () => {
             </div>
 
             {/* Right: Buy/Scouted — sidebar on desktop, horizontal scroll on mobile */}
-            <div className="lg:w-[280px] xl:w-[320px] lg:flex-shrink-0 lg:overflow-y-auto lg:border-l lg:border-border lg:pl-4">
+            <div className="md:w-[280px] lg:w-[320px] md:flex-shrink-0 md:overflow-y-auto md:border-l md:border-border md:pl-4">
               <DropZone id="scouted">
                 <h2 className="text-sm font-bold text-foreground uppercase tracking-wide mb-3 lg:mt-0 mt-4" style={nunito}>{t("panel.buy")}</h2>
                 {/* Mobile: horizontal scroll */}
