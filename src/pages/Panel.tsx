@@ -515,7 +515,7 @@ const Panel = () => {
     const removeName = t(`allocation.classes.${removeId}`, { defaultValue: toRemove?.name || removeId });
     const addName = t(`allocation.classes.${addId}`, { defaultValue: toAdd.name });
     mascotToast(t("panel.swapMsg", { removed: removeName, added: addName }));
-  }, [activePortfolio, enrichedAvailable, allocations, saveProgress, t]);
+  }, [activePortfolio, enrichedAvailable, allocations, saveNestData, t]);
 
   const handleDragStart = (event: DragStartEvent) => {
     setDraggedItem(event.active.data.current as { inv: Investment; zone: string });
