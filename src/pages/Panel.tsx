@@ -137,6 +137,20 @@ function getSuggestions(profile: string, active: Investment[]): Investment[] {
   return scored.slice(0, Math.max(slotsLeft + 1, 4)).map((s) => s.inv);
 }
 
+const tagDescriptions: Record<string, string> = {
+  "AAA": "Máxima calidad crediticia",
+  "GOV": "Bono gubernamental",
+  "NESN": "Ticker: Nestlé",
+  "NOVN": "Ticker: Novartis",
+  "AAPL": "Ticker: Apple",
+  "MSFT": "Ticker: Microsoft",
+  "NVDA": "Ticker: NVIDIA",
+  "LOGN": "Ticker: Logitech",
+  "UBSG": "Ticker: UBS",
+  "AMZN": "Ticker: Amazon",
+  "HIGH RISK": "Riesgo elevado",
+};
+
 /* ---- Draggable investment card ---- */
 function DraggableCard({
   inv, zone, onClick, onAsk,
@@ -169,10 +183,18 @@ function NestCard({ inv, overlay }: { inv: Investment; overlay?: boolean }) {
           {getInvestmentIcon(inv)}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-bold text-foreground truncate" style={nunito}>{inv.name}</p>
-          <p className="text-[11px] text-muted-foreground mt-0.5" style={nunito}>
-            {riskWord(inv.riskLevel)} · ~{inv.annualReturn}%/año
-          </p>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <p className="text-sm font-bold text-foreground" style={nunito}>{inv.name}</p>
+            {inv.flag && <span className="text-xs">{inv.flag}</span>}
+          </div>
+          <div className="flex items-center gap-2 mt-1 flex-wrap">
+            <span className="text-xs text-muted-foreground" style={nunito}>
+              Riesgo <span style={{ color: getRiskBarColor(inv.riskLevel), fontWeight: 700 }}>{inv.riskLevel}/10</span>
+            </span>
+            <span className="text-xs" style={{ ...nunito, color: CELESTE, fontWeight: 700 }}>
+              {inv.annualReturn}%/año
+            </span>
+          </div>
         </div>
         {!overlay && (
           <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
@@ -180,20 +202,15 @@ function NestCard({ inv, overlay }: { inv: Investment; overlay?: boolean }) {
           </div>
         )}
       </div>
-      <div className="mt-2.5 flex items-center gap-2">
-        <span className="text-[10px] text-muted-foreground font-medium w-8" style={nunito}>Risk</span>
-        <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
-          <div
-            className="h-full rounded-full transition-all"
-            style={{ width: `${inv.riskLevel * 10}%`, backgroundColor: getRiskBarColor(inv.riskLevel) }}
-          />
-        </div>
-        <span className={`text-[10px] font-bold ${getRiskColor(inv.riskLevel)}`} style={{ ...nunito, ...getRiskInlineColor(inv.riskLevel) }}>{inv.riskLevel}/10</span>
-      </div>
       {inv.tag && (
-        <span className="inline-block mt-2 text-[10px] font-bold bg-accent/15 text-accent px-2.5 py-0.5 rounded-full" style={nunito}>
-          {inv.tag}
-        </span>
+        <div className="mt-2 flex items-center gap-1.5">
+          <span className="text-[10px] font-bold bg-accent/15 text-accent px-2 py-0.5 rounded-full" style={nunito}>
+            {inv.tag}
+          </span>
+          {tagDescriptions[inv.tag] && (
+            <span className="text-[10px] text-muted-foreground" style={nunito}>{tagDescriptions[inv.tag]}</span>
+          )}
+        </div>
       )}
     </div>
   );
@@ -207,36 +224,36 @@ function ScoutedCard({ inv, overlay, onAsk }: { inv: Investment; overlay?: boole
           {getInvestmentIcon(inv)}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-bold text-foreground leading-tight" style={nunito}>{inv.name}</p>
+          <p className="text-xs font-bold text-foreground leading-snug" style={nunito}>{inv.name}</p>
           {inv.flag && <span className="text-[10px]">{inv.flag}</span>}
         </div>
       </div>
-      <p className="text-[10px] text-muted-foreground mt-1.5 leading-tight" style={nunito}>
-        {riskWord(inv.riskLevel)} · ~{inv.annualReturn}%/año
-      </p>
-      <div className="mt-2 flex items-center gap-1.5">
-        <div className="flex-1 h-1 bg-muted rounded-full overflow-hidden">
-          <div className="h-full rounded-full" style={{ width: `${inv.riskLevel * 10}%`, backgroundColor: getRiskBarColor(inv.riskLevel) }} />
-        </div>
-        <span className={`text-[9px] font-bold ${getRiskColor(inv.riskLevel)}`} style={{ ...nunito, ...getRiskInlineColor(inv.riskLevel) }}>{inv.riskLevel}/10</span>
+      <div className="flex items-center gap-2 mt-2">
+        <span className="text-[10px] text-muted-foreground" style={nunito}>Riesgo</span>
+        <span className="text-[10px] font-bold" style={{ ...nunito, color: getRiskBarColor(inv.riskLevel) }}>{inv.riskLevel}/10</span>
+        <span className="text-muted-foreground text-[10px]">·</span>
+        <span className="text-[10px] font-bold" style={{ ...nunito, color: CELESTE }}>{inv.annualReturn}%</span>
       </div>
-      <div className="flex items-center justify-between mt-2">
-        {inv.tag && (
-          <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${inv.tag === "HIGH RISK" ? "bg-destructive/10 text-destructive" : ""}`} style={{ ...nunito, ...(inv.tag !== "HIGH RISK" ? { backgroundColor: `${CELESTE}18`, color: CELESTE } : {}) }}>
+      {inv.tag && (
+        <div className="mt-1.5 flex items-center gap-1">
+          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${inv.tag === "HIGH RISK" ? "bg-destructive/10 text-destructive" : ""}`} style={{ ...nunito, ...(inv.tag !== "HIGH RISK" ? { backgroundColor: `${CELESTE}18`, color: CELESTE } : {}) }}>
             {inv.tag}
           </span>
-        )}
-        <div className="flex items-center gap-1 ml-auto">
-          {!overlay && onAsk && (
-            <span
-              onClick={(e) => { e.stopPropagation(); e.preventDefault(); onAsk(); }}
-              onPointerDown={(e) => e.stopPropagation()}
-              className="w-6 h-6 rounded-full bg-accent/10 text-accent flex items-center justify-center text-[10px] font-bold cursor-pointer"
-              style={nunito}
-            >?</span>
+          {tagDescriptions[inv.tag] && (
+            <span className="text-[9px] text-muted-foreground" style={nunito}>{tagDescriptions[inv.tag]}</span>
           )}
-          {!overlay && <span className="text-sm font-bold" style={{ color: CELESTE }}>+</span>}
         </div>
+      )}
+      <div className="flex items-center justify-end mt-1.5 gap-1">
+        {!overlay && onAsk && (
+          <span
+            onClick={(e) => { e.stopPropagation(); e.preventDefault(); onAsk(); }}
+            onPointerDown={(e) => e.stopPropagation()}
+            className="w-6 h-6 rounded-full bg-accent/10 text-accent flex items-center justify-center text-[10px] font-bold cursor-pointer"
+            style={nunito}
+          >?</span>
+        )}
+        {!overlay && <span className="text-sm font-bold" style={{ color: CELESTE }}>+</span>}
       </div>
     </div>
   );

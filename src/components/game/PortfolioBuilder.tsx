@@ -222,7 +222,16 @@ const PortfolioBuilder = ({ profile, onComplete }: Props) => {
                         {getTypeIcon(inv.type)} {getTypeLabel(inv.type)}
                       </span>
                       {inv.tag && (
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">{inv.tag}</span>
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground" title={
+                          inv.tag === "AAA" ? "Máxima calidad crediticia" : inv.tag === "GOV" ? "Bono gubernamental" : ""
+                        }>
+                          {inv.tag}
+                          {(inv.tag === "AAA" || inv.tag === "GOV") && (
+                            <span className="ml-1 text-[10px] opacity-70">
+                              {inv.tag === "AAA" ? "· Máx. calidad" : "· Gobierno"}
+                            </span>
+                          )}
+                        </span>
                       )}
                     </div>
                     <div className="flex items-center gap-4 mt-2">
