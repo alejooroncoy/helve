@@ -392,6 +392,7 @@ const Panel = () => {
   const { loadProgress, saveProgress } = useUserProgress();
   const { t } = useTranslation();
   const [activePortfolio, setActivePortfolio] = useState<Investment[]>([]);
+  const [allocations, setAllocations] = useState<Record<string, number>>({});
   const [profile, setProfile] = useState("balanced");
   const [balance, setBalance] = useState(1000);
   const [lastSimGain, setLastSimGain] = useState<number | null>(null);
