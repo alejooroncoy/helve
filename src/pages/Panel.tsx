@@ -333,7 +333,7 @@ const Panel = () => {
     ? Math.round(enrichedPortfolio.reduce((s, i) => s + i.riskLevel, 0) / enrichedPortfolio.length * 10)
     : 0;
 
-  const balance = 1000;
+  
   const monthlyIncome = enrichedPortfolio.reduce((s, i) => s + Math.round((balance * i.annualReturn) / 100 / 12), 0);
   const avgReturn = enrichedPortfolio.length
     ? (enrichedPortfolio.reduce((s, i) => s + i.annualReturn, 0) / enrichedPortfolio.length).toFixed(1)
