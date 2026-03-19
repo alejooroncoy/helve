@@ -81,7 +81,8 @@ const PortfolioBuilder = ({ profile, onComplete }: Props) => {
     return availableInvestments
       .filter(i => !ids.has(i.id))
       .map(inv => {
-        const dbId = investmentToDbId[inv.id];
+        const dbIds = categoryToDbIds[inv.id];
+        const dbId = dbIds?.[0];
         const real = dbId ? stats[dbId] : null;
         if (real) return { ...inv, annualReturn: real.avgAnnualReturn, riskLevel: real.riskLevel };
         return inv;
