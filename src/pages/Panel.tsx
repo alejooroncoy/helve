@@ -289,7 +289,7 @@ const Panel = () => {
                 </motion.button>
               </DrawerTrigger>
               <DrawerContent className="h-[80vh] p-0">
-                <CoachChat onClose={() => setCoachOpen(false)} />
+                <CoachChat onClose={() => setCoachOpen(false)} portfolio={activePortfolio} />
               </DrawerContent>
             </Drawer>
           ) : (
@@ -303,7 +303,7 @@ const Panel = () => {
                 </motion.button>
               </PopoverTrigger>
               <PopoverContent side="bottom" align="end" className="w-[380px] h-[500px] p-0 rounded-2xl overflow-hidden">
-                <CoachChat onClose={() => setCoachOpen(false)} />
+                <CoachChat onClose={() => setCoachOpen(false)} portfolio={activePortfolio} />
               </PopoverContent>
             </Popover>
           )}
