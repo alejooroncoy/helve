@@ -123,7 +123,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_instrument_stats: {
+        Args: { p_instrument_ids: string[] }
+        Returns: {
+          cagr: number
+          category: string
+          currency: string
+          first_price: number
+          instrument_id: string
+          latest_price: number
+          name: string
+          risk_level: number
+          ticker: string
+          total_return: number
+          volatility: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
