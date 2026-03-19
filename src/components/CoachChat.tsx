@@ -245,25 +245,55 @@ interface CoachChatProps {
   onSwapAccepted?: (removeId: string, addId: string) => void;
 }
 
-export default function CoachChat({ onClose, portfolio, onAddInvestment, onRemoveInvestment, initialQuestion }: CoachChatProps) {
+export default function CoachChat({ onClose, portfolio, onAddInvestment, onRemoveInvestment, initialQuestion, onSwapAccepted }: CoachChatProps) {
+  const { user } = useAuth();
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [loadingHistory, setLoadingHistory] = useState(true);
   const [initSent, setInitSent] = useState(false);
   const [playingIdx, setPlayingIdx] = useState<number | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Load chat history from DB
+  useEffect(() => {
+    if (!user) { setLoadingHistory(false); return; }
+    supabase
+      .from("chat_messages")
+      .select("role, content")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: true })
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          setMessages(data.map(m => ({ role: m.role as "user" | "assistant", content: m.content })));
+        }
+        setLoadingHistory(false);
+      });
+  }, [user]);
+
+  // Save message to DB
+  const persistMessage = useCallback(async (msg: Msg) => {
+    if (!user) return;
+    await supabase.from("chat_messages").insert({ user_id: user.id, role: msg.role, content: msg.content });
+  }, [user]);
+
+  const clearChat = useCallback(async () => {
+    if (!user) return;
+    await supabase.from("chat_messages").delete().eq("user_id", user.id);
+    setMessages([]);
+  }, [user]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
 
   useEffect(() => {
-    if (initialQuestion && !initSent && messages.length === 0) {
+    if (initialQuestion && !initSent && !loadingHistory && messages.length >= 0) {
       setInitSent(true);
       setTimeout(() => send(initialQuestion), 300);
     }
-  }, [initialQuestion, initSent]);
+  }, [initialQuestion, initSent, loadingHistory]);
 
   const stopAudio = useCallback(() => {
     if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
