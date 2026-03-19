@@ -66,7 +66,7 @@ export default function TimeSimulationCategoryCharts({
         const markerIdx = hasMarker ? eventMarker!.pointIndex : -1;
         const markerPoint = hasMarker ? item.points[markerIdx] : null;
 
-        // Use pre-computed event change if available
+        const pts = item.points;
         const recentChange = hasMarker && eventMarker!.changePct != null
           ? eventMarker!.changePct
           : (pts.length >= 2
