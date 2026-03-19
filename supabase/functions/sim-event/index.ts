@@ -48,7 +48,17 @@ serve(async (req) => {
   }
 
   try {
-    const { portfolio, balance, monthLabel, language } = await req.json();
+    const {
+      portfolio,
+      balance,
+      monthLabel,
+      language,
+      focusCategory,
+      focusCategoryLabel,
+      focusDirection,
+      focusRiskLevel,
+      focusImpactPct,
+    } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
@@ -56,24 +66,37 @@ serve(async (req) => {
     const portfolioDesc = (portfolio || [])
       .map((p: any) => p.name)
       .join(", ") || "empty portfolio";
+    const focusedCategory = focusCategoryLabel || focusCategory || "one category";
+    const directionHint = focusDirection === "drop"
+      ? "price drop / panic"
+      : focusDirection === "surge"
+        ? "fast rally / sudden jump"
+        : "volatile shake / uncertainty";
 
-    const systemPrompt = `You are a financial market event generator for an educational investment game. 
+    const impactLabel = focusImpactPct != null ? `${focusImpactPct > 0 ? "+" : ""}${focusImpactPct}%` : "";
+
+    const systemPrompt = `You are a financial market event generator for an educational investment game.
 You create realistic but simplified market scenarios that teach beginners about investing.
 
 RULES:
 - Respond ALWAYS in ${lang}
-- Create dramatic, engaging scenarios inspired by real-world events (tech crashes, pandemics, rate hikes, commodity booms, geopolitical tension, etc.)
+- Create a scenario specifically centered on ${focusedCategory}
+- The scenario MUST clearly mention ${focusedCategory} in the title or description
+- The current trigger for this category is: ${directionHint}
+- CRITICAL: The exact price movement is ${impactLabel}. You MUST use this EXACT percentage in your description (e.g. "a ${impactLabel} ${focusDirection === "drop" ? "drop" : focusDirection === "surge" ? "surge" : "swing"}"). Do NOT invent a different number.
 - Each scenario must have exactly 3 options: hold, sell, buy
 - Exactly ONE option should be marked as is_best=true (the wisest choice for a long-term investor)
+- Make the options feel tied to the focused category. Example: if gold falls, user considers buying more, selling, or holding
 - feedback_good: celebrate the smart choice, explain briefly why it's wise
 - feedback_bad: be supportive ("Don't worry, this happens to everyone"), explain what went wrong, give a concrete tip for next time
-- Use the bird/nest metaphor: portfolio = nest, investments = eggs
+- Use the bird/nest metaphor lightly: portfolio = nest, investments = eggs
 - Keep it simple, no jargon
 - NEVER mention AI or that this is generated
-- Make scenarios varied: sometimes holding is best, sometimes selling, sometimes buying more is the contrarian play
-- Consider the user's actual portfolio when crafting the scenario`;
+- Vary the best action depending on context
+- Consider the user's actual portfolio when crafting the scenario
+- Higher risk categories can justify sharper moves, but advice should still fit a beginner long-term investor`;
 
-    const userPrompt = `The user's nest has: ${portfolioDesc}. Current balance: CHF ${balance}. Time: ${monthLabel}. Generate a surprising market event.`;
+    const userPrompt = `The user's nest has: ${portfolioDesc}. Current balance: CHF ${balance}. Time: ${monthLabel}. Focus category: ${focusedCategory}. Category risk level: ${focusRiskLevel ?? "unknown"}/10. Generate a surprising but believable event with decision buttons for this category.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

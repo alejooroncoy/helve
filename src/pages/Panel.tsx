@@ -167,7 +167,7 @@ function DraggableCard({
     <div
       ref={setNodeRef}
       {...rootDragProps}
-      onClick={zone === "scouted" && !isMobile ? onClick : undefined}
+      onClick={zone === "scouted" ? onClick : undefined}
       className={`select-none transition-all h-full w-full ${isDragging ? "opacity-30 scale-95" : ""}`}
     >
       {zone === "nest" ? (
@@ -949,8 +949,8 @@ const Panel = () => {
         </div>
 
         {/* Stat Cards — Capital & Invested (global), Risk & Return (per nest) */}
-        <div className="grid grid-cols-3 gap-2.5">
-          <div className="bg-card rounded-2xl p-3 shadow-sm flex items-stretch gap-2.5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+          <div className="bg-card rounded-2xl p-3 shadow-sm flex items-stretch gap-3 col-span-2 sm:col-span-1">
             <div className="flex-1 min-w-0">
               <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium" style={nunito}>
                 {t("panel.capital")}
@@ -1080,7 +1080,7 @@ const Panel = () => {
         <div className="flex-1 min-h-0 px-5 pb-4 flex flex-col overflow-hidden">
           <div className="flex flex-col md:flex-row gap-4 flex-1 min-h-0">
             {/* My Nest */}
-            <div className="flex-1 min-h-0 md:pr-2 flex flex-col">
+            <div className="flex-1 min-h-0 md:pr-2 flex flex-col overflow-hidden">
               <DropZone id="nest">
                 <div className="flex items-center justify-between mb-3">
                   <h2 className="text-sm font-bold text-foreground uppercase tracking-wide" style={nunito}>
@@ -1101,7 +1101,8 @@ const Panel = () => {
                     </p>
                   </div>
                 ) : (
-                  <div className="space-y-2">
+                <ScrollArea className="flex-1 min-h-0 max-h-[40vh]">
+                  <div className="space-y-2 pr-2">
                     <AnimatePresence>
                       {enrichedPortfolio.map((inv) => (
                         <motion.div
@@ -1137,6 +1138,7 @@ const Panel = () => {
                       ))}
                     </AnimatePresence>
                   </div>
+                </ScrollArea>
                 )}
               </DropZone>
             </div>
