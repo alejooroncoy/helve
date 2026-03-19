@@ -677,8 +677,8 @@ const Panel = () => {
 
       {/* DnD Content */}
       <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-        <div className="flex-1 px-5 pb-4">
-          <div className="flex flex-col md:flex-row gap-4">
+        <div className="flex-1 px-5 pb-4 flex flex-col min-h-0">
+          <div className="flex flex-col md:flex-row gap-4 flex-1 min-h-0">
             {/* My Nest */}
             <div className="flex-1 md:pr-2">
               <DropZone id="nest">
@@ -711,7 +711,7 @@ const Panel = () => {
             </div>
 
             {/* Add categories */}
-            <div className="md:w-[280px] lg:w-[320px] md:flex-shrink-0 md:overflow-y-auto md:border-l md:border-border md:pl-4">
+            <div className="md:w-[280px] lg:w-[320px] md:flex-shrink-0 flex-1 min-h-0 overflow-y-auto md:border-l md:border-border md:pl-4">
               <DropZone id="scouted">
                 <h2 className="text-sm font-bold text-foreground uppercase tracking-wide mb-3 md:mt-0 mt-4" style={nunito}>{t("panel.buy")}</h2>
                 {/* Mobile: horizontal scroll */}
