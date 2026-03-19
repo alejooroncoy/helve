@@ -480,7 +480,7 @@ export default function TimeSimulation({
   const [loadingDecisionStep, setLoadingDecisionStep] = useState<number | null>(null);
   const intervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const aiScenarioCache = useRef<Record<number, AIScenario | null>>({});
-  const aiFetchingRef = useRef<Set<number>>(new Set());
+  const aiScenarioPromises = useRef<Record<number, Promise<AIScenario | null>>>({});
   const decisionMultiplier = useRef(1);
   const categoryExposure = useRef<Record<string, number>>({});
   const aiDecisions = useRef<Array<{ step: number; action: string; isGood: boolean; investmentId: string }>>([]);
@@ -562,7 +562,7 @@ export default function TimeSimulation({
 
   useEffect(() => {
     aiScenarioCache.current = {};
-    aiFetchingRef.current.clear();
+    aiScenarioPromises.current = {};
   }, [aiEventPlan, i18n.language]);
 
   const calculatePortfolioValueAtStep = useCallback(
@@ -587,16 +587,22 @@ export default function TimeSimulation({
 
   const ensureScenario = useCallback(
     async (event: ScheduledAIEvent, balance: number) => {
-      if (aiScenarioCache.current[event.step]) return aiScenarioCache.current[event.step];
-      if (aiFetchingRef.current.has(event.step)) return null;
+      if (Object.prototype.hasOwnProperty.call(aiScenarioCache.current, event.step)) {
+        return aiScenarioCache.current[event.step];
+      }
 
-      aiFetchingRef.current.add(event.step);
-      const scenario =
-        (await fetchAIScenario(currentPortfolio, balance, filteredLabels[event.step] || "", i18n.language, event)) ||
-        buildFallbackScenario(event, i18n.language);
-      aiScenarioCache.current[event.step] = scenario;
-      aiFetchingRef.current.delete(event.step);
-      return scenario;
+      if (!aiScenarioPromises.current[event.step]) {
+        aiScenarioPromises.current[event.step] = (async () => {
+          const scenario =
+            (await fetchAIScenario(currentPortfolio, balance, filteredLabels[event.step] || "", i18n.language, event)) ||
+            buildFallbackScenario(event, i18n.language);
+          aiScenarioCache.current[event.step] = scenario;
+          delete aiScenarioPromises.current[event.step];
+          return scenario;
+        })();
+      }
+
+      return aiScenarioPromises.current[event.step];
     },
     [currentPortfolio, filteredLabels, i18n.language],
   );
@@ -606,7 +612,11 @@ export default function TimeSimulation({
       const prefetchAt = Math.max(0, event.step - 1);
       const lastValue = data[data.length - 1]?.value || startBalance;
 
-      if (currentStep >= prefetchAt && !aiScenarioCache.current[event.step] && !aiFetchingRef.current.has(event.step)) {
+      if (
+        currentStep >= prefetchAt &&
+        !Object.prototype.hasOwnProperty.call(aiScenarioCache.current, event.step) &&
+        !aiScenarioPromises.current[event.step]
+      ) {
         void ensureScenario(event, lastValue);
       }
     }
