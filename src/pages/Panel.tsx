@@ -467,7 +467,7 @@ const Panel = () => {
   }, [activePortfolio, allocations, saveNestData, t]);
 
   const tryBuyInvestment = useCallback((inv: Investment) => {
-    if (activePortfolio.length >= 4) { mascotToast(t("panel.nestFull")); return; }
+    if (activePortfolio.find((i) => i.id === inv.id)) return;
     if (activePortfolio.find((i) => i.id === inv.id)) return;
     if (skipBuyDialog) executeBuy(inv);
     else setBuyDialogInv(inv);
