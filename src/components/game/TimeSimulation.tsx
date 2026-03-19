@@ -659,9 +659,8 @@ export default function TimeSimulation({
         setAiScenario(scenario);
         setShowAIEvent(true);
         setBirdMsg(
-          i18n.language === "es"
-            ? `${scheduledEvent.investmentName} está moviéndose fuerte...`
-            : `${scheduledEvent.investmentName} is moving sharply...`,
+          t("timeSim.movingSharp", { name: scheduledEvent.investmentName }),
+        );
         );
       });
     }
