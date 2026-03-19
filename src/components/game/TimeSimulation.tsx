@@ -6,6 +6,7 @@ import type { Investment } from "@/game/types";
 
 interface TimeSimulationProps {
   portfolio: Investment[];
+  initialMonths?: number;
   onClose: () => void;
   onSellInvestment: (id: string) => void;
   onAskCoach?: (question: string) => void;
