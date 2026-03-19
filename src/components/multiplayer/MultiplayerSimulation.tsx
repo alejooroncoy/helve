@@ -223,7 +223,7 @@ const MultiplayerSimulation = ({ mp }: Props) => {
       for (const key of myCategories) {
         const base = prev[key] ?? share;
         balanceBefore += base;
-        next[key] = (base + extraPerCat) * impact;
+        next[key] = (base + extraPerCat) * impact - extraPerCat;
         balanceAfter += next[key];
       }
       setCategoryHistories(prevH => {
@@ -240,7 +240,9 @@ const MultiplayerSimulation = ({ mp }: Props) => {
       holdImpact,
       sellImpact,
       balanceBefore: Math.round(balance),
-      balanceAfter: Math.round(balance * (decision === "sell" ? sellImpact : holdImpact) + (decision === "buy" ? BUY_AMOUNT * holdImpact : 0)),
+      balanceAfter: Math.round(decision === "buy"
+        ? (balance + BUY_AMOUNT) * holdImpact - BUY_AMOUNT
+        : balance * (decision === "sell" ? sellImpact : holdImpact)),
     });
 
     setTimeout(() => { setActiveEvent(null); setPaused(false); }, 1200);
@@ -489,7 +491,7 @@ const MultiplayerSimulation = ({ mp }: Props) => {
               onClick={() => handleEventDecision("buy")} whileTap={{ scale: 0.97 }}
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
               <ShoppingCart className="w-4 h-4" />
-              {t("multiplayer.buy")} +CHF {BUY_AMOUNT}
+              {t("multiplayer.buy")} CHF {BUY_AMOUNT}
             </motion.button>
 
             {/* Sell + Hold — side by side */}
