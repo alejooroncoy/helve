@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { Trophy, ArrowLeft, Lightbulb, X, TrendingUp, TrendingDown, Minus, ChevronRight } from "lucide-react";
+import { Trophy, ArrowLeft, Lightbulb, X, TrendingUp, TrendingDown, Minus, ChevronRight, Info } from "lucide-react";
 import type { useMultiplayer } from "@/hooks/useMultiplayer";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 
@@ -45,6 +45,7 @@ const MultiplayerResults = ({ mp }: Props) => {
   const { user } = useAuth();
   const [openMyDecisions, setOpenMyDecisions] = useState(false);
   const [showInsight, setShowInsight] = useState(false);
+  const [openTipIndex, setOpenTipIndex] = useState<number | null>(null);
 
   const ranked = useMemo(() =>
     [...mp.players]
@@ -237,12 +238,31 @@ const MultiplayerResults = ({ mp }: Props) => {
                   const chfChange = d.balanceBefore && d.balanceAfter
                     ? d.balanceAfter - d.balanceBefore
                     : null;
-                  const recommended = d.holdImpact && d.sellImpact
-                    ? (d.holdImpact >= d.sellImpact ? "Hold" : "Sell")
-                    : null;
-                  const isRec = recommended === (d.decision === "hold" ? "Hold" : "Sell");
 
-                  const dotColor = d.decision === "hold" ? HOLD_COLOR : SELL_COLOR;
+                  // Determine best action
+                  const holdImpact = d.holdImpact ?? 1;
+                  const sellImpact = d.sellImpact ?? 1;
+                  const buyImpact = 1 + (holdImpact - 1) * 1.5;
+                  const bestImpact = Math.max(holdImpact, sellImpact, buyImpact);
+                  const recommended = bestImpact === buyImpact ? "Buy"
+                    : bestImpact === holdImpact ? "Hold" : "Sell";
+                  const choseAction = d.decision === "hold" ? "Hold"
+                    : d.decision === "buy" ? "Buy" : "Sell";
+                  const isRec = choseAction === recommended;
+
+                  // Tip key logic
+                  let tipKey = "";
+                  if (d.decision === "buy") {
+                    tipKey = buyImpact >= holdImpact ? "tipBuyWin" : "tipBuyBad";
+                  } else if (d.decision === "hold") {
+                    tipKey = holdImpact >= sellImpact ? "tipHoldWin" : "tipSellBad";
+                  } else {
+                    tipKey = sellImpact >= holdImpact ? "tipSellWin" : "tipHoldOk";
+                  }
+
+                  // Colors
+                  const dotColor = d.decision === "hold" ? HOLD_COLOR
+                    : d.decision === "buy" ? "#a78bfa" : SELL_COLOR;
                   let changeColor = FLAT_COLOR;
                   let ChangeIcon = Minus;
                   if (chfChange !== null) {
@@ -250,38 +270,69 @@ const MultiplayerResults = ({ mp }: Props) => {
                     else if (chfChange < -1) { changeColor = LOSS_COLOR; ChangeIcon = TrendingDown; }
                   }
 
+                  const tipOpen = openTipIndex === i;
+
                   return (
-                    <div key={i} className="rounded-2xl p-3 border border-border bg-background">
-                      {/* Event name + decision */}
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-                          style={{ backgroundColor: dotColor }} />
-                        <p className="text-xs font-bold text-foreground flex-1 truncate" style={nunito}>
-                          {d.title ? t(d.title) : `#${i + 1}`}
-                        </p>
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full"
-                          style={{ backgroundColor: `${dotColor}20`, color: dotColor, ...nunito }}>
-                          {d.decision === "hold" ? "Hold" : "Sell"}
-                        </span>
-                      </div>
+                    <div key={i} className="rounded-2xl border bg-background overflow-hidden"
+                      style={{ borderColor: isRec ? `${CELESTE}60` : "hsl(var(--border))" }}>
 
-                      {/* CHF change + recommendation */}
-                      <div className="flex items-center justify-between">
-                        {chfChange !== null ? (
-                          <div className="flex items-center gap-1">
-                            <ChangeIcon className="w-3 h-3" style={{ color: changeColor }} />
-                            <span className="text-xs font-black tabular-nums" style={{ color: changeColor, ...nunito }}>
-                              {chfChange >= 0 ? "+" : ""}CHF {Math.round(chfChange)}
-                            </span>
-                          </div>
-                        ) : <span />}
+                      {/* Main row */}
+                      <div className="p-3">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                            style={{ backgroundColor: dotColor }} />
+                          <p className="text-xs font-bold text-foreground flex-1" style={nunito}>
+                            {d.title ? t(d.title) : `#${i + 1}`}
+                          </p>
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0"
+                            style={{ backgroundColor: `${dotColor}20`, color: dotColor, ...nunito }}>
+                            {choseAction}
+                          </span>
+                          <button
+                            onClick={() => setOpenTipIndex(tipOpen ? null : i)}
+                            className="flex-shrink-0 ml-1">
+                            <Info className="w-3.5 h-3.5" style={{ color: tipOpen ? CELESTE : "hsl(var(--muted-foreground))" }} />
+                          </button>
+                        </div>
 
-                        {recommended && (
-                          <span className="text-[10px] text-muted-foreground" style={nunito}>
+                        {/* CHF change + recommendation row */}
+                        <div className="flex items-center justify-between">
+                          {chfChange !== null ? (
+                            <div className="flex items-center gap-1">
+                              <ChangeIcon className="w-3 h-3" style={{ color: changeColor }} />
+                              <span className="text-xs font-black tabular-nums" style={{ color: changeColor, ...nunito }}>
+                                {chfChange >= 0 ? "+" : ""}CHF {Math.round(chfChange)}
+                              </span>
+                            </div>
+                          ) : <span />}
+                          <span className="text-[10px] font-bold" style={{
+                            ...nunito,
+                            color: isRec ? CELESTE : "hsl(var(--muted-foreground))",
+                          }}>
                             {isRec ? "✓ " : ""}{t("multiplayer.recommended")}: {recommended}
                           </span>
-                        )}
+                        </div>
                       </div>
+
+                      {/* Expandable tip */}
+                      <AnimatePresence>
+                        {tipOpen && (
+                          <motion.div
+                            className="px-3 pb-3 pt-0"
+                            initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }}>
+                            <div className="rounded-xl p-3 mt-1"
+                              style={{ backgroundColor: `${CELESTE}0E` }}>
+                              <div className="flex items-start gap-2">
+                                <Lightbulb className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: CELESTE }} />
+                                <p className="text-[11px] text-muted-foreground leading-relaxed" style={nunito}>
+                                  {t(`multiplayer.${tipKey}`)}
+                                </p>
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
                   );
                 })}

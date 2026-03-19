@@ -434,8 +434,14 @@ const es = {
     playAgain: "Jugar de nuevo",
     backToNest: "Volver a My Nest",
     eventHistory: "HISTORIAL DE EVENTOS",
-    recommended: "Recomendado",
+    recommended: "Lo mejor era",
     buy: "Comprar",
+    tipHoldWin: "Mantener fue la decisión correcta. El mercado absorbió el golpe y siguió creciendo. Vender habría bloqueado pérdidas innecesarias.",
+    tipHoldOk: "Ambas opciones causaron pérdidas, pero mantener limitó el daño. En crisis, la paciencia suele costar menos que vender.",
+    tipSellWin: "Vender fue inteligente aquí. Las pérdidas reales eran inminentes — salir a tiempo protegió tu capital.",
+    tipSellBad: "Vender bloqueó tus pérdidas. El mercado se recuperó después de este evento, por lo que mantener habría sido mejor.",
+    tipBuyWin: "¡Movida audaz que valió la pena! Comprar durante un evento favorable amplificó tus ganancias.",
+    tipBuyBad: "Comprar aumentó tu riesgo durante una caída. Más exposición significa más pérdida cuando los mercados bajan.",
   },
 
   // Multiplayer market events pool

@@ -434,8 +434,14 @@ const en = {
     playAgain: "Play Again",
     backToNest: "Back to My Nest",
     eventHistory: "EVENT HISTORY",
-    recommended: "Recommended",
+    recommended: "Best was",
     buy: "Buy",
+    tipHoldWin: "Holding was the right call. The market absorbed the shock and kept growing. Panic-selling would have locked in losses.",
+    tipHoldOk: "Both hurt, but holding limited the damage. In crises, staying patient is usually less costly than selling.",
+    tipSellWin: "Selling was smart here. Real losses were coming — exiting early protected your capital.",
+    tipSellBad: "Selling locked in your losses. The market recovered after this event, so holding would have been better.",
+    tipBuyWin: "Bold move that paid off! Buying during a favorable event amplified your gains.",
+    tipBuyBad: "Buying increased your risk during a downturn. More exposure means more loss when markets fall.",
   },
 
   // Multiplayer market events pool
