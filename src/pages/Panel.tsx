@@ -423,12 +423,25 @@ const Panel = () => {
         setProfile(p.risk_profile);
         if (p.portfolio && p.portfolio.length > 0) {
           setActivePortfolio(p.portfolio);
+          if (p.allocations && Object.keys(p.allocations).length > 0) {
+            setAllocations(p.allocations);
+          } else {
+            // Auto-distribute evenly
+            const evenPct = Math.floor(100 / p.portfolio.length);
+            const allocs: Record<string, number> = {};
+            p.portfolio.forEach(inv => { allocs[inv.id] = evenPct; });
+            setAllocations(allocs);
+            saveProgress({ allocations: allocs });
+          }
         } else {
-          // Auto-fill nest with top 4 suggestions based on risk profile
           const defaults = getSuggestions(p.risk_profile, []).slice(0, 4);
           if (defaults.length > 0) {
             setActivePortfolio(defaults);
-            saveProgress({ portfolio: defaults });
+            const evenPct = Math.floor(100 / defaults.length);
+            const allocs: Record<string, number> = {};
+            defaults.forEach(inv => { allocs[inv.id] = evenPct; });
+            setAllocations(allocs);
+            saveProgress({ portfolio: defaults, allocations: allocs });
           }
         }
         if (p.simulation_result && p.simulation_result > 0) setBalance(p.simulation_result);
