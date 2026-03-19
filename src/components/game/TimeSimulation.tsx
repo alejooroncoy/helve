@@ -13,7 +13,7 @@ import {
   Zap,
   AlertTriangle,
 } from "lucide-react";
-import { ResponsiveContainer } from "recharts";
+
 import type { Investment } from "@/game/types";
 import { ASSET_CLASSES } from "@/game/types";
 import { useMonthlyPrices } from "@/hooks/useMarketData";
