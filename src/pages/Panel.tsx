@@ -116,10 +116,12 @@ function DraggableCard({
   inv,
   zone,
   onClick,
+  onAsk,
 }: {
   inv: Investment;
   zone: "scouted" | "nest";
   onClick: () => void;
+  onAsk?: () => void;
 }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `${zone}-${inv.id}`,
@@ -137,7 +139,7 @@ function DraggableCard({
       {zone === "nest" ? (
         <NestCard inv={inv} />
       ) : (
-        <ScoutedCard inv={inv} />
+        <ScoutedCard inv={inv} onAsk={onAsk} />
       )}
     </div>
   );
