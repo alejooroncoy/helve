@@ -683,7 +683,7 @@ const Panel = () => {
             <div className="flex-1 md:pr-2">
               <DropZone id="nest">
                 <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-sm font-bold text-foreground uppercase tracking-wide" style={nunito}>{t("panel.myNest")}</h2>
+                  <h2 className="text-sm font-bold text-foreground uppercase tracking-wide" style={nunito}>{nests.find(n => n.id === activeNestId)?.name || t("panel.myNest")}</h2>
                   <span className="text-xs text-muted-foreground" style={nunito}>{enrichedPortfolio.length}/4</span>
                 </div>
                 {enrichedPortfolio.length === 0 ? (
