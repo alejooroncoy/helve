@@ -44,43 +44,43 @@ ASSET_CLASSES.forEach(cls => {
 });
 
 const marketEvents: MarketEvent[] = [
-  { id: "boom", emoji: "☀️", title: "¡Primavera financiera!", description: "El mercado florece. Tu nido brilla.", impact: 1.12, type: "positive" },
-  { id: "crash", emoji: "🌪️", title: "¡Tormenta en el mercado!", description: "Los vientos soplan fuerte. ¿Mantienes tus huevos?", impact: 0.82, type: "negative" },
-  { id: "steady", emoji: "🌤️", title: "Cielo despejado", description: "Todo tranquilo. Tu nido crece poco a poco.", impact: 1.03, type: "neutral" },
-  { id: "tech-boom", emoji: "🚀", title: "¡Boom tecnológico!", description: "Las empresas tech despegan. Los nidos con tech crecen más.", impact: 1.18, type: "positive" },
-  { id: "recession", emoji: "🥶", title: "Invierno económico", description: "Todo se enfría. Los pájaros más valientes aguantan.", impact: 0.88, type: "negative" },
-  { id: "green-wave", emoji: "🌱", title: "Ola verde", description: "La energía limpia sube. ¡El futuro es verde!", impact: 1.08, type: "positive" },
-  { id: "inflation", emoji: "🔥", title: "¡Inflación alta!", description: "Los precios suben. Tu nido pierde un poco de calor.", impact: 0.93, type: "negative" },
-  { id: "dividend", emoji: "🥚", title: "¡Temporada de dividendos!", description: "Tus inversiones ponen huevos extra.", impact: 1.06, type: "positive" },
-  { id: "stable", emoji: "🪺", title: "Nido estable", description: "Sin sorpresas. Tu nido se mantiene firme.", impact: 1.01, type: "neutral" },
-  { id: "war", emoji: "⚡", title: "Tensión global", description: "El mundo se sacude. Los mercados tiemblan.", impact: 0.85, type: "negative" },
+  { id: "boom", emoji: "", title: "Primavera financiera", description: "El mercado florece. Tu nido brilla.", impact: 1.12, type: "positive" },
+  { id: "crash", emoji: "", title: "Tormenta en el mercado", description: "Los vientos soplan fuerte.", impact: 0.82, type: "negative" },
+  { id: "steady", emoji: "", title: "Cielo despejado", description: "Todo tranquilo. Tu nido crece poco a poco.", impact: 1.03, type: "neutral" },
+  { id: "tech-boom", emoji: "", title: "Boom tecnologico", description: "Las empresas tech despegan.", impact: 1.18, type: "positive" },
+  { id: "recession", emoji: "", title: "Invierno economico", description: "Todo se enfria.", impact: 0.88, type: "negative" },
+  { id: "green-wave", emoji: "", title: "Ola verde", description: "La energia limpia sube.", impact: 1.08, type: "positive" },
+  { id: "inflation", emoji: "", title: "Inflacion alta", description: "Los precios suben.", impact: 0.93, type: "negative" },
+  { id: "dividend", emoji: "", title: "Temporada de dividendos", description: "Tus inversiones generan extra.", impact: 1.06, type: "positive" },
+  { id: "stable", emoji: "", title: "Nido estable", description: "Sin sorpresas. Tu nido se mantiene firme.", impact: 1.01, type: "neutral" },
+  { id: "war", emoji: "", title: "Tension global", description: "El mundo se sacude. Los mercados tiemblan.", impact: 0.85, type: "negative" },
 ];
 
 const timeLabels = [
   "Hoy", "1 mes", "2 meses", "3 meses", "6 meses",
-  "9 meses", "1 año", "1.5 años", "2 años", "3 años", "5 años"
+  "9 meses", "1 ano", "1.5 anos", "2 anos", "3 anos", "5 anos"
 ];
 const timeMonths = [0, 1, 2, 3, 6, 9, 12, 18, 24, 36, 60];
 
 const birdMessages = {
   positive: [
-    "¡Tu nido brilla! 🌟",
-    "¡Los huevos están calentitos! 🥚✨",
-    "¡Buen vuelo! Vas por buen camino 🐦",
+    "Tu nido brilla!",
+    "Los huevos estan calentitos!",
+    "Buen vuelo! Vas por buen camino.",
   ],
   negative: [
-    "¡Aguanta! Las tormentas pasan 🌧️",
-    "Los pájaros fuertes resisten el viento 💪",
-    "No todo vuelo es suave, ¡pero sigues volando! 🦅",
+    "Aguanta! Las tormentas pasan.",
+    "Los pajaros fuertes resisten el viento.",
+    "No todo vuelo es suave, pero sigues volando!",
   ],
   neutral: [
-    "Tranquilo, tu nido crece despacio pero seguro 🪺",
-    "Paciencia, pajarito. El tiempo es tu amigo ⏳",
-    "Paso a paso se construye el mejor nido 🐣",
+    "Tranquilo, tu nido crece despacio pero seguro.",
+    "Paciencia. El tiempo es tu amigo.",
+    "Paso a paso se construye el mejor nido.",
   ],
   sell: [
-    "¡Vendiste! A veces es bueno aligerar el nido 🍃",
-    "Huevo fuera. ¿Fue buena decisión? Lo veremos... 🤔",
+    "Vendiste! A veces es bueno aligerar el nido.",
+    "Fuera. Fue buena decision? Lo veremos...",
   ],
 };
 
