@@ -60,7 +60,8 @@ const Hub = () => {
           <div>
             {(() => {
               const meta = user?.user_metadata;
-              const displayName = meta?.full_name || meta?.name || meta?.email?.split("@")[0] || null;
+              const isDemo = user?.email === "demo@helve.app";
+              const displayName = isDemo ? null : (meta?.full_name || meta?.name || meta?.email?.split("@")[0] || null);
               const firstName = displayName ? displayName.split(" ")[0] : t("hub.guest");
               return (
                 <h1
