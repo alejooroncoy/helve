@@ -94,38 +94,34 @@ const ACTION_COLORS = {
   buy: PRIMARY_COLOR,
 };
 
-const timeLabels = [
-  "Hoy",
-  "1 mes",
-  "2 meses",
-  "3 meses",
-  "6 meses",
-  "9 meses",
-  "1 ano",
-  "1.5 anos",
-  "2 anos",
-  "3 anos",
-  "5 anos",
+const timeLabelKeys = [
+  "today", "1m", "2m", "3m", "6m", "9m", "1y", "1.5y", "2y", "3y", "5y",
 ];
 const timeMonths = [0, 1, 2, 3, 6, 9, 12, 18, 24, 36, 60];
 
-const birdMessages = {
-  positive: [
-    "Tu nido brilla!",
-    "Los huevos estan calentitos!",
-    "Buen vuelo! Vas por buen camino.",
-  ],
-  negative: [
-    "Aguanta! Las tormentas pasan.",
-    "Los pajaros fuertes resisten el viento.",
-    "No todo vuelo es suave, pero sigues volando!",
-  ],
-  neutral: [
-    "Tranquilo, tu nido crece despacio pero seguro.",
-    "Paciencia. El tiempo es tu amigo.",
-    "Paso a paso se construye el mejor nido.",
-  ],
-};
+function getTimeLabels(t: (key: string) => string) {
+  return timeLabelKeys.map((key) => t(`timeSim.timeLabels.${key}`));
+}
+
+function getBirdMessages(t: (key: string) => string) {
+  return {
+    positive: [
+      t("birdMessages.positive.0"),
+      t("birdMessages.positive.1"),
+      t("birdMessages.positive.2"),
+    ],
+    negative: [
+      t("birdMessages.negative.0"),
+      t("birdMessages.negative.1"),
+      t("birdMessages.negative.2"),
+    ],
+    neutral: [
+      t("birdMessages.neutral.0"),
+      t("birdMessages.neutral.1"),
+      t("birdMessages.neutral.2"),
+    ],
+  };
+}
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
