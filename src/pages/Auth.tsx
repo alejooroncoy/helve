@@ -5,6 +5,7 @@ import { lovable } from "@/integrations/lovable/index";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 const nunito = { fontFamily: "'Nunito', sans-serif" };
 
