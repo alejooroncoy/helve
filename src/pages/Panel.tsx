@@ -443,6 +443,16 @@ const Panel = () => {
           </p>
         )}
       </div>
+      {/* Time Simulation */}
+      <AnimatePresence>
+        {simulationOpen && (
+          <TimeSimulation
+            portfolio={activePortfolio}
+            onClose={() => setSimulationOpen(false)}
+            onSellInvestment={handleSimSell}
+          />
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };
