@@ -58,7 +58,8 @@ export function getProfile(score: number): RiskProfile {
 
 export { simulateRealGrowth } from "./marketData";
 
+import { simulateRealGrowth as _simReal } from "./marketData";
+
 export function simulateGrowth(portfolio: PortfolioSlot[], stormChoice: "stay" | "sell" | null): number {
-  const { finalValue } = (await import("./marketData")).simulateRealGrowth(portfolio, stormChoice, 5);
-  return finalValue;
+  return _simReal(portfolio, stormChoice, 5).finalValue;
 }
