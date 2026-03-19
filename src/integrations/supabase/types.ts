@@ -99,6 +99,7 @@ export type Database = {
       }
       user_progress: {
         Row: {
+          allocations: Json | null
           created_at: string | null
           game_step: string | null
           id: string
@@ -113,6 +114,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          allocations?: Json | null
           created_at?: string | null
           game_step?: string | null
           id?: string
@@ -127,6 +129,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          allocations?: Json | null
           created_at?: string | null
           game_step?: string | null
           id?: string
