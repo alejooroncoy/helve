@@ -29,7 +29,7 @@ import { ASSET_CLASSES, ALL_ASSET_DB_IDS } from "@/game/types";
 import { availableInvestments } from "@/game/types";
 import {
   LogOut, X, AlertTriangle, Inbox, Shield, TrendingUp, BarChart2,
-  Building2, Leaf, Globe, Landmark, Zap, FastForward, MessageCircle, DollarSign, Info, Wallet,
+  Building2, Leaf, Globe, Landmark, Zap, FastForward, MessageCircle, DollarSign, Info, Wallet, GripVertical,
 } from "lucide-react";
 
 const nunito = { fontFamily: "'Nunito', sans-serif" };
@@ -100,32 +100,37 @@ function getSuggestions(profile: string, active: Investment[]): Investment[] {
 
 /* ---- Draggable category card ---- */
 function DraggableCard({
-  inv, zone, onClick, onAsk, onSell, onInfo, allocation, balance, t,
+  inv, zone, onClick, onAsk, onSell, onInfo, allocation, balance, t, isMobile,
 }: {
   inv: Investment; zone: "scouted" | "nest"; onClick: () => void; onAsk?: () => void; onSell?: () => void; onInfo?: () => void;
-  allocation?: number; balance?: number; t: any;
+  allocation?: number; balance?: number; t: any; isMobile?: boolean;
 }) {
-  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+  const { attributes, listeners, setNodeRef, setActivatorNodeRef, isDragging } = useDraggable({
     id: `${zone}-${inv.id}`,
     data: { inv, zone },
   });
 
+  const dragHandleProps = isMobile
+    ? { ref: setActivatorNodeRef, ...listeners, ...attributes }
+    : undefined;
+
+  const rootDragProps = isMobile ? {} : { ...listeners, ...attributes };
+
   return (
     <div
       ref={setNodeRef}
-      {...listeners}
-      {...attributes}
-      onClick={zone === "scouted" ? onClick : undefined}
+      {...rootDragProps}
+      onClick={zone === "scouted" && !isMobile ? onClick : undefined}
       className={`select-none transition-all h-full w-full ${isDragging ? "opacity-30 scale-95" : ""}`}
     >
       {zone === "nest"
-        ? <NestCard inv={inv} onSell={onSell} onAsk={onAsk} onInfo={onInfo} allocation={allocation} balance={balance} t={t} />
-        : <ScoutedCard inv={inv} onAsk={onAsk} t={t} />}
+        ? <NestCard inv={inv} onSell={onSell} onAsk={onAsk} onInfo={onInfo} allocation={allocation} balance={balance} t={t} overlay={false} isMobile={isMobile} dragHandleProps={dragHandleProps} />
+        : <ScoutedCard inv={inv} onAsk={onAsk} t={t} overlay={false} isMobile={isMobile} dragHandleProps={dragHandleProps} />}
     </div>
   );
 }
 
-function NestCard({ inv, overlay, onSell, onAsk, onInfo, allocation, balance, t }: { inv: Investment; overlay?: boolean; onSell?: () => void; onAsk?: () => void; onInfo?: () => void; allocation?: number; balance?: number; t: any }) {
+function NestCard({ inv, overlay, onSell, onAsk, onInfo, allocation, balance, t, isMobile, dragHandleProps }: { inv: Investment; overlay?: boolean; onSell?: () => void; onAsk?: () => void; onInfo?: () => void; allocation?: number; balance?: number; t: any; isMobile?: boolean; dragHandleProps?: any }) {
   const [expanded, setExpanded] = useState(false);
   const pct = allocation ?? 25;
   const chfAmount = balance ? Math.round(balance * pct / 100) : 0;
@@ -133,7 +138,7 @@ function NestCard({ inv, overlay, onSell, onAsk, onInfo, allocation, balance, t 
   const color = CLASS_COLORS[inv.id as AssetClass] || CELESTE;
 
   return (
-    <div className={`bg-card rounded-2xl p-3.5 shadow-sm ${overlay ? "shadow-lg rotate-2" : ""} cursor-grab active:cursor-grabbing`} style={overlay ? { boxShadow: `0 0 0 2px ${color}40` } : {}}>
+    <div className={`bg-card rounded-2xl p-3.5 shadow-sm ${overlay ? "shadow-lg rotate-2 cursor-grabbing" : isMobile ? "" : "cursor-grab active:cursor-grabbing"}`} style={overlay ? { boxShadow: `0 0 0 2px ${color}40` } : {}}>
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${color}18`, color }}>
           {getCategoryIcon(inv.id)}
@@ -153,9 +158,22 @@ function NestCard({ inv, overlay, onSell, onAsk, onInfo, allocation, balance, t 
           </div>
         </div>
         {!overlay && (
-          <div className="flex flex-col items-end flex-shrink-0" onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }} onPointerDown={(e) => e.stopPropagation()}>
-            <span className="text-sm font-bold" style={{ ...nunito, color }}>{pct}%</span>
-            <span className="text-[10px] text-muted-foreground" style={nunito}>CHF {chfAmount}</span>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <div className="flex flex-col items-end" onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }} onPointerDown={(e) => e.stopPropagation()}>
+              <span className="text-sm font-bold" style={{ ...nunito, color }}>{pct}%</span>
+              <span className="text-[10px] text-muted-foreground" style={nunito}>CHF {chfAmount}</span>
+            </div>
+            {isMobile && dragHandleProps && (
+              <button
+                type="button"
+                {...dragHandleProps}
+                onClick={(e) => e.stopPropagation()}
+                className="w-8 h-8 rounded-xl bg-muted text-muted-foreground flex items-center justify-center"
+                aria-label={t("panel.myNest")}
+              >
+                <GripVertical className="w-4 h-4" />
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -187,12 +205,12 @@ function NestCard({ inv, overlay, onSell, onAsk, onInfo, allocation, balance, t 
   );
 }
 
-function ScoutedCard({ inv, overlay, onAsk, t }: { inv: Investment; overlay?: boolean; onAsk?: () => void; t: any }) {
+function ScoutedCard({ inv, overlay, onAsk, t, isMobile, dragHandleProps }: { inv: Investment; overlay?: boolean; onAsk?: () => void; t: any; isMobile?: boolean; dragHandleProps?: any }) {
   const displayName = t(`allocation.classes.${inv.id}`, { defaultValue: inv.name });
   const color = CLASS_COLORS[inv.id as AssetClass] || CELESTE;
 
   return (
-    <div className={`bg-card rounded-2xl p-3 shadow-sm border-2 border-dashed border-border ${overlay ? "-rotate-2" : ""} cursor-grab active:cursor-grabbing min-h-[110px] h-full flex flex-col`} style={overlay ? { boxShadow: `0 0 0 2px ${color}40`, borderColor: `${color}60` } : {}}>
+    <div className={`bg-card rounded-2xl p-3 shadow-sm border-2 border-dashed border-border ${overlay ? "-rotate-2 cursor-grabbing" : isMobile ? "" : "cursor-grab active:cursor-grabbing"} min-h-[110px] h-full flex flex-col`} style={overlay ? { boxShadow: `0 0 0 2px ${color}40`, borderColor: `${color}60` } : {}}>
       <div className="flex items-start gap-2">
         <div className="w-9 h-9 bg-secondary rounded-xl flex items-center justify-center text-muted-foreground flex-shrink-0" style={{ color }}>
           {getCategoryIcon(inv.id)}
@@ -203,6 +221,17 @@ function ScoutedCard({ inv, overlay, onAsk, t }: { inv: Investment; overlay?: bo
             <p className="text-xs font-bold text-foreground leading-snug" style={nunito}>{displayName}</p>
           </div>
         </div>
+        {!overlay && isMobile && dragHandleProps && (
+          <button
+            type="button"
+            {...dragHandleProps}
+            onClick={(e) => e.stopPropagation()}
+            className="w-8 h-8 rounded-xl bg-muted text-muted-foreground flex items-center justify-center flex-shrink-0"
+            aria-label={t("panel.buy")}
+          >
+            <GripVertical className="w-4 h-4" />
+          </button>
+        )}
       </div>
       <div className="flex-grow" />
       <div className="flex items-center gap-2 mt-2">
@@ -216,7 +245,7 @@ function ScoutedCard({ inv, overlay, onAsk, t }: { inv: Investment; overlay?: bo
           <span onClick={(e) => { e.stopPropagation(); e.preventDefault(); onAsk(); }} onPointerDown={(e) => e.stopPropagation()}
             className="w-6 h-6 rounded-full bg-accent/10 text-accent flex items-center justify-center text-[10px] font-bold cursor-pointer" style={nunito}>?</span>
         )}
-        {!overlay && <span className="text-sm font-bold" style={{ color }}>+</span>}
+        {!overlay && !isMobile && <span className="text-sm font-bold" style={{ color }}>+</span>}
       </div>
     </div>
   );
@@ -567,7 +596,7 @@ const Panel = () => {
                     <AnimatePresence>
                       {enrichedPortfolio.map((inv) => (
                         <motion.div key={inv.id} initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }} layout>
-                          <DraggableCard inv={inv} zone="nest" onClick={() => {}} t={t}
+                          <DraggableCard inv={inv} zone="nest" onClick={() => {}} t={t} isMobile={isMobile}
                             onSell={() => removeInvestment(inv.id)}
                             onAsk={() => { setCoachInitQ(`Tengo ${t(`allocation.classes.${inv.id}`)} en mi nido. ¿Es buena inversión? ¿Debería quitarla o mantenerla?`); setCoachOpen(true); }}
                             onInfo={() => { setCoachInitQ(`Dame un análisis detallado de ${t(`allocation.classes.${inv.id}`)}: riesgo, retorno histórico, y perspectiva futura.`); setCoachOpen(true); }}
@@ -585,10 +614,10 @@ const Panel = () => {
               <DropZone id="scouted">
                 <h2 className="text-sm font-bold text-foreground uppercase tracking-wide mb-3 md:mt-0 mt-4" style={nunito}>{t("panel.buy")}</h2>
                 {/* Mobile: horizontal scroll */}
-                <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide items-stretch md:hidden" style={{ scrollSnapType: "x mandatory" }}>
+                <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide items-stretch md:hidden" style={{ scrollSnapType: "x mandatory", touchAction: "pan-x" }}>
                   {suggestions.map((inv) => (
                     <div key={inv.id} className="flex-shrink-0 flex" style={{ width: 170, minWidth: 160, scrollSnapAlign: "start" }}>
-                      <DraggableCard inv={inv} zone="scouted" onClick={() => tryBuyInvestment(inv)} t={t}
+                      <DraggableCard inv={inv} zone="scouted" onClick={() => tryBuyInvestment(inv)} t={t} isMobile={isMobile}
                         onAsk={() => { setCoachInitQ(`Explica brevemente qué es ${t(`allocation.classes.${inv.id}`)} y si encaja con mi perfil`); setCoachOpen(true); }} />
                     </div>
                   ))}
@@ -597,7 +626,7 @@ const Panel = () => {
                 <div className="hidden md:flex md:flex-col gap-2">
                   {suggestions.map((inv) => (
                     <div key={inv.id} className="w-full">
-                      <DraggableCard inv={inv} zone="scouted" onClick={() => tryBuyInvestment(inv)} t={t}
+                      <DraggableCard inv={inv} zone="scouted" onClick={() => tryBuyInvestment(inv)} t={t} isMobile={isMobile}
                         onAsk={() => { setCoachInitQ(`Explica brevemente qué es ${t(`allocation.classes.${inv.id}`)} y si encaja con mi perfil`); setCoachOpen(true); }} />
                     </div>
                   ))}
@@ -611,8 +640,8 @@ const Panel = () => {
           {draggedItem ? (
             <div style={{ width: draggedItem.zone === "scouted" ? 160 : "auto", maxWidth: 340 }}>
               {draggedItem.zone === "nest"
-                ? <NestCard inv={draggedItem.inv} overlay t={t} />
-                : <ScoutedCard inv={draggedItem.inv} overlay t={t} />}
+                ? <NestCard inv={draggedItem.inv} overlay t={t} isMobile={false} />
+                : <ScoutedCard inv={draggedItem.inv} overlay t={t} isMobile={false} />}
             </div>
           ) : null}
         </DragOverlay>
