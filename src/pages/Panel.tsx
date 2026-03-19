@@ -547,7 +547,10 @@ const Panel = () => {
     const removed = activePortfolio.find(i => i.id === id);
     setActivePortfolio((prev) => {
       const next = prev.filter((i) => i.id !== id);
-      saveProgress({ portfolio: next });
+      const newAllocations = { ...allocations };
+      delete newAllocations[id];
+      setAllocations(newAllocations);
+      saveProgress({ portfolio: next, allocations: newAllocations });
       return next;
     });
     if (removed) {
