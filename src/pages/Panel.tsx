@@ -565,17 +565,22 @@ const Panel = () => {
     const toRemove = activePortfolio.find(i => i.id === removeId);
     const toAdd = enrichedAvailable.find(i => i.id === addId);
     if (!toAdd) return;
+    const removedAlloc = allocations[removeId] ?? 25;
     setActivePortfolio((prev) => {
       const next = prev.filter((i) => i.id !== removeId);
       if (!next.find(i => i.id === addId) && next.length < 4) {
         next.push(toAdd);
       }
-      saveProgress({ portfolio: next });
+      const newAllocations = { ...allocations };
+      delete newAllocations[removeId];
+      newAllocations[addId] = removedAlloc;
+      setAllocations(newAllocations);
+      saveProgress({ portfolio: next, allocations: newAllocations });
       return next;
     });
     const removeName = toRemove?.name || removeId;
     mascotToast(t("panel.swapMsg", { removed: removeName, added: toAdd.name }));
-  }, [activePortfolio, enrichedAvailable, saveProgress, t]);
+  }, [activePortfolio, enrichedAvailable, allocations, saveProgress, t]);
 
   const handleDragStart = (event: DragStartEvent) => {
     setDraggedItem(event.active.data.current as { inv: Investment; zone: string });
