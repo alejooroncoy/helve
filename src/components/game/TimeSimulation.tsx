@@ -141,8 +141,8 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, onClose,
       setTotalGain(Math.round(gain * 10) / 10);
 
       const point: TimePoint = {
-        month: timeMonths[nextStep],
-        label: timeLabels[nextStep],
+        month: filteredMonths[nextStep],
+        label: filteredLabels[nextStep],
         value: Math.round(newValue),
         event: event || undefined,
       };
