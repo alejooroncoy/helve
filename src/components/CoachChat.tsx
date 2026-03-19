@@ -390,11 +390,11 @@ export default function CoachChat({ onClose, portfolio, onAddInvestment, onRemov
             <div className="w-14 h-14 rounded-full mx-auto mb-3 flex items-center justify-center" style={{ backgroundColor: `${CELESTE}15` }}>
               <MessageCircle className="w-7 h-7" style={{ color: CELESTE }} />
             </div>
-            <p className="text-sm font-bold text-foreground" style={nunito}>Hi! I'm your coach</p>
+            <p className="text-sm font-bold text-foreground" style={nunito}>{t("coach.greeting")}</p>
             <p className="text-xs text-muted-foreground mt-1" style={nunito}>
               {portfolio && portfolio.length > 0
-                ? "I can analyze your nest and give you recommendations"
-                : "Ask me anything about investing"}
+                ? t("coach.analyzeNest")
+                : t("coach.askAnything")}
             </p>
             <div className="mt-4 flex flex-wrap gap-2 justify-center">
               {quickQuestions.map((q) => (
