@@ -826,7 +826,7 @@ const Panel = () => {
 
   return (
     <motion.div
-      className="min-h-screen bg-background flex flex-col overflow-y-auto"
+      className="h-screen bg-background flex flex-col overflow-hidden"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
     >
