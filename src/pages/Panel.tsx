@@ -175,14 +175,16 @@ function DraggableCard({
   );
 }
 
-function NestCard({ inv, overlay }: { inv: Investment; overlay?: boolean }) {
+function NestCard({ inv, overlay, onSell, onAsk, onInfo }: { inv: Investment; overlay?: boolean; onSell?: () => void; onAsk?: () => void; onInfo?: () => void }) {
+  const [expanded, setExpanded] = useState(false);
+
   return (
     <div className={`bg-card rounded-2xl p-3.5 shadow-sm ${overlay ? "shadow-lg rotate-2" : ""} cursor-grab active:cursor-grabbing`} style={overlay ? { boxShadow: `0 0 0 2px ${CELESTE}40` } : {}}>
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${CELESTE}18`, color: CELESTE }}>
           {getInvestmentIcon(inv)}
         </div>
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0" onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }} onPointerDown={(e) => e.stopPropagation()}>
           <div className="flex items-center gap-1.5 flex-wrap">
             <p className="text-sm font-bold text-foreground" style={nunito}>{inv.name}</p>
             {inv.flag && <span className="text-xs">{inv.flag}</span>}
@@ -197,11 +199,18 @@ function NestCard({ inv, overlay }: { inv: Investment; overlay?: boolean }) {
           </div>
         </div>
         {!overlay && (
-          <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-            <X className="w-3 h-3 text-muted-foreground" />
+          <div
+            className="w-7 h-7 rounded-full bg-muted flex items-center justify-center flex-shrink-0 cursor-pointer"
+            onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
+            onPointerDown={(e) => e.stopPropagation()}
+          >
+            <motion.div animate={{ rotate: expanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
+              <Info className="w-3.5 h-3.5 text-muted-foreground" />
+            </motion.div>
           </div>
         )}
       </div>
+
       {inv.tag && (
         <div className="mt-2 flex items-center gap-1.5">
           <span className="text-[10px] font-bold bg-accent/15 text-accent px-2 py-0.5 rounded-full" style={nunito}>
@@ -212,6 +221,51 @@ function NestCard({ inv, overlay }: { inv: Investment; overlay?: boolean }) {
           )}
         </div>
       )}
+
+      {/* Expandable actions */}
+      <AnimatePresence>
+        {expanded && !overlay && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="overflow-hidden"
+          >
+            <div className="flex gap-2 mt-3 pt-3 border-t border-border">
+              <motion.button
+                onClick={(e) => { e.stopPropagation(); onSell?.(); }}
+                onPointerDown={(e) => e.stopPropagation()}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold bg-destructive/10 text-destructive transition-colors"
+                style={nunito}
+                whileTap={{ scale: 0.95 }}
+              >
+                <DollarSign className="w-3.5 h-3.5" />
+                Vender
+              </motion.button>
+              <motion.button
+                onClick={(e) => { e.stopPropagation(); onAsk?.(); }}
+                onPointerDown={(e) => e.stopPropagation()}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold transition-colors"
+                style={{ ...nunito, backgroundColor: `${CELESTE}15`, color: CELESTE }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <MessageCircle className="w-3.5 h-3.5" />
+                Preguntar
+              </motion.button>
+              <motion.button
+                onClick={(e) => { e.stopPropagation(); onInfo?.(); }}
+                onPointerDown={(e) => e.stopPropagation()}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold bg-muted text-muted-foreground transition-colors"
+                style={nunito}
+                whileTap={{ scale: 0.95 }}
+              >
+                <BarChart2 className="w-3.5 h-3.5" />
+                Detalle
+              </motion.button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
