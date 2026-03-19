@@ -49,12 +49,19 @@ emoji: [emoji]
 descripción: [1 línea corta]
 \`\`\`
 
-### Para comparar dos opciones:
+### Para comparar dos opciones (cuando sugieras un cambio/swap):
 \`\`\`comparison
-opción_a: [nombre] | [riesgo bajo/medio/alto] | [retorno %]
-opción_b: [nombre] | [riesgo bajo/medio/alto] | [retorno %]
+opción_a: [nombre] | [riesgo X/10] | [retorno ~X% anual]
+opción_b: [nombre] | [riesgo X/10] | [retorno ~X% anual]
 veredicto: [1 línea corta de recomendación]
+swap: [id_quitar] -> [id_poner]
 \`\`\`
+
+IMPORTANTE para comparaciones:
+- "riesgo" es el nivel de riesgo (1-10). Etiquétalo SIEMPRE como "Riesgo X/10"
+- "retorno" es el retorno anual esperado. Etiquétalo SIEMPRE como "~X% anual"
+- Usa el campo "swap" SOLO cuando sugieras reemplazar una inversión del nido por otra. Formato: id_actual -> id_nueva
+- Si solo comparas sin sugerir cambio, omite el campo swap
 
 ### Para dar un tip:
 \`\`\`tip
@@ -70,8 +77,7 @@ contenido: [1 línea corta]
 - Si preguntan algo fuera de inversiones, redirige amablemente
 - NUNCA des consejos financieros específicos ("compra X"). Siempre di "podrías considerar"
 - Usa emojis con moderación (1-2 por mensaje máximo)
-- Para comparaciones, SIEMPRE usa el formato: nombre | riesgo | retorno (separado por |)`;
-
+- Para comparaciones, SIEMPRE separa nombre | riesgo | retorno con |`;
 const tools = [
   {
     type: "function",
