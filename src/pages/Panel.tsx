@@ -51,10 +51,64 @@ function riskWord(level: number): string {
 
 function getSuggestions(profile: string, active: Investment[]): Investment[] {
   const activeIds = new Set(active.map((i) => i.id));
+  const activeTypes = new Set(active.map((i) => i.type));
   const pool = availableInvestments.filter((i) => !activeIds.has(i.id));
-  if (profile === "conservative") return pool.sort((a, b) => a.riskLevel - b.riskLevel).slice(0, 4);
-  if (profile === "growth") return pool.sort((a, b) => b.annualReturn - a.annualReturn).slice(0, 4);
-  return pool.sort((a, b) => Math.abs(5 - a.riskLevel) - Math.abs(5 - b.riskLevel)).slice(0, 4);
+  if (pool.length === 0) return [];
+
+  // Risk comfort zone per profile
+  const riskRange = profile === "conservative" ? [1, 4]
+    : profile === "growth" ? [5, 10]
+    : [3, 7];
+
+  // Current portfolio metrics
+  const avgRisk = active.length
+    ? active.reduce((s, i) => s + i.riskLevel, 0) / active.length
+    : riskRange[0] + (riskRange[1] - riskRange[0]) / 2;
+  const hasType = (t: string) => activeTypes.has(t as any);
+  const slotsLeft = 4 - active.length;
+
+  // Score each candidate: higher = better suggestion
+  const scored = pool.map((inv) => {
+    let score = 0;
+
+    // 1. Risk fit: prefer investments within the profile's comfort zone
+    const inRange = inv.riskLevel >= riskRange[0] && inv.riskLevel <= riskRange[1];
+    if (inRange) score += 30;
+    else score -= Math.abs(inv.riskLevel - (riskRange[0] + riskRange[1]) / 2) * 3;
+
+    // 2. Diversification: prefer types not yet in portfolio
+    if (!hasType(inv.type)) score += 25;
+
+    // 3. Balance: if portfolio is too risky, prefer safer; if too safe, prefer growth
+    if (active.length > 0) {
+      if (avgRisk > 7 && inv.riskLevel <= 4) score += 20; // counterbalance risk
+      if (avgRisk < 3 && inv.riskLevel >= 5) score += 15; // nudge toward growth
+    }
+
+    // 4. Return efficiency: reward good risk-adjusted returns
+    const efficiency = inv.annualReturn / Math.max(inv.riskLevel, 1);
+    score += efficiency * 2;
+
+    // 5. Beginner-friendly bonus for safe/balanced with decent returns
+    if (profile === "conservative" && inv.riskLevel <= 3) score += 10;
+    if (profile === "balanced" && inv.riskLevel >= 3 && inv.riskLevel <= 6) score += 10;
+
+    // 6. If portfolio is empty, heavily favor profile-matching investments
+    if (active.length === 0) {
+      if (profile === "conservative" && inv.type === "safe") score += 20;
+      if (profile === "balanced" && inv.type === "balanced") score += 20;
+      if (profile === "growth" && inv.type === "growth") score += 20;
+    }
+
+    // 7. Slight penalty for very high risk on conservative profiles
+    if (profile === "conservative" && inv.riskLevel >= 8) score -= 15;
+
+    return { inv, score };
+  });
+
+  // Sort by score descending, show up to 4
+  scored.sort((a, b) => b.score - a.score);
+  return scored.slice(0, Math.max(slotsLeft + 1, 4)).map((s) => s.inv);
 }
 
 /* ---- Draggable investment card ---- */
