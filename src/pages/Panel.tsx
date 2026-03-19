@@ -594,10 +594,10 @@ const Panel = () => {
             { label: t("panel.risk"), value: `${totalRisk}%`, valueStyle: totalRisk > 60 ? { color: "hsl(var(--destructive))" } : totalRisk > 30 ? {} : { color: CELESTE }, valueClass: totalRisk > 30 && totalRisk <= 60 ? "text-accent" : "", sub: getRiskLabelLocal(totalRisk), subStyle: {} },
             { label: t("panel.returnLabel"), value: `${avgReturn}%`, valueStyle: { color: CELESTE }, sub: t("panel.annual"), subStyle: {} },
           ].map((stat, i) => (
-            <motion.div key={stat.label} className="bg-card rounded-3xl p-3 shadow-sm" initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 + i * 0.05 }}>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium" style={nunito}>{stat.label}</p>
-              <p className={`text-lg font-bold mt-0.5 ${"valueClass" in stat ? stat.valueClass : "text-foreground"}`} style={{ ...nunito, ...("valueStyle" in stat ? stat.valueStyle : {}) }}>{stat.value}</p>
-              <p className="text-[10px] text-muted-foreground font-medium mt-0.5" style={{ ...nunito, ...stat.subStyle }}>{stat.sub}</p>
+            <motion.div key={stat.label} className="bg-card rounded-3xl p-2.5 sm:p-3 shadow-sm" initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 + i * 0.05 }}>
+              <p className="text-[9px] sm:text-[10px] text-muted-foreground uppercase tracking-wider font-medium" style={nunito}>{stat.label}</p>
+              <p className={`text-sm sm:text-lg font-bold mt-0.5 ${"valueClass" in stat ? stat.valueClass : "text-foreground"}`} style={{ ...nunito, ...("valueStyle" in stat ? stat.valueStyle : {}) }}>{stat.value}</p>
+              <p className="text-[9px] sm:text-[10px] text-muted-foreground font-medium mt-0.5" style={{ ...nunito, ...stat.subStyle }}>{stat.sub}</p>
             </motion.div>
           ))}
         </div>
