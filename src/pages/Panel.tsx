@@ -30,6 +30,27 @@ import {
 const nunito = { fontFamily: "'Nunito', sans-serif" };
 const CELESTE = "#5BB8F5";
 
+// Map game IDs to DB instrument IDs
+const investmentToDbId: Record<string, string> = {
+  "ch-bond-aaa": "ch-bond-aaa",
+  "global-bond": "global-bond-agg",
+  "ch-govt-10y": "ch-govt-10y",
+  "smi-index": "smi-index",
+  "eurostoxx50": "eurostoxx50",
+  "gold-chf": "gold-chf",
+  "nestle": "nesn-ch",
+  "novartis": "novn-ch",
+  "djia-index": "djia-index",
+  "dax-index": "dax-index",
+  "apple": "aapl-us",
+  "microsoft": "msft-us",
+  "nvidia": "nvda-us",
+  "logitech": "logn-ch",
+  "ubs": "ubsg-ch",
+  "amazon": "amzn-us",
+};
+const allDbIds = Object.values(investmentToDbId);
+
 function getInvestmentIcon(inv: Investment) {
   const name = inv.name.toLowerCase();
   if (name.includes("bond") || name.includes("treasury")) return <Landmark className="w-5 h-5" />;
