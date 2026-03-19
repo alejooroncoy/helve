@@ -507,7 +507,8 @@ export default function TimeSimulation({
     return indices;
   }, [initialMonths]);
   const filteredMonths = filteredIndices.map((index) => timeMonths[index]);
-  const filteredLabels = filteredIndices.map((index) => timeLabels[index]);
+  const localizedTimeLabels = useMemo(() => getTimeLabels(t), [t]);
+  const filteredLabels = filteredIndices.map((index) => localizedTimeLabels[index]);
   const totalSteps = filteredMonths.length - 1;
 
   const aiEventPlan = useMemo(
