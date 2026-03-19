@@ -93,8 +93,9 @@ function computeRealMultipliers(
   investmentIds: string[],
   months: number[]
 ): number[] {
-  const dbIds = investmentIds.map(id => investmentToDbId[id] || id);
-  const available = dbIds.filter(id => prices[id] && prices[id].length > 1);
+  // For each category, get all its DB IDs and average their multipliers
+  const allDbIds = investmentIds.flatMap(id => categoryToDbIds[id] || []);
+  const available = allDbIds.filter(id => prices[id] && prices[id].length > 1);
 
   if (available.length === 0) return months.map(() => 1);
 
