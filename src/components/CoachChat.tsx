@@ -60,7 +60,7 @@ function parseCards(content: string): { text: string; cards: VisualCard[] } {
     if (type === "strategy") {
       cards.push({ type: "strategy", título: fields["título"] || fields["titulo"] || "Strategy", riesgo: fields["riesgo"] || "medio", emoji: fields["emoji"] || "", descripción: fields["descripción"] || fields["descripcion"] || "" });
     } else if (type === "comparison") {
-      cards.push({ type: "comparison", opción_a: fields["opción_a"] || fields["opcion_a"] || "", opción_b: fields["opción_b"] || fields["opcion_b"] || "", veredicto: fields["veredicto"] || "" });
+      cards.push({ type: "comparison", opción_a: fields["opción_a"] || fields["opcion_a"] || "", opción_b: fields["opción_b"] || fields["opcion_b"] || "", veredicto: fields["veredicto"] || "", swap: fields["swap"] || undefined });
     } else if (type === "tip") {
       cards.push({ type: "tip", emoji: fields["emoji"] || "", título: fields["título"] || fields["titulo"] || "Tip", contenido: fields["contenido"] || "" });
     }
