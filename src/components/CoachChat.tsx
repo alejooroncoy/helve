@@ -383,7 +383,7 @@ export default function CoachChat({ onClose, portfolio, onAddInvestment, onRemov
                     ) : msg.content}
                   </div>
                 )}
-                {cards.map((card, ci) => <VisualCardRenderer key={ci} card={card} />)}
+                {cards.map((card, ci) => <VisualCardRenderer key={ci} card={card} onAcceptSwap={handleAcceptSwap} />)}
                 {isAssistant && !loading && (
                   <motion.button
                     initial={{ opacity: 0 }} animate={{ opacity: 1 }}
