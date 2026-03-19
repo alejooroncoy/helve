@@ -13,7 +13,7 @@ import {
   Zap,
   AlertTriangle,
 } from "lucide-react";
-import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, ReferenceDot } from "recharts";
+
 import type { Investment } from "@/game/types";
 import { ASSET_CLASSES } from "@/game/types";
 import { useMonthlyPrices } from "@/hooks/useMarketData";
@@ -523,8 +523,11 @@ export default function TimeSimulation({
   const categorySnapshots = useMemo<CategoryTrendSnapshot[]>(() => {
     if (!categoryMultipliers) return [];
 
+    const visibleSteps = Math.min(currentStep + 1, filteredMonths.length);
+
     return currentPortfolio.map((investment, idx) => {
-      const series = categoryMultipliers[investment.id] || filteredMonths.map(() => 1);
+      const fullSeries = categoryMultipliers[investment.id] || filteredMonths.map(() => 1);
+      const series = fullSeries.slice(0, visibleSteps);
       const first = series[0] || 1;
       const last = series[series.length - 1] || first;
       const changePct = ((last / first) - 1) * 100;
@@ -541,7 +544,7 @@ export default function TimeSimulation({
         })),
       };
     });
-  }, [categoryMultipliers, currentPortfolio, filteredMonths, t]);
+  }, [categoryMultipliers, currentPortfolio, filteredMonths, t, currentStep]);
 
   const startBalance = initialBalance;
 
@@ -722,8 +725,6 @@ export default function TimeSimulation({
   const isPositive = lastValue >= startBalance;
   const totalDecisions = aiDecisions.current.length;
   const goodDecisions = aiDecisions.current.filter((decision) => decision.isGood).length;
-  const decisionsByStep = new Map(aiDecisions.current.map((decision) => [decision.step, decision]));
-  const showCategorySnapshots = !showAIEvent && !showAIFeedback && !isFinished;
 
   if (pricesLoading) {
     return (
@@ -820,78 +821,17 @@ export default function TimeSimulation({
         </div>
       </div>
 
-      <div className="px-5 flex-1 min-h-0 space-y-3 overflow-y-auto">
-        {showCategorySnapshots && categorySnapshots.length > 0 && (
+      <div className="px-5 flex-1 min-h-0 overflow-y-auto">
+        {categorySnapshots.length > 0 && (
           <div className="bg-card rounded-3xl p-4 shadow-sm">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-bold text-foreground" style={nunito}>
+                {data.length > 1 ? filteredLabels[currentStep] : t("timeSim.today")}
+              </p>
+            </div>
             <TimeSimulationCategoryCharts items={categorySnapshots} />
           </div>
         )}
-
-        <div className="bg-card rounded-3xl p-4 shadow-sm h-full flex flex-col min-h-0">
-          <div className="flex items-center justify-between mb-2 gap-3">
-            <p className="text-xs font-bold text-foreground" style={nunito}>
-              {data.length > 1 ? filteredLabels[currentStep] : t("timeSim.today")}
-            </p>
-            <div className="flex items-center gap-1.5 flex-wrap justify-end">
-              {currentPortfolio.map((investment) => (
-                <span
-                  key={investment.id}
-                  className="text-[10px] font-semibold rounded-full px-2 py-1"
-                  style={{
-                    color: "hsl(var(--foreground))",
-                    backgroundColor: "hsl(var(--muted))",
-                  }}
-                >
-                  {t(`allocation.classes.${investment.id}`)}
-                </span>
-              ))}
-            </div>
-          </div>
-          <div className="flex-1 min-h-0">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={data} margin={{ top: 10, right: 10, bottom: 5, left: 10 }}>
-                <XAxis
-                  dataKey="label"
-                  tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <YAxis hide domain={["dataMin - 50", "dataMax + 50"]} />
-                <Line
-                  type="monotone"
-                  dataKey="value"
-                  stroke={PRIMARY_COLOR}
-                  strokeWidth={3}
-                  dot={false}
-                  animationDuration={500}
-                />
-                {aiEventPlan.map((event) => {
-                  const point = data[event.step];
-                  if (!point) return null;
-                  const resolvedDecision = decisionsByStep.get(event.step);
-
-                  return (
-                    <ReferenceDot
-                      key={`${event.step}-${event.investmentId}`}
-                      x={point.label}
-                      y={point.value}
-                      r={4.5}
-                      fill={
-                        resolvedDecision
-                          ? resolvedDecision.isGood
-                            ? PRIMARY_COLOR
-                            : DANGER_COLOR
-                          : "hsl(var(--muted-foreground))"
-                      }
-                      stroke="hsl(var(--background))"
-                      strokeWidth={2}
-                    />
-                  );
-                })}
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
       </div>
 
       <div className="px-5 py-3">
