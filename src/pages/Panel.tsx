@@ -682,7 +682,7 @@ const Panel = () => {
         <div className="flex-1 overflow-hidden px-5 pb-4">
           <div className="flex flex-col md:flex-row gap-4 h-full">
             {/* Left: My Nest */}
-            <div className="flex-1 overflow-y-auto lg:pr-2">
+            <div className="flex-1 overflow-y-auto md:pr-2">
               <DropZone id="nest">
                 <div className="flex items-center justify-between mb-3">
                   <h2 className="text-sm font-bold text-foreground uppercase tracking-wide" style={nunito}>{t("panel.myNest")}</h2>
