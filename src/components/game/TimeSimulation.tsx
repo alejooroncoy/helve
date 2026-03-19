@@ -795,9 +795,18 @@ export default function TimeSimulation({
               <p className="text-[10px] text-muted-foreground uppercase tracking-wide" style={nunito}>
                 {t("timeSim.currentValue")}
               </p>
-              <p className="text-2xl font-bold text-foreground" style={nunito}>
-                CHF {lastValue.toLocaleString()}
-              </p>
+              <AnimatePresence mode="wait">
+                <motion.p
+                  key={lastValue}
+                  className="text-2xl font-bold text-foreground"
+                  style={nunito}
+                  initial={{ opacity: 0.4, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.35 }}
+                >
+                  CHF {lastValue.toLocaleString()}
+                </motion.p>
+              </AnimatePresence>
             </div>
             <div className="text-right">
               <p
