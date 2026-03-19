@@ -468,7 +468,7 @@ export default function CoachChat({ onClose, portfolio, onAddInvestment, onRemov
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Write or use the microphone..."
+            placeholder={t("coach.inputPlaceholder")}
             className="flex-1 bg-muted rounded-2xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground outline-none"
             style={{ ...nunito, boxShadow: `0 0 0 0px ${CELESTE}` }}
             onFocus={(e) => e.target.style.boxShadow = `0 0 0 2px ${CELESTE}40`}
