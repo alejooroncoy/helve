@@ -857,19 +857,27 @@ const Panel = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
     >
-      {/* Header */}
-      <div className="px-5 pt-6 pb-2">
-        <div className="flex items-center justify-between">
+      {/* Header — Global Balance */}
+      <div className="px-5 pt-5 pb-2">
+        <div className="flex items-center justify-between mb-3">
           <div>
-            <h1 className="text-2xl text-foreground mt-0.5" style={{ ...nunito, fontWeight: 900 }}>
-              {t("panel.panelTitle")}
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium" style={nunito}>
+              {t("panel.balance")}
+            </p>
+            <h1 className="text-3xl text-foreground" style={{ ...nunito, fontWeight: 900 }}>
+              CHF {balance.toLocaleString()}
             </h1>
+            <p className="text-xs mt-0.5" style={{ ...nunito, color: lastSimGain !== null ? (lastSimGain >= 0 ? CELESTE : "hsl(var(--destructive))") : CELESTE }}>
+              {lastSimGain !== null
+                ? `${lastSimGain > 0 ? "+" : ""}${lastSimGain.toFixed(1)}% ${t("panel.lastSim")}`
+                : `+CHF ${monthlyIncome}${t("panel.perMonth")}`}
+            </p>
           </div>
           <div className="flex items-center gap-2">
             <LanguageSwitcher />
             <motion.button
               onClick={handleSignOut}
-              className="w-10 h-10 rounded-full bg-card shadow-sm flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors"
+              className="w-9 h-9 rounded-full bg-card shadow-sm flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors"
               whileTap={{ scale: 0.9 }}
             >
               <LogOut className="w-4 h-4" />
@@ -878,7 +886,7 @@ const Panel = () => {
               <Drawer open={coachOpen} onOpenChange={setCoachOpen}>
                 <DrawerTrigger asChild>
                   <motion.button
-                    className="w-12 h-12 rounded-full bg-card shadow-md overflow-hidden border-2"
+                    className="w-11 h-11 rounded-full bg-card shadow-md overflow-hidden border-2"
                     style={{ borderColor: `${CELESTE}40` }}
                     whileTap={{ scale: 0.9 }}
                   >
@@ -887,15 +895,9 @@ const Panel = () => {
                 </DrawerTrigger>
                 <DrawerContent className="h-[80vh] p-0">
                   <CoachChat
-                    onClose={() => {
-                      setCoachOpen(false);
-                      setCoachInitQ(undefined);
-                    }}
+                    onClose={() => { setCoachOpen(false); setCoachInitQ(undefined); }}
                     portfolio={enrichedPortfolio}
-                    onAddInvestment={(id) => {
-                      const inv = enrichedAvailable.find((i) => i.id === id);
-                      if (inv) tryBuyInvestment(inv);
-                    }}
+                    onAddInvestment={(id) => { const inv = enrichedAvailable.find((i) => i.id === id); if (inv) tryBuyInvestment(inv); }}
                     onRemoveInvestment={(id) => removeInvestment(id)}
                     initialQuestion={coachInitQ}
                     onSwapAccepted={handleSwapFromCoach}
@@ -906,28 +908,18 @@ const Panel = () => {
               <Popover open={coachOpen} onOpenChange={setCoachOpen}>
                 <PopoverTrigger asChild>
                   <motion.button
-                    className="w-12 h-12 rounded-full bg-card shadow-md overflow-hidden border-2"
+                    className="w-11 h-11 rounded-full bg-card shadow-md overflow-hidden border-2"
                     style={{ borderColor: `${CELESTE}40` }}
                     whileTap={{ scale: 0.9 }}
                   >
                     <img src="/perspectiva1.png" alt="Coach" className="w-full h-full object-cover" />
                   </motion.button>
                 </PopoverTrigger>
-                <PopoverContent
-                  side="bottom"
-                  align="end"
-                  className="w-[380px] h-[500px] p-0 rounded-2xl overflow-hidden"
-                >
+                <PopoverContent side="bottom" align="end" className="w-[380px] h-[500px] p-0 rounded-2xl overflow-hidden">
                   <CoachChat
-                    onClose={() => {
-                      setCoachOpen(false);
-                      setCoachInitQ(undefined);
-                    }}
+                    onClose={() => { setCoachOpen(false); setCoachInitQ(undefined); }}
                     portfolio={enrichedPortfolio}
-                    onAddInvestment={(id) => {
-                      const inv = enrichedAvailable.find((i) => i.id === id);
-                      if (inv) tryBuyInvestment(inv);
-                    }}
+                    onAddInvestment={(id) => { const inv = enrichedAvailable.find((i) => i.id === id); if (inv) tryBuyInvestment(inv); }}
                     onRemoveInvestment={(id) => removeInvestment(id)}
                     initialQuestion={coachInitQ}
                     onSwapAccepted={handleSwapFromCoach}
@@ -939,69 +931,76 @@ const Panel = () => {
         </div>
       </div>
 
-      {/* Nest Tabs */}
+      {/* Nest Tabs with per-nest stats */}
       <div className="px-5 pb-3">
         <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-1">
-          {nests.map((nest) => (
-            <div key={nest.id} className="flex-shrink-0 relative group">
-              {renamingNest === nest.id ? (
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    handleRenameNest(nest.id, renameValue);
-                  }}
-                  className="flex items-center"
-                >
-                  <input
-                    autoFocus
-                    value={renameValue}
-                    onChange={(e) => setRenameValue(e.target.value)}
-                    onBlur={() => handleRenameNest(nest.id, renameValue)}
-                    className="text-xs font-bold px-3 py-2 rounded-2xl bg-card border-2 outline-none w-24"
-                    style={{ ...nunito, borderColor: CELESTE }}
-                  />
-                </form>
-              ) : (
-                <button
-                  onClick={() => handleTabClick(nest)}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-2xl text-xs font-bold transition-all border-2"
-                  style={{
-                    ...nunito,
-                    borderColor: activeNestId === nest.id ? CELESTE : "hsl(var(--border))",
-                    backgroundColor: activeNestId === nest.id ? CELESTE + "15" : "hsl(var(--card))",
-                    color: activeNestId === nest.id ? CELESTE : "hsl(var(--muted-foreground))",
-                  }}
-                >
-                  <span>{nest.name}</span>
-                  {activeNestId === nest.id && (
-                    <span className="flex items-center gap-0.5 ml-1">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setRenamingNest(nest.id);
-                          setRenameValue(nest.name);
-                        }}
-                        className="p-0.5 rounded hover:bg-black/10 transition-colors"
-                      >
-                        <Pencil className="w-3 h-3" />
-                      </button>
-                      {nests.length > 1 && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteNest(nest.id);
-                          }}
-                          className="p-0.5 rounded hover:bg-destructive/20 text-destructive/70 hover:text-destructive transition-colors"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </button>
+          {nests.map((nest) => {
+            const ns = getNestStats(nest);
+            const isActive = activeNestId === nest.id;
+            return (
+              <div key={nest.id} className="flex-shrink-0 relative">
+                {renamingNest === nest.id ? (
+                  <form
+                    onSubmit={(e) => { e.preventDefault(); handleRenameNest(nest.id, renameValue); }}
+                    className="flex items-center"
+                  >
+                    <input
+                      autoFocus
+                      value={renameValue}
+                      onChange={(e) => setRenameValue(e.target.value)}
+                      onBlur={() => handleRenameNest(nest.id, renameValue)}
+                      className="text-xs font-bold px-3 py-2 rounded-2xl bg-card border-2 outline-none w-24"
+                      style={{ ...nunito, borderColor: CELESTE }}
+                    />
+                  </form>
+                ) : (
+                  <button
+                    onClick={() => handleTabClick(nest)}
+                    className="flex flex-col items-start px-3 py-2 rounded-2xl text-xs transition-all border-2 min-w-[90px]"
+                    style={{
+                      ...nunito,
+                      fontWeight: 700,
+                      borderColor: isActive ? CELESTE : "hsl(var(--border))",
+                      backgroundColor: isActive ? CELESTE + "15" : "hsl(var(--card))",
+                      color: isActive ? CELESTE : "hsl(var(--muted-foreground))",
+                    }}
+                  >
+                    <div className="flex items-center gap-1.5 w-full">
+                      <span className="truncate">{nest.name}</span>
+                      {isActive && (
+                        <span className="flex items-center gap-0.5 ml-auto">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setRenamingNest(nest.id); setRenameValue(nest.name); }}
+                            className="p-0.5 rounded hover:bg-black/10 transition-colors"
+                          >
+                            <Pencil className="w-3 h-3" />
+                          </button>
+                          {nests.length > 1 && (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleDeleteNest(nest.id); }}
+                              className="p-0.5 rounded hover:bg-destructive/20 text-destructive/70 hover:text-destructive transition-colors"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          )}
+                        </span>
                       )}
-                    </span>
-                  )}
-                </button>
-              )}
-            </div>
-          ))}
+                    </div>
+                    {ns.count > 0 && (
+                      <div className="flex items-center gap-2 mt-1 text-[10px] font-medium" style={nunito}>
+                        <span style={{ color: ns.risk > 60 ? "hsl(var(--destructive))" : ns.risk > 30 ? "hsl(var(--accent-foreground))" : CELESTE }}>
+                          R {ns.risk}%
+                        </span>
+                        <span style={{ color: CELESTE }}>
+                          {ns.ret}%/yr
+                        </span>
+                      </div>
+                    )}
+                  </button>
+                )}
+              </div>
+            );
+          })}
           {nests.length < 4 && (
             <motion.button
               onClick={handleCreateNest}
@@ -1014,68 +1013,27 @@ const Panel = () => {
             </motion.button>
           )}
         </div>
-      </div>
 
-      {/* Stats */}
-      <div className="px-5 pb-3">
-        <div className="grid grid-cols-3 gap-3">
-          {[
-            {
-              label: t("panel.balance"),
-              value: `CHF ${balance.toLocaleString()}`,
-              sub:
-                lastSimGain !== null
-                  ? `${lastSimGain > 0 ? "+" : ""}${lastSimGain.toFixed(1)}% ${t("panel.lastSim")}`
-                  : `+CHF ${monthlyIncome}${t("panel.perMonth")}`,
-              subStyle: {
-                color: lastSimGain !== null ? (lastSimGain >= 0 ? CELESTE : "hsl(var(--destructive))") : CELESTE,
-              },
-            },
-            {
-              label: t("panel.risk"),
-              value: `${totalRisk}%`,
-              valueStyle:
-                totalRisk > 60 ? { color: "hsl(var(--destructive))" } : totalRisk > 30 ? {} : { color: CELESTE },
-              valueClass: totalRisk > 30 && totalRisk <= 60 ? "text-accent" : "",
-              sub: getRiskLabelLocal(totalRisk),
-              subStyle: {},
-            },
-            {
-              label: t("panel.returnLabel"),
-              value: `${avgReturn}%`,
-              valueStyle: { color: CELESTE },
-              sub: t("panel.annual"),
-              subStyle: {},
-            },
-          ].map((stat, i) => (
-            <motion.div
-              key={stat.label}
-              className="bg-card rounded-3xl p-2.5 sm:p-3 shadow-sm"
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.1 + i * 0.05 }}
-            >
-              <p
-                className="text-[9px] sm:text-[10px] text-muted-foreground uppercase tracking-wider font-medium"
-                style={nunito}
-              >
-                {stat.label}
-              </p>
-              <p
-                className={`text-sm sm:text-lg font-bold mt-0.5 ${"valueClass" in stat ? stat.valueClass : "text-foreground"}`}
-                style={{ ...nunito, ...("valueStyle" in stat ? stat.valueStyle : {}) }}
-              >
-                {stat.value}
-              </p>
-              <p
-                className="text-[9px] sm:text-[10px] text-muted-foreground font-medium mt-0.5"
-                style={{ ...nunito, ...stat.subStyle }}
-              >
-                {stat.sub}
-              </p>
-            </motion.div>
-          ))}
-        </div>
+        {/* Active nest stats bar */}
+        {enrichedPortfolio.length > 0 && (
+          <div className="flex items-center gap-4 mt-2 px-1">
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: totalRisk > 60 ? "hsl(var(--destructive))" : totalRisk > 30 ? "hsl(var(--accent))" : CELESTE }} />
+              <span className="text-[11px] text-muted-foreground" style={nunito}>
+                {t("panel.risk")}: <span className="font-bold text-foreground">{totalRisk}%</span>
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: CELESTE }} />
+              <span className="text-[11px] text-muted-foreground" style={nunito}>
+                {t("panel.returnLabel")}: <span className="font-bold text-foreground">{avgReturn}%/yr</span>
+              </span>
+            </div>
+            <span className="text-[11px] text-muted-foreground ml-auto" style={nunito}>
+              {enrichedPortfolio.length} {enrichedPortfolio.length === 1 ? "asset" : "assets"} · {totalAllocated}% {t("panel.allocated", { defaultValue: "allocated" })}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* DnD Content */}
