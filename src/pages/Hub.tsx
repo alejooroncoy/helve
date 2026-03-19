@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
-import { Briefcase, Users, ChevronRight, ArrowRight, X } from "lucide-react";
+import { Briefcase, Users, ChevronRight, ArrowRight, X, Map, Lock } from "lucide-react";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 const nunito = { fontFamily: "'Nunito', sans-serif" };
@@ -47,41 +47,28 @@ const Hub = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
     >
-      {/* Header */}
-      <div className="px-6 pt-6 pb-4">
-        <div className="flex justify-center mb-3">
-          <LanguageSwitcher />
-        </div>
-        <div className="flex items-center gap-3">
-          <img
-            src="/mascot-owl.png"
-            alt="mascot"
-            className="w-10 h-10 rounded-full object-cover flex-shrink-0"
-          />
-          <div>
-            {(() => {
-              const meta = user?.user_metadata;
-              const isDemo = user?.email === "demo@helve.app";
-              const displayName = isDemo ? null : (meta?.full_name || meta?.name || meta?.email?.split("@")[0] || null);
-              const firstName = displayName ? displayName.split(" ")[0] : t("hub.guest");
-              return (
-                <h1
-                  className="text-2xl text-foreground"
-                  style={{ ...nunito, fontWeight: 900 }}
-                >
-                  {t("hub.greeting")}, {firstName}
-                </h1>
-              );
-            })()}
-            <p className="text-xs text-muted-foreground" style={nunito}>
-              {t("hub.subtitle")}
-            </p>
-          </div>
-        </div>
+      {/* Top: language switcher + title */}
+      <div className="flex flex-col items-center text-center px-6 pt-6 pb-2">
+        <LanguageSwitcher />
+        {(() => {
+          const meta = user?.user_metadata;
+          const isDemo = user?.email === "demo@helve.app";
+          const displayName = isDemo ? null : (meta?.full_name || meta?.name || meta?.email?.split("@")[0] || null);
+          const firstName = displayName ? displayName.split(" ")[0] : t("hub.guest");
+          return (
+            <h1 className="text-2xl text-foreground mt-4" style={{ ...nunito, fontWeight: 900 }}>
+              {t("hub.greeting")}, {firstName}
+            </h1>
+          );
+        })()}
+        <p className="text-xs text-muted-foreground" style={nunito}>
+          {t("hub.subtitle")}
+        </p>
       </div>
 
-      {/* Cards */}
-      <div className="flex-1 flex flex-col justify-center px-6 gap-4 max-w-md mx-auto w-full">
+      {/* Cards — centered in remaining space */}
+      <div className="flex-1 flex flex-col justify-center px-6 pb-6 max-w-md mx-auto w-full">
+        <div className="flex flex-col gap-4">
         {/* Portfolio card */}
         <motion.button
           className="w-full rounded-3xl p-6 text-left relative overflow-hidden border-2 border-transparent"
@@ -168,7 +155,34 @@ const Hub = () => {
             />
           </div>
         </motion.button>
-      </div>
+
+        {/* Map card — coming soon */}
+        <div
+          className="w-full rounded-3xl p-6 text-left relative overflow-hidden border-2 opacity-60 cursor-not-allowed"
+          style={{
+            background: "linear-gradient(135deg, #4ade8015, #4ade8008)",
+            borderColor: "#4ade8040",
+          }}
+        >
+          <div className="flex items-center gap-4">
+            <div
+              className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0"
+              style={{ backgroundColor: "#4ade8020" }}
+            >
+              <Map className="w-7 h-7" style={{ color: "#4ade80" }} />
+            </div>
+            <div className="flex-1">
+              <h2 className="text-lg text-foreground" style={{ ...nunito, fontWeight: 800 }}>
+                Map
+              </h2>
+              <p className="text-xs text-muted-foreground mt-0.5" style={nunito}>
+                Coming soon
+              </p>
+            </div>
+            <Lock className="w-5 h-5 flex-shrink-0 text-muted-foreground" />
+          </div>
+        </div>{/* end cards inner */}
+      </div>{/* end centered wrapper */}
 
       {/* Multiplayer onboarding modal */}
       <AnimatePresence>
