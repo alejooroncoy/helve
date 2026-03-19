@@ -387,7 +387,6 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, initialB
               className="bg-card rounded-3xl p-6 shadow-xl max-w-sm w-full text-center"
             >
               <h2 className="text-lg font-bold text-foreground mb-1" style={nunito}>{currentEvent.title}</h2>
-              <h2 className="text-lg font-bold text-foreground mb-1" style={nunito}>{currentEvent.title}</h2>
               <p className="text-sm text-muted-foreground mb-4" style={nunito}>{currentEvent.description}</p>
 
               {currentEvent.type === "negative" && (
