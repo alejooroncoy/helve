@@ -949,8 +949,8 @@ const Panel = () => {
         </div>
 
         {/* Stat Cards — Capital & Invested (global), Risk & Return (per nest) */}
-        <div className="grid grid-cols-3 gap-2.5">
-          <div className="bg-card rounded-2xl p-3 shadow-sm flex items-stretch gap-2.5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+          <div className="bg-card rounded-2xl p-3 shadow-sm flex items-stretch gap-3 col-span-2 sm:col-span-1">
             <div className="flex-1 min-w-0">
               <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium" style={nunito}>
                 {t("panel.capital")}
