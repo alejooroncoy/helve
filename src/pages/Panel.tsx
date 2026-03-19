@@ -504,7 +504,7 @@ const Panel = () => {
     const removedAlloc = allocations[removeId] ?? 25;
     setActivePortfolio((prev) => {
       const next = prev.filter((i) => i.id !== removeId);
-      if (!next.find(i => i.id === addId) && next.length < 4) next.push(toAdd);
+      if (!next.find(i => i.id === addId)) next.push(toAdd);
       const newAllocations = { ...allocations };
       delete newAllocations[removeId];
       newAllocations[addId] = removedAlloc;
