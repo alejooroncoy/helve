@@ -187,14 +187,28 @@ function DropZone({
 /* ---- Main Panel ---- */
 const Panel = () => {
   const navigate = useNavigate();
-  const profile = (sessionStorage.getItem("helve-profile") as string) || "balanced";
+  const { signOut } = useAuth();
+  const { loadProgress, saveProgress } = useUserProgress();
   const [activePortfolio, setActivePortfolio] = useState<Investment[]>([]);
+  const [profile, setProfile] = useState("balanced");
   const [mascotMessage, setMascotMessage] = useState(
     "Hey there! 👋 Drag an investment into your nest — or just tap it!"
   );
   const [draggedItem, setDraggedItem] = useState<{ inv: Investment; zone: string } | null>(null);
   const [coachOpen, setCoachOpen] = useState(false);
   const isMobile = useIsMobile();
+
+  // Load saved progress on mount
+  useEffect(() => {
+    loadProgress().then((p) => {
+      if (p) {
+        setProfile(p.risk_profile);
+        if (p.portfolio && p.portfolio.length > 0) {
+          setActivePortfolio(p.portfolio);
+        }
+      }
+    });
+  }, [loadProgress]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
