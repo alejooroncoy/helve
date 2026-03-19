@@ -1027,7 +1027,7 @@ export default function TimeSimulation({
                 style={{ ...nunito, backgroundColor: PRIMARY_COLOR, color: "hsl(var(--primary-foreground))" }}
                 whileTap={{ scale: 0.97 }}
               >
-                {i18n.language === "es" ? "Continuar" : "Continue"}
+                {t("timeSim.continue")}
               </motion.button>
             </motion.div>
           </motion.div>
