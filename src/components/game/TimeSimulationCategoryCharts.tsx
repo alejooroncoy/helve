@@ -20,12 +20,11 @@ export interface CategoryTrendSnapshot {
 }
 
 export interface EventMarker {
-  /** index in the points array where the event fires */
   pointIndex: number;
-  /** short label shown on the chart */
   label?: string;
-  /** time label like "6 meses", "1 año" */
   timeLabel?: string;
+  /** Pre-computed change % at the event step */
+  changePct?: number;
   direction?: "drop" | "surge" | "shake";
 }
 
@@ -67,11 +66,12 @@ export default function TimeSimulationCategoryCharts({
         const markerIdx = hasMarker ? eventMarker!.pointIndex : -1;
         const markerPoint = hasMarker ? item.points[markerIdx] : null;
 
-        // Compute recent change (last step vs previous step)
         const pts = item.points;
-        const recentChange = pts.length >= 2
-          ? ((pts[pts.length - 1].value - pts[pts.length - 2].value) / pts[pts.length - 2].value) * 100
-          : 0;
+        const recentChange = hasMarker && eventMarker!.changePct != null
+          ? eventMarker!.changePct
+          : (pts.length >= 2
+              ? ((pts[pts.length - 1].value - pts[pts.length - 2].value) / pts[pts.length - 2].value) * 100
+              : 0);
         const recentPositive = recentChange >= 0;
 
         const augmentedData = hasMarker
@@ -99,7 +99,6 @@ export default function TimeSimulationCategoryCharts({
             <div className="flex items-baseline justify-between mb-0.5 px-1">
               <p className="text-sm font-bold text-foreground">{item.label}</p>
               <div className="flex items-baseline gap-2">
-                {/* Recent step change — the key info */}
                 {hasMarker && (
                   <span
                     className="text-xs font-bold px-1.5 py-0.5 rounded-md"
@@ -108,7 +107,7 @@ export default function TimeSimulationCategoryCharts({
                       color: recentPositive ? "hsl(var(--primary))" : "hsl(var(--destructive))",
                     }}
                   >
-                    {recentPositive ? "+" : ""}{recentChange.toFixed(1)}% {eventMarker?.timeLabel || "hoy"}
+                    {recentPositive ? "+" : ""}{recentChange.toFixed(1)}% {eventMarker?.timeLabel || ""}
                   </span>
                 )}
                 {/* Total cumulative */}
