@@ -41,7 +41,7 @@ async function chatWithTools({
 }
 
 interface StrategyCard { type: "strategy"; título: string; riesgo: string; emoji: string; descripción: string; }
-interface ComparisonCard { type: "comparison"; opción_a: string; opción_b: string; veredicto: string; }
+interface ComparisonCard { type: "comparison"; opción_a: string; opción_b: string; veredicto: string; swap?: string; }
 interface TipCard { type: "tip"; emoji: string; título: string; contenido: string; }
 type VisualCard = StrategyCard | ComparisonCard | TipCard;
 
