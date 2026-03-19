@@ -241,7 +241,7 @@ const SimulationScreen = ({ allocation, profile, stormChoice, onContinue }: Prop
               </div>
               <div className="flex gap-2 flex-wrap justify-center px-4">
                 {ASSET_CLASSES.filter(c => allocation[c.key] > 0).map((c) => (
-                  <span key={c.key} className="text-xs px-3 py-1.5 rounded-full bg-card border" style={nunito}>{c.emoji} {t(`allocation.classes.${c.key}`)} {allocation[c.key]}%</span>
+                  <span key={c.key} className="text-xs px-3 py-1.5 rounded-full bg-card border" style={nunito}>{t(`allocation.classes.${c.key}`)} {allocation[c.key]}%</span>
                 ))}
               </div>
             </motion.div>

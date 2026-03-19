@@ -84,7 +84,7 @@ const LearningMoment = ({ allocation, profile, stormChoice, result, onContinue }
         <div className="flex flex-wrap gap-2 justify-center">
           {ASSET_CLASSES.filter(c => allocation[c.key] > 0).map(c => (
             <span key={c.key} className="text-[10px] text-muted-foreground" style={nunito}>
-              {c.emoji} {allocation[c.key]}%
+              {allocation[c.key]}%
             </span>
           ))}
         </div>

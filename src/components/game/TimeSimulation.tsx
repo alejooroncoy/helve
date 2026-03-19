@@ -434,7 +434,7 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, initialB
                         style={nunito}
                         whileTap={{ scale: 0.97 }}
                       >
-                        {inv.emoji} {t("timeSim.sellInv", { name: inv.name })}
+                        {t("timeSim.sellInv", { name: inv.name })}
                       </motion.button>
                     ))}
                   </div>
