@@ -291,13 +291,20 @@ function buildAIEventPlan(portfolio: Investment[], initialMonths: number, totalS
   return steps.map((step, index) => {
     const investment = pickWeightedInvestment(portfolio, usedIds, index + step);
     usedIds.add(investment.id);
+    const direction = pickEventDirection(investment.id, investment.riskLevel, step);
+    // Compute a consistent impact % based on risk
+    const base = 3 + investment.riskLevel * 1.5;
+    const jitter = (seededUnit(`${investment.id}-impact-${step}`) - 0.5) * 4;
+    const raw = Math.round((base + jitter) * 10) / 10;
+    const impactPct = direction === "drop" ? -Math.abs(raw) : direction === "surge" ? Math.abs(raw) : (raw > 0 ? raw : -raw) * 0.5;
 
     return {
       step,
       investmentId: investment.id,
       investmentName: translateName(investment.id),
       riskLevel: investment.riskLevel,
-      direction: pickEventDirection(investment.id, investment.riskLevel, step),
+      direction,
+      impactPct: Math.round(impactPct * 10) / 10,
     } satisfies ScheduledAIEvent;
   });
 }
