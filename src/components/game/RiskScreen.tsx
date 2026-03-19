@@ -36,7 +36,7 @@ const RiskScreen = ({ questionIndex, onAnswer, onBack }: Props) => {
   const options: RiskOption[] = q.options.map((label, i) => ({
     label,
     score: scores[i],
-    emoji: emojis[i],
+    icon: questionIcons[questionIndex]?.[i] ?? <Sprout className="w-5 h-5" />,
   }));
 
   const handleContinue = () => {
