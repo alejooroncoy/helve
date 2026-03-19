@@ -25,7 +25,6 @@ import {
 } from "@dnd-kit/core";
 import type { Investment } from "@/game/types";
 import { availableInvestments } from "@/game/types";
-import { Slider } from "@/components/ui/slider";
 import {
   LogOut, X, AlertTriangle, Inbox, Shield, TrendingUp, BarChart2,
   Building2, Leaf, Globe, Landmark, Zap, FastForward, MessageCircle, DollarSign, Info, Wallet,
@@ -122,10 +121,10 @@ function getSuggestions(profile: string, active: Investment[]): Investment[] {
 
 /* ---- Draggable investment card ---- */
 function DraggableCard({
-  inv, zone, onClick, onAsk, onSell, onInfo, allocation, onAllocationChange, maxAllocation, balance,
+  inv, zone, onClick, onAsk, onSell, onInfo, allocation, balance,
 }: {
   inv: Investment; zone: "scouted" | "nest"; onClick: () => void; onAsk?: () => void; onSell?: () => void; onInfo?: () => void;
-  allocation?: number; onAllocationChange?: (pct: number) => void; maxAllocation?: number; balance?: number;
+  allocation?: number; balance?: number;
 }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `${zone}-${inv.id}`,
@@ -140,17 +139,16 @@ function DraggableCard({
       onClick={zone === "scouted" ? onClick : undefined}
       className={`touch-none select-none transition-all h-full w-full ${isDragging ? "opacity-30 scale-95" : ""}`}
     >
-      {zone === "nest" ? <NestCard inv={inv} onSell={onSell} onAsk={onAsk} onInfo={onInfo} allocation={allocation} onAllocationChange={onAllocationChange} maxAllocation={maxAllocation} balance={balance} /> : <ScoutedCard inv={inv} onAsk={onAsk} />}
+      {zone === "nest" ? <NestCard inv={inv} onSell={onSell} onAsk={onAsk} onInfo={onInfo} allocation={allocation} balance={balance} /> : <ScoutedCard inv={inv} onAsk={onAsk} />}
     </div>
   );
 }
 
-function NestCard({ inv, overlay, onSell, onAsk, onInfo, allocation, onAllocationChange, maxAllocation, balance }: { inv: Investment; overlay?: boolean; onSell?: () => void; onAsk?: () => void; onInfo?: () => void; allocation?: number; onAllocationChange?: (pct: number) => void; maxAllocation?: number; balance?: number }) {
+function NestCard({ inv, overlay, onSell, onAsk, onInfo, allocation, balance }: { inv: Investment; overlay?: boolean; onSell?: () => void; onAsk?: () => void; onInfo?: () => void; allocation?: number; balance?: number }) {
   const [expanded, setExpanded] = useState(false);
   const { t } = useTranslation();
   const pct = allocation ?? 25;
   const chfAmount = balance ? Math.round(balance * pct / 100) : 0;
-  const maxSlider = Math.min(100, pct + (maxAllocation ?? 100));
 
   return (
     <div className={`bg-card rounded-2xl p-3.5 shadow-sm ${overlay ? "shadow-lg rotate-2" : ""} cursor-grab active:cursor-grabbing`} style={overlay ? { boxShadow: `0 0 0 2px ${CELESTE}40` } : {}}>
@@ -180,20 +178,6 @@ function NestCard({ inv, overlay, onSell, onAsk, onInfo, allocation, onAllocatio
           </div>
         )}
       </div>
-
-      {/* Allocation slider */}
-      {!overlay && onAllocationChange && (
-        <div className="mt-2 px-1" onClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
-          <Slider
-            value={[pct]}
-            min={0}
-            max={maxSlider}
-            step={1}
-            onValueChange={([v]) => onAllocationChange(v)}
-            className="w-full"
-          />
-        </div>
-      )}
 
       {inv.tag && (
         <div className="mt-2 flex items-center gap-1.5">
@@ -723,8 +707,6 @@ const Panel = () => {
                             onAsk={() => { setCoachInitQ(`Tengo ${inv.name} en mi nido. ¿Es buena inversión? ¿Debería venderla o mantenerla?`); setCoachOpen(true); }}
                             onInfo={() => { setCoachInitQ(`Dame un análisis detallado de ${inv.name}: riesgo, retorno histórico, y perspectiva futura.`); setCoachOpen(true); }}
                             allocation={allocations[inv.id] ?? 0}
-                            onAllocationChange={(pct) => handleAllocationChange(inv.id, pct)}
-                            maxAllocation={cashRemaining}
                             balance={balance}
                           />
                         </motion.div>
