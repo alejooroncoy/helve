@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { ChevronRight } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const nunito = { fontFamily: "'Nunito', sans-serif" };
 
@@ -8,6 +9,8 @@ interface Props {
 }
 
 const WelcomeScreen = ({ onStart }: Props) => {
+  const { t } = useTranslation();
+
   return (
     <motion.div
       className="flex flex-col items-center min-h-screen bg-background px-6"
@@ -33,10 +36,10 @@ const WelcomeScreen = ({ onStart }: Props) => {
           transition={{ delay: 0.5, duration: 0.5 }}
         >
           <h1 className="text-2xl text-foreground mb-2" style={{ ...nunito, fontWeight: 900 }}>
-            Let's discover your financial profile
+            {t("welcome.title")}
           </h1>
           <p className="text-sm text-muted-foreground max-w-xs mx-auto leading-relaxed" style={{ ...nunito, fontWeight: 600 }}>
-            Answer 3 quick questions so we can personalize your investment journey.
+            {t("welcome.subtitle")}
           </p>
         </motion.div>
       </div>
@@ -52,7 +55,7 @@ const WelcomeScreen = ({ onStart }: Props) => {
           style={{ backgroundColor: "#5BB8F5", ...nunito, fontWeight: 900 }}
           onClick={onStart}
         >
-          Let's go
+          {t("welcome.cta")}
           <ChevronRight className="w-4 h-4" />
         </button>
       </motion.div>

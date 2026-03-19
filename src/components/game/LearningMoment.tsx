@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import type { PortfolioSlot } from "@/game/types";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   portfolio: PortfolioSlot[];
@@ -8,46 +9,20 @@ interface Props {
   onContinue: () => void;
 }
 
-function getInsight(portfolio: PortfolioSlot[], stormChoice: "stay" | "sell" | null, result: number): { emoji: string; text: string } {
-  if (stormChoice === "sell") {
-    return {
-      emoji: "🌱",
-      text: "Selling during a storm locked in your losses. Patience often leads to recovery.",
-    };
-  }
-
-  const growthCount = portfolio.filter((s) => s === "growth").length;
-  const safeCount = portfolio.filter((s) => s === "safe").length;
-
-  if (growthCount === 3) {
-    return {
-      emoji: "🎢",
-      text: "Higher risk brought bigger rewards — but also bigger storms. Diversification helps.",
-    };
-  }
-
-  if (safeCount === 3) {
-    return {
-      emoji: "🐢",
-      text: "Playing it safe preserved your money, but growth was limited. A little risk can go a long way.",
-    };
-  }
-
-  if (stormChoice === "stay") {
-    return {
-      emoji: "🌿",
-      text: "Staying invested during the storm helped your garden recover and grow stronger.",
-    };
-  }
-
-  return {
-    emoji: "✨",
-    text: "A balanced approach gave you steady growth without too many surprises.",
-  };
-}
-
 const LearningMoment = ({ portfolio, stormChoice, result, onContinue }: Props) => {
-  const insight = getInsight(portfolio, stormChoice, result);
+  const { t } = useTranslation();
+
+  const getInsight = (): { emoji: string; text: string } => {
+    if (stormChoice === "sell") return { emoji: "🌱", text: t("learning.sellInsight") };
+    const growthCount = portfolio.filter((s) => s === "growth").length;
+    const safeCount = portfolio.filter((s) => s === "safe").length;
+    if (growthCount === 3) return { emoji: "🎢", text: t("learning.allGrowthInsight") };
+    if (safeCount === 3) return { emoji: "🐢", text: t("learning.allSafeInsight") };
+    if (stormChoice === "stay") return { emoji: "🌿", text: t("learning.stayInsight") };
+    return { emoji: "✨", text: t("learning.balancedInsight") };
+  };
+
+  const insight = getInsight();
 
   return (
     <motion.div
@@ -71,7 +46,7 @@ const LearningMoment = ({ portfolio, stormChoice, result, onContinue }: Props) =
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.3 }}
       >
-        <h2 className="text-2xl font-serif text-foreground mb-3">What you learned</h2>
+        <h2 className="text-2xl font-serif text-foreground mb-3">{t("learning.title")}</h2>
         <p className="text-lg text-muted-foreground leading-relaxed">{insight.text}</p>
       </motion.div>
 
@@ -84,7 +59,7 @@ const LearningMoment = ({ portfolio, stormChoice, result, onContinue }: Props) =
         whileHover={{ scale: 1.03 }}
         whileTap={{ scale: 0.97 }}
       >
-        Continue
+        {t("learning.continue")}
       </motion.button>
     </motion.div>
   );

@@ -2,36 +2,20 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { ChevronRight } from "lucide-react";
-
-const steps = [
-  {
-    number: 1,
-    image: "/step1.png",
-    title: "Set your profile",
-    description: "Tell me how you like to play it — safe and steady, or bold and risky. I'll tailor your journey from there.",
-  },
-  {
-    number: 2,
-    image: "/step2.png",
-    title: "Make your moves",
-    description: "Buy, sell, and react to real market events. Every decision shapes your portfolio.",
-  },
-  {
-    number: 3,
-    image: "/step3.png",
-    title: "Hatch your wealth",
-    description: "Watch your nest grow over time. The more you play, the more you learn — and earn.",
-  },
-];
+import { useTranslation } from "react-i18next";
 
 const nunito = { fontFamily: "'Nunito', sans-serif" };
 
 const Onboarding = () => {
   const [current, setCurrent] = useState(0);
   const navigate = useNavigate();
+  const { t } = useTranslation();
+
+  const steps = t("onboarding.steps", { returnObjects: true }) as { title: string; description: string }[];
+  const totalSteps = steps.length;
 
   const handleNext = () => {
-    if (current < steps.length - 1) {
+    if (current < totalSteps - 1) {
       setCurrent((c) => c + 1);
     } else {
       localStorage.setItem("onboarding_done", "1");
@@ -39,11 +23,11 @@ const Onboarding = () => {
     }
   };
 
+  const images = ["/step1.png", "/step2.png", "/step3.png"];
   const step = steps[current];
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-between px-6 py-10">
-      {/* Step dots */}
       <div className="flex gap-2 pt-2">
         {steps.map((_, i) => (
           <div
@@ -58,10 +42,9 @@ const Onboarding = () => {
         ))}
       </div>
 
-      {/* Step image */}
       <motion.img
         key={current}
-        src={step.image}
+        src={images[current]}
         alt={step.title}
         className="object-contain"
         style={{ width: 200 }}
@@ -70,7 +53,6 @@ const Onboarding = () => {
         transition={{ duration: 0.4, type: "spring" }}
       />
 
-      {/* Text + Button */}
       <div className="w-full flex flex-col gap-6">
         <AnimatePresence mode="wait">
           <motion.div
@@ -82,7 +64,7 @@ const Onboarding = () => {
             transition={{ duration: 0.3 }}
           >
             <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2" style={{ ...nunito, fontWeight: 700 }}>
-              Step {step.number} of {steps.length}
+              {t("onboarding.step", { current: current + 1, total: totalSteps })}
             </p>
             <h2 className="text-2xl text-foreground mb-3" style={{ ...nunito, fontWeight: 900 }}>
               {step.title}
@@ -99,7 +81,7 @@ const Onboarding = () => {
           style={{ backgroundColor: "#5BB8F5", ...nunito, fontWeight: 900 }}
           whileTap={{ scale: 0.97 }}
         >
-          {current < steps.length - 1 ? "Next" : "Let's go"}
+          {current < totalSteps - 1 ? t("onboarding.next") : t("onboarding.letsGo")}
           <ChevronRight className="w-4 h-4" />
         </motion.button>
       </div>
