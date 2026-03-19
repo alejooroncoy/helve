@@ -31,6 +31,12 @@ import {
 const nunito = { fontFamily: "'Nunito', sans-serif" };
 const CELESTE = "#5BB8F5";
 
+const MascotIcon = () => (
+  <img src="/mascot-owl.png" alt="mascot" className="w-6 h-6 rounded-full object-cover" />
+);
+
+const mascotToast = (msg: string) => toast(msg, { icon: <MascotIcon />, duration: 3000 });
+
 // Map game IDs to DB instrument IDs
 const investmentToDbId: Record<string, string> = {
   "ch-bond-aaa": "ch-bond-aaa",
