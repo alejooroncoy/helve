@@ -8,6 +8,7 @@ export interface UserProgress {
   risk_scores: number[];
   risk_profile: RiskProfile;
   portfolio: Investment[];
+  allocations: Record<string, number>; // investmentId -> percentage (0-100)
   game_step: string;
   storm_choice: string | null;
   simulation_result: number;
@@ -32,6 +33,7 @@ export function useUserProgress() {
       risk_scores: (data.risk_scores as unknown as number[]) ?? [],
       risk_profile: (data.risk_profile as RiskProfile) ?? "balanced",
       portfolio: (data.portfolio as unknown as Investment[]) ?? [],
+      allocations: ((data as any).allocations as Record<string, number>) ?? {},
       game_step: data.game_step ?? "welcome",
       storm_choice: data.storm_choice ?? null,
       simulation_result: data.simulation_result ?? 0,
@@ -48,6 +50,7 @@ export function useUserProgress() {
       if (progress.risk_scores !== undefined) updateData.risk_scores = progress.risk_scores;
       if (progress.risk_profile !== undefined) updateData.risk_profile = progress.risk_profile;
       if (progress.portfolio !== undefined) updateData.portfolio = progress.portfolio;
+      if (progress.allocations !== undefined) updateData.allocations = progress.allocations;
       if (progress.game_step !== undefined) updateData.game_step = progress.game_step;
       if (progress.storm_choice !== undefined) updateData.storm_choice = progress.storm_choice;
       if (progress.simulation_result !== undefined) updateData.simulation_result = progress.simulation_result;

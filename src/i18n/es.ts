@@ -196,6 +196,12 @@ const es = {
     buyDialogDesc: "Vas a agregar este huevito a tu nido. Recuerda: comprar = invertir en este activo.",
     buyDialogConfirm: "Entendido, ¡comprar!",
     buyDialogDontRemind: "Entendido, no volver a recordarme",
+    allocation: "Asignación",
+    cash: "Efectivo",
+    ofBalance: "del balance",
+    totalAllocated: "Asignado",
+    adjustAllocation: "Desliza para ajustar %",
+    maxAllocation: "Asignación máxima alcanzada (100%)",
   },
 
   // Time simulation

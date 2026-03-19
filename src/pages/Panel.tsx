@@ -25,9 +25,10 @@ import {
 } from "@dnd-kit/core";
 import type { Investment } from "@/game/types";
 import { availableInvestments } from "@/game/types";
+import { Slider } from "@/components/ui/slider";
 import {
   LogOut, X, AlertTriangle, Inbox, Shield, TrendingUp, BarChart2,
-  Building2, Leaf, Globe, Landmark, Zap, FastForward, MessageCircle, DollarSign, Info,
+  Building2, Leaf, Globe, Landmark, Zap, FastForward, MessageCircle, DollarSign, Info, Wallet,
 } from "lucide-react";
 
 const nunito = { fontFamily: "'Nunito', sans-serif" };
@@ -121,9 +122,10 @@ function getSuggestions(profile: string, active: Investment[]): Investment[] {
 
 /* ---- Draggable investment card ---- */
 function DraggableCard({
-  inv, zone, onClick, onAsk, onSell, onInfo,
+  inv, zone, onClick, onAsk, onSell, onInfo, allocation, onAllocationChange, maxAllocation, balance,
 }: {
   inv: Investment; zone: "scouted" | "nest"; onClick: () => void; onAsk?: () => void; onSell?: () => void; onInfo?: () => void;
+  allocation?: number; onAllocationChange?: (pct: number) => void; maxAllocation?: number; balance?: number;
 }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `${zone}-${inv.id}`,
@@ -138,14 +140,17 @@ function DraggableCard({
       onClick={zone === "scouted" ? onClick : undefined}
       className={`touch-none select-none transition-all h-full w-full ${isDragging ? "opacity-30 scale-95" : ""}`}
     >
-      {zone === "nest" ? <NestCard inv={inv} onSell={onSell} onAsk={onAsk} onInfo={onInfo} /> : <ScoutedCard inv={inv} onAsk={onAsk} />}
+      {zone === "nest" ? <NestCard inv={inv} onSell={onSell} onAsk={onAsk} onInfo={onInfo} allocation={allocation} onAllocationChange={onAllocationChange} maxAllocation={maxAllocation} balance={balance} /> : <ScoutedCard inv={inv} onAsk={onAsk} />}
     </div>
   );
 }
 
-function NestCard({ inv, overlay, onSell, onAsk, onInfo }: { inv: Investment; overlay?: boolean; onSell?: () => void; onAsk?: () => void; onInfo?: () => void }) {
+function NestCard({ inv, overlay, onSell, onAsk, onInfo, allocation, onAllocationChange, maxAllocation, balance }: { inv: Investment; overlay?: boolean; onSell?: () => void; onAsk?: () => void; onInfo?: () => void; allocation?: number; onAllocationChange?: (pct: number) => void; maxAllocation?: number; balance?: number }) {
   const [expanded, setExpanded] = useState(false);
   const { t } = useTranslation();
+  const pct = allocation ?? 25;
+  const chfAmount = balance ? Math.round(balance * pct / 100) : 0;
+  const maxSlider = Math.min(100, pct + (maxAllocation ?? 100));
 
   return (
     <div className={`bg-card rounded-2xl p-3.5 shadow-sm ${overlay ? "shadow-lg rotate-2" : ""} cursor-grab active:cursor-grabbing`} style={overlay ? { boxShadow: `0 0 0 2px ${CELESTE}40` } : {}}>
@@ -167,18 +172,28 @@ function NestCard({ inv, overlay, onSell, onAsk, onInfo }: { inv: Investment; ov
             </span>
           </div>
         </div>
+        {/* Allocation badge */}
         {!overlay && (
-          <div
-            className="w-7 h-7 rounded-full bg-muted flex items-center justify-center flex-shrink-0 cursor-pointer"
-            onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
-            onPointerDown={(e) => e.stopPropagation()}
-          >
-            <motion.div animate={{ rotate: expanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
-              <Info className="w-3.5 h-3.5 text-muted-foreground" />
-            </motion.div>
+          <div className="flex flex-col items-end flex-shrink-0" onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }} onPointerDown={(e) => e.stopPropagation()}>
+            <span className="text-sm font-bold" style={{ ...nunito, color: CELESTE }}>{pct}%</span>
+            <span className="text-[10px] text-muted-foreground" style={nunito}>CHF {chfAmount}</span>
           </div>
         )}
       </div>
+
+      {/* Allocation slider */}
+      {!overlay && onAllocationChange && (
+        <div className="mt-2.5 px-1" onClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
+          <Slider
+            value={[pct]}
+            min={0}
+            max={maxSlider}
+            step={1}
+            onValueChange={([v]) => onAllocationChange(v)}
+            className="w-full"
+          />
+        </div>
+      )}
 
       {inv.tag && (
         <div className="mt-2 flex items-center gap-1.5">
@@ -378,6 +393,7 @@ const Panel = () => {
   const { loadProgress, saveProgress } = useUserProgress();
   const { t } = useTranslation();
   const [activePortfolio, setActivePortfolio] = useState<Investment[]>([]);
+  const [allocations, setAllocations] = useState<Record<string, number>>({});
   const [profile, setProfile] = useState("balanced");
   const [balance, setBalance] = useState(1000);
   const [lastSimGain, setLastSimGain] = useState<number | null>(null);
@@ -408,12 +424,25 @@ const Panel = () => {
         setProfile(p.risk_profile);
         if (p.portfolio && p.portfolio.length > 0) {
           setActivePortfolio(p.portfolio);
+          if (p.allocations && Object.keys(p.allocations).length > 0) {
+            setAllocations(p.allocations);
+          } else {
+            // Auto-distribute evenly
+            const evenPct = Math.floor(100 / p.portfolio.length);
+            const allocs: Record<string, number> = {};
+            p.portfolio.forEach(inv => { allocs[inv.id] = evenPct; });
+            setAllocations(allocs);
+            saveProgress({ allocations: allocs });
+          }
         } else {
-          // Auto-fill nest with top 4 suggestions based on risk profile
           const defaults = getSuggestions(p.risk_profile, []).slice(0, 4);
           if (defaults.length > 0) {
             setActivePortfolio(defaults);
-            saveProgress({ portfolio: defaults });
+            const evenPct = Math.floor(100 / defaults.length);
+            const allocs: Record<string, number> = {};
+            defaults.forEach(inv => { allocs[inv.id] = evenPct; });
+            setAllocations(allocs);
+            saveProgress({ portfolio: defaults, allocations: allocs });
           }
         }
         if (p.simulation_result && p.simulation_result > 0) setBalance(p.simulation_result);
@@ -435,14 +464,36 @@ const Panel = () => {
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
   const suggestions = useMemo(() => getSuggestions(profile, enrichedPortfolio), [profile, enrichedPortfolio]);
 
+  const totalAllocated = useMemo(() => {
+    return enrichedPortfolio.reduce((s, i) => s + (allocations[i.id] ?? 0), 0);
+  }, [enrichedPortfolio, allocations]);
+  const cashRemaining = 100 - totalAllocated;
+
   const totalRisk = enrichedPortfolio.length
-    ? Math.round(enrichedPortfolio.reduce((s, i) => s + i.riskLevel, 0) / enrichedPortfolio.length * 10)
+    ? Math.round(
+        totalAllocated > 0
+          ? enrichedPortfolio.reduce((s, i) => s + i.riskLevel * (allocations[i.id] ?? 0), 0) / totalAllocated * 10
+          : enrichedPortfolio.reduce((s, i) => s + i.riskLevel, 0) / enrichedPortfolio.length * 10
+      )
     : 0;
 
-  const monthlyIncome = enrichedPortfolio.reduce((s, i) => s + Math.round((balance * i.annualReturn) / 100 / 12), 0);
-  const avgReturn = enrichedPortfolio.length
-    ? (enrichedPortfolio.reduce((s, i) => s + i.annualReturn, 0) / enrichedPortfolio.length).toFixed(1)
-    : "0.0";
+  const monthlyIncome = enrichedPortfolio.reduce((s, i) => {
+    const pct = allocations[i.id] ?? 0;
+    return s + Math.round((balance * pct / 100 * i.annualReturn) / 100 / 12);
+  }, 0);
+  const avgReturn = enrichedPortfolio.length && totalAllocated > 0
+    ? (enrichedPortfolio.reduce((s, i) => s + i.annualReturn * (allocations[i.id] ?? 0), 0) / totalAllocated).toFixed(1)
+    : enrichedPortfolio.length
+      ? (enrichedPortfolio.reduce((s, i) => s + i.annualReturn, 0) / enrichedPortfolio.length).toFixed(1)
+      : "0.0";
+
+  const handleAllocationChange = useCallback((invId: string, newPct: number) => {
+    setAllocations(prev => {
+      const updated = { ...prev, [invId]: newPct };
+      saveProgress({ allocations: updated });
+      return updated;
+    });
+  }, [saveProgress]);
 
   const getRiskLabelLocal = (risk: number): string => {
     if (risk <= 30) return t("portfolio.low");
@@ -457,13 +508,19 @@ const Panel = () => {
     }
     if (activePortfolio.find((i) => i.id === inv.id)) return;
     const next = [...activePortfolio, inv];
+    // Auto-allocate: give remaining space evenly, or 25% if there's room
+    const currentTotal = Object.values(allocations).reduce((s, v) => s + v, 0);
+    const remaining = 100 - currentTotal;
+    const newAlloc = Math.min(25, remaining);
+    const newAllocations = { ...allocations, [inv.id]: newAlloc };
     setActivePortfolio(next);
-    saveProgress({ portfolio: next });
+    setAllocations(newAllocations);
+    saveProgress({ portfolio: next, allocations: newAllocations });
     const newRisk = Math.round(next.reduce((s, i) => s + i.riskLevel, 0) / next.length * 10);
     if (newRisk > 70) mascotToast(t("panel.riskyBuy"));
     else if (newRisk < 20) mascotToast(t("panel.safeBuy"));
     else mascotToast(t("panel.normalBuy"));
-  }, [activePortfolio, saveProgress, t]);
+  }, [activePortfolio, allocations, saveProgress, t]);
 
   const tryBuyInvestment = useCallback((inv: Investment) => {
     if (activePortfolio.length >= 4) {
@@ -491,7 +548,10 @@ const Panel = () => {
     const removed = activePortfolio.find(i => i.id === id);
     setActivePortfolio((prev) => {
       const next = prev.filter((i) => i.id !== id);
-      saveProgress({ portfolio: next });
+      const newAllocations = { ...allocations };
+      delete newAllocations[id];
+      setAllocations(newAllocations);
+      saveProgress({ portfolio: next, allocations: newAllocations });
       return next;
     });
     if (removed) {
@@ -505,17 +565,22 @@ const Panel = () => {
     const toRemove = activePortfolio.find(i => i.id === removeId);
     const toAdd = enrichedAvailable.find(i => i.id === addId);
     if (!toAdd) return;
+    const removedAlloc = allocations[removeId] ?? 25;
     setActivePortfolio((prev) => {
       const next = prev.filter((i) => i.id !== removeId);
       if (!next.find(i => i.id === addId) && next.length < 4) {
         next.push(toAdd);
       }
-      saveProgress({ portfolio: next });
+      const newAllocations = { ...allocations };
+      delete newAllocations[removeId];
+      newAllocations[addId] = removedAlloc;
+      setAllocations(newAllocations);
+      saveProgress({ portfolio: next, allocations: newAllocations });
       return next;
     });
     const removeName = toRemove?.name || removeId;
     mascotToast(t("panel.swapMsg", { removed: removeName, added: toAdd.name }));
-  }, [activePortfolio, enrichedAvailable, saveProgress, t]);
+  }, [activePortfolio, enrichedAvailable, allocations, saveProgress, t]);
 
   const handleDragStart = (event: DragStartEvent) => {
     setDraggedItem(event.active.data.current as { inv: Investment; zone: string });
@@ -613,16 +678,17 @@ const Panel = () => {
 
       {/* Stats */}
       <div className="px-5 pb-3">
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-4 gap-2">
           {[
             { label: t("panel.balance"), value: `CHF ${balance.toLocaleString()}`, sub: lastSimGain !== null ? `${lastSimGain > 0 ? "+" : ""}${lastSimGain.toFixed(1)}% ${t("panel.lastSim")}` : `+CHF ${monthlyIncome}${t("panel.perMonth")}`, subStyle: { color: lastSimGain !== null ? (lastSimGain >= 0 ? CELESTE : "hsl(var(--destructive))") : CELESTE } },
+            { label: t("panel.totalAllocated"), value: `${totalAllocated}%`, valueStyle: { color: CELESTE }, sub: `CHF ${Math.round(balance * totalAllocated / 100)}`, subStyle: {} },
             { label: t("panel.risk"), value: `${totalRisk}%`, valueStyle: totalRisk > 60 ? { color: "hsl(var(--destructive))" } : totalRisk > 30 ? {} : { color: CELESTE }, valueClass: totalRisk > 30 && totalRisk <= 60 ? "text-accent" : "", sub: getRiskLabelLocal(totalRisk), subStyle: {} },
-            { label: t("panel.returnLabel"), value: `${avgReturn}%`, valueStyle: { color: CELESTE }, sub: t("panel.annual"), subStyle: {} },
+            { label: t("panel.cash"), value: `${cashRemaining}%`, valueStyle: cashRemaining > 0 ? {} : { color: CELESTE }, sub: `CHF ${Math.round(balance * cashRemaining / 100)}`, subStyle: {} },
           ].map((stat, i) => (
-            <motion.div key={stat.label} className="bg-card rounded-3xl p-2.5 sm:p-3 shadow-sm" initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 + i * 0.05 }}>
-              <p className="text-[9px] sm:text-[10px] text-muted-foreground uppercase tracking-wider font-medium" style={nunito}>{stat.label}</p>
-              <p className={`text-sm sm:text-lg font-bold mt-0.5 ${"valueClass" in stat ? stat.valueClass : "text-foreground"}`} style={{ ...nunito, ...("valueStyle" in stat ? stat.valueStyle : {}) }}>{stat.value}</p>
-              <p className="text-[9px] sm:text-[10px] text-muted-foreground font-medium mt-0.5" style={{ ...nunito, ...stat.subStyle }}>{stat.sub}</p>
+            <motion.div key={stat.label} className="bg-card rounded-3xl p-2 sm:p-3 shadow-sm" initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 + i * 0.05 }}>
+              <p className="text-[8px] sm:text-[10px] text-muted-foreground uppercase tracking-wider font-medium" style={nunito}>{stat.label}</p>
+              <p className={`text-xs sm:text-lg font-bold mt-0.5 ${"valueClass" in stat ? stat.valueClass : "text-foreground"}`} style={{ ...nunito, ...("valueStyle" in stat ? stat.valueStyle : {}) }}>{stat.value}</p>
+              <p className="text-[8px] sm:text-[10px] text-muted-foreground font-medium mt-0.5" style={{ ...nunito, ...stat.subStyle }}>{stat.sub}</p>
             </motion.div>
           ))}
         </div>
@@ -657,6 +723,10 @@ const Panel = () => {
                             onSell={() => removeInvestment(inv.id)}
                             onAsk={() => { setCoachInitQ(`Tengo ${inv.name} en mi nido. ¿Es buena inversión? ¿Debería venderla o mantenerla?`); setCoachOpen(true); }}
                             onInfo={() => { setCoachInitQ(`Dame un análisis detallado de ${inv.name}: riesgo, retorno histórico, y perspectiva futura.`); setCoachOpen(true); }}
+                            allocation={allocations[inv.id] ?? 0}
+                            onAllocationChange={(pct) => handleAllocationChange(inv.id, pct)}
+                            maxAllocation={cashRemaining}
+                            balance={balance}
                           />
                         </motion.div>
                       ))}
