@@ -711,7 +711,7 @@ const Panel = () => {
             </div>
 
             {/* Add categories */}
-            <div className="md:w-[280px] lg:w-[320px] md:flex-shrink-0 md:overflow-y-auto md:border-l md:border-border md:pl-4">
+            <div className="md:w-[280px] lg:w-[320px] md:flex-shrink-0 flex-1 min-h-0 overflow-y-auto md:border-l md:border-border md:pl-4">
               <DropZone id="scouted">
                 <h2 className="text-sm font-bold text-foreground uppercase tracking-wide mb-3 md:mt-0 mt-4" style={nunito}>{t("panel.buy")}</h2>
                 {/* Mobile: horizontal scroll */}
