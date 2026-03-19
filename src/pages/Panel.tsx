@@ -116,7 +116,7 @@ function DraggableCard({
       {...listeners}
       {...attributes}
       onClick={zone === "scouted" ? onClick : undefined}
-      className={`touch-none select-none transition-all h-full w-full ${isDragging ? "opacity-30 scale-95" : ""}`}
+      className={`select-none transition-all h-full w-full ${isDragging ? "opacity-30 scale-95" : ""}`}
     >
       {zone === "nest"
         ? <NestCard inv={inv} onSell={onSell} onAsk={onAsk} onInfo={onInfo} allocation={allocation} balance={balance} t={t} />
@@ -488,7 +488,7 @@ const Panel = () => {
   ];
 
   return (
-    <motion.div className="min-h-screen bg-background flex flex-col" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+    <motion.div className="min-h-screen bg-background flex flex-col overflow-y-auto" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
       {/* Header */}
       <div className="px-5 pt-6 pb-3">
         <div className="flex items-center justify-between">
@@ -547,10 +547,10 @@ const Panel = () => {
 
       {/* DnD Content */}
       <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-        <div className="flex-1 overflow-hidden px-5 pb-4">
-          <div className="flex flex-col md:flex-row gap-4 h-full">
+        <div className="flex-1 px-5 pb-4">
+          <div className="flex flex-col md:flex-row gap-4">
             {/* My Nest */}
-            <div className="flex-1 overflow-y-auto md:pr-2">
+            <div className="flex-1 md:pr-2">
               <DropZone id="nest">
                 <div className="flex items-center justify-between mb-3">
                   <h2 className="text-sm font-bold text-foreground uppercase tracking-wide" style={nunito}>{t("panel.myNest")}</h2>
