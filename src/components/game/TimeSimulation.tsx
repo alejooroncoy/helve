@@ -829,7 +829,7 @@ export default function TimeSimulation({
                 </motion.p>
               </AnimatePresence>
               <p className="text-[10px] text-muted-foreground" style={nunito}>
-                {i18n.language === "es" ? "desde" : "from"} CHF {startBalance}
+                {t("timeSim.from")} CHF {startBalance}
               </p>
             </div>
           </div>
