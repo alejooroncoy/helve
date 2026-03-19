@@ -476,14 +476,14 @@ export default function CoachChat({ onClose, portfolio }: CoachChatProps) {
               <div className={`max-w-[90%] ${isAssistant ? "" : ""}`}>
                 {text && (
                   <div
-                    className={`rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
+                    className={`rounded-2xl px-3 py-2 text-xs leading-relaxed ${
                       isAssistant
                         ? "bg-muted text-foreground rounded-bl-md"
                         : "bg-primary text-primary-foreground rounded-br-md"
                     }`}
                   >
                     {isAssistant ? (
-                      <div className="prose prose-sm max-w-none [&>p]:m-0 [&>ul]:my-1 [&>ol]:my-1">
+                      <div className="prose prose-xs max-w-none text-xs [&>p]:m-0 [&>p]:text-xs [&>ul]:my-0.5 [&>ol]:my-0.5 [&>ul]:text-xs [&>ol]:text-xs [&>li]:text-xs [&>strong]:text-xs [&>h1]:text-sm [&>h2]:text-sm [&>h3]:text-xs">
                         <ReactMarkdown>{text}</ReactMarkdown>
                       </div>
                     ) : (
