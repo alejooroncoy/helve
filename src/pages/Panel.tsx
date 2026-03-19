@@ -197,6 +197,7 @@ const Panel = () => {
   );
   const [draggedItem, setDraggedItem] = useState<{ inv: Investment; zone: string } | null>(null);
   const [coachOpen, setCoachOpen] = useState(false);
+  const [simulationOpen, setSimulationOpen] = useState(false);
   const isMobile = useIsMobile();
 
   // Load saved progress on mount
