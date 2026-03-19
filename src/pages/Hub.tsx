@@ -181,6 +181,7 @@ const Hub = () => {
             </div>
             <Lock className="w-5 h-5 flex-shrink-0 text-muted-foreground" />
           </div>
+        </div>
         </div>{/* end cards inner */}
       </div>{/* end centered wrapper */}
 
