@@ -669,7 +669,8 @@ export default function TimeSimulation({
     const previousValue = data[data.length - 1]?.value || startBalance;
     const stepReturn = previousValue > 0 ? newValue / previousValue - 1 : 0;
     const msgType = stepReturn > 0.02 ? "positive" : stepReturn < -0.02 ? "negative" : "neutral";
-    setBirdMsg(pickRandom(birdMessages[msgType]));
+    const localBirdMsgs = getBirdMessages(t);
+    setBirdMsg(pickRandom(localBirdMsgs[msgType]));
     setCurrentStep(nextStep);
   }, [
     currentStep,
