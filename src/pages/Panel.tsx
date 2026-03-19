@@ -518,6 +518,7 @@ const Panel = () => {
             portfolio={activePortfolio}
             onClose={() => setSimulationOpen(false)}
             onSellInvestment={handleSimSell}
+            onAskCoach={(q) => { setCoachInitQ(q); setCoachOpen(true); }}
           />
         )}
       </AnimatePresence>
