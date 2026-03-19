@@ -211,7 +211,7 @@ const SimulationScreen = ({ allocation, profile, stormChoice, onContinue }: Prop
                 <p className="text-xs tracking-widest text-muted-foreground" style={{ ...nunito, fontWeight: 700 }}>{t("simulation.yourPortfolio")}</p>
                 {ASSET_CLASSES.filter(c => allocation[c.key] > 0).map((c) => (
                   <div key={c.key} className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-card">
-                    <span>{c.emoji}</span>
+                    <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: CLASS_COLORS[c.key] }} />
                     <span className="text-xs text-foreground flex-1" style={{ ...nunito, fontWeight: 600 }}>{t(`allocation.classes.${c.key}`)}</span>
                     <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
                       <div className="h-full rounded-full transition-all" style={{ width: `${allocation[c.key]}%`, backgroundColor: CLASS_COLORS[c.key] }} />
