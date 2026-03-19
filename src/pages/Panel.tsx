@@ -544,7 +544,7 @@ const Panel = () => {
       <AnimatePresence>
         {simulationOpen && (
           <TimeSimulation
-            portfolio={activePortfolio}
+            portfolio={enrichedPortfolio}
             initialMonths={simMonths}
             onClose={() => setSimulationOpen(false)}
             onSellInvestment={handleSimSell}
