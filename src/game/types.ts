@@ -39,6 +39,7 @@ export const availableInvestments: Investment[] = [
 export interface GameState {
   step: GameStep;
   riskScore: number; // 0–6, built from 3 questions (0–2 each)
+  riskScores: number[]; // individual score per question for back navigation
   profile: RiskProfile;
   portfolio: Investment[]; // selected investments
   portfolioSlots: PortfolioSlot[]; // for simulation compatibility
@@ -49,6 +50,7 @@ export interface GameState {
 export const initialGameState: GameState = {
   step: "welcome",
   riskScore: 0,
+  riskScores: [],
   profile: "balanced",
   portfolio: [],
   portfolioSlots: [],

@@ -21,12 +21,23 @@ const GameFlow = () => {
   }, []);
 
   const handleRiskAnswer = (questionIndex: number, score: number) => {
-    const newScore = state.riskScore + score;
+    const newScores = [...state.riskScores, score];
+    const newTotal = newScores.reduce((a, b) => a + b, 0);
     const nextStep = riskSteps[questionIndex + 1];
     if (nextStep) {
-      go(nextStep, { riskScore: newScore });
+      go(nextStep, { riskScore: newTotal, riskScores: newScores });
     } else {
-      go("profile-result", { riskScore: newScore, profile: getProfile(newScore) });
+      go("profile-result", { riskScore: newTotal, riskScores: newScores, profile: getProfile(newTotal) });
+    }
+  };
+
+  const handleRiskBack = (questionIndex: number) => {
+    if (questionIndex === 0) {
+      go("welcome", { riskScore: 0, riskScores: [] });
+    } else {
+      const prevScores = state.riskScores.slice(0, questionIndex - 1);
+      const prevTotal = prevScores.reduce((a, b) => a + b, 0);
+      go(riskSteps[questionIndex - 1], { riskScore: prevTotal, riskScores: prevScores });
     }
   };
 
@@ -49,13 +60,13 @@ const GameFlow = () => {
         )}
 
         {state.step === "risk-1" && (
-          <RiskScreen key="risk-1" questionIndex={0} onAnswer={(s) => handleRiskAnswer(0, s)} />
+          <RiskScreen key="risk-1" questionIndex={0} onAnswer={(s) => handleRiskAnswer(0, s)} onBack={() => handleRiskBack(0)} />
         )}
         {state.step === "risk-2" && (
-          <RiskScreen key="risk-2" questionIndex={1} onAnswer={(s) => handleRiskAnswer(1, s)} />
+          <RiskScreen key="risk-2" questionIndex={1} onAnswer={(s) => handleRiskAnswer(1, s)} onBack={() => handleRiskBack(1)} />
         )}
         {state.step === "risk-3" && (
-          <RiskScreen key="risk-3" questionIndex={2} onAnswer={(s) => handleRiskAnswer(2, s)} />
+          <RiskScreen key="risk-3" questionIndex={2} onAnswer={(s) => handleRiskAnswer(2, s)} onBack={() => handleRiskBack(2)} />
         )}
 
         {state.step === "profile-result" && (

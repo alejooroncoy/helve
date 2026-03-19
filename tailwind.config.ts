@@ -14,7 +14,7 @@ export default {
     },
     extend: {
       fontFamily: {
-        serif: ["'Instrument Serif'", "serif"],
+        serif: ["'Nunito'", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",
