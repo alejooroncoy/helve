@@ -26,7 +26,6 @@ const Auth = () => {
       password: "demo1234",
     });
     if (error) {
-      // If demo user doesn't exist, sign up first
       const { error: signUpError } = await supabase.auth.signUp({
         email: "demo@helve.app",
         password: "demo1234",
@@ -37,7 +36,7 @@ const Auth = () => {
         return;
       }
     }
-    navigate("/onboarding");
+    navigate("/");
   };
 
   return (
