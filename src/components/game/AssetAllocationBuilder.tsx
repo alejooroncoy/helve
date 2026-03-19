@@ -147,7 +147,7 @@ const AssetAllocationBuilder = ({ profile, onComplete }: Props) => {
           <div key={c.key} className="space-y-1">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="text-base">{c.emoji}</span>
+                <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: CLASS_COLORS[c.key] }} />
                 <div>
                   <span className="text-sm font-bold text-foreground" style={nunito}>
                     {t(`allocation.classes.${c.key}`)}
