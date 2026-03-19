@@ -109,6 +109,57 @@ const en = {
     },
   },
 
+  // Asset allocation
+  allocation: {
+    title: "ASSET ALLOCATION",
+    reset: "Reset to recommended",
+    remaining: "{{pct}}% remaining to allocate",
+    over: "{{pct}}% over — reduce some classes",
+    mustEqual100: "ALLOCATION MUST EQUAL 100%",
+    classes: {
+      bonds: "Bonds",
+      equity: "Equity",
+      gold: "Gold",
+      realEstate: "Real Estate",
+      alternatives: "Alternatives",
+    },
+    classDesc: {
+      bonds: "Low risk, stable income. Government & corporate debt.",
+      equity: "Higher risk, higher growth. Stock market indices.",
+      gold: "Inflation hedge. Store of value.",
+      realEstate: "Steady income. Property investments.",
+      alternatives: "High risk, uncorrelated returns. Crypto, commodities.",
+    },
+    feedback: {
+      aligned: {
+        title: "✅ Well aligned with your profile!",
+        desc: "This allocation matches your {{profile}} risk tolerance. Good balance for your goals.",
+      },
+      tooAggressive: {
+        title: "⚠️ More aggressive than your profile",
+        desc: "Your allocation has more risk than a typical {{profile}} portfolio. That's OK if you understand the volatility — let's see how it performs!",
+      },
+      tooConservative: {
+        title: "⚠️ More conservative than your profile",
+        desc: "Your allocation is safer than a typical {{profile}} portfolio. You might miss some growth — let's simulate and see!",
+      },
+    },
+    summary: {
+      aligned: {
+        title: "📊 Your allocation performed as expected",
+        desc: "Your portfolio matched your risk profile, delivering returns consistent with your tolerance for volatility.",
+      },
+      tooAggressive: {
+        title: "📊 Higher risk brought bigger swings",
+        desc: "Your aggressive allocation amplified both gains and losses. Consider whether you're comfortable with these fluctuations long-term.",
+      },
+      tooConservative: {
+        title: "📊 Safety came at the cost of growth",
+        desc: "Your conservative allocation protected against losses but limited upside. A bit more equity exposure could help over longer horizons.",
+      },
+    },
+  },
+
   // Market event
   market: {
     stormTitle: "A storm hits the market",
