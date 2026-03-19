@@ -442,13 +442,35 @@ const es = {
     stablePeriod: { title: "☀️ Período de Estabilidad", desc: "La economía crece de forma estable. Baja volatilidad, ganancias constantes." },
   },
 
+  // Hub screen
+  hub: {
+    greeting: "Bienvenido de vuelta",
+    subtitle: "Elige tu aventura",
+    portfolio: {
+      title: "Mi Portafolio",
+      desc: "Construye y simula tu nido de inversiones",
+    },
+    multiplayer: {
+      title: "Multiplayer",
+      desc: "Compite con amigos en tiempo real",
+    },
+    multiplayerSteps: [
+      { title: "Crea o Unete", description: "Crea una sala e invita amigos con un codigo o QR. Hasta 4 jugadores pueden competir." },
+      { title: "Elige tus activos", description: "Cada jugador elige hasta 5 categorias de activos. Tu dinero se reparte equitativamente." },
+      { title: "Sobrevive al mercado", description: "Mira 10 anos de mercado con eventos reales. Manten o vende - el mejor portafolio gana!" },
+    ],
+    next: "Siguiente",
+    letsPlay: "A jugar!",
+    footer: "HELVE - Aprende a invertir jugando",
+  },
+
   // Common
   common: {
     loading: "Cargando...",
-    perYear: "/año",
+    perYear: "/ano",
     notFound: {
       title: "404",
-      message: "¡Ups! Página no encontrada",
+      message: "Ups! Pagina no encontrada",
       backHome: "Volver al inicio",
     },
   },

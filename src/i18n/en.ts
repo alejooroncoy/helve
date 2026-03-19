@@ -442,6 +442,28 @@ const en = {
     stablePeriod: { title: "☀️ Stable Growth Period", desc: "Economy grows steadily. Low volatility, steady gains." },
   },
 
+  // Hub screen
+  hub: {
+    greeting: "Welcome back",
+    subtitle: "Choose your adventure",
+    portfolio: {
+      title: "My Portfolio",
+      desc: "Build and simulate your investment nest",
+    },
+    multiplayer: {
+      title: "Multiplayer",
+      desc: "Compete with friends in real-time",
+    },
+    multiplayerSteps: [
+      { title: "Create or Join", description: "Start a room and invite friends with a code or QR. Up to 4 players can compete." },
+      { title: "Pick Your Assets", description: "Each player picks up to 5 asset categories. Your money is split equally across them." },
+      { title: "Survive the Market", description: "Watch 10 years unfold with real market events. Hold or sell — the best portfolio wins!" },
+    ],
+    next: "Next",
+    letsPlay: "Let's play!",
+    footer: "HELVE - Learn investing by playing",
+  },
+
   // Common
   common: {
     loading: "Loading...",
