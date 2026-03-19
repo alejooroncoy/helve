@@ -280,18 +280,35 @@ function MicButton({ onTranscript, disabled }: { onTranscript: (text: string) =>
 
     const recognition = new SpeechRecognition();
     recognition.lang = "es-ES";
-    recognition.interimResults = false;
-    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.continuous = true;
     recognitionRef.current = recognition;
 
+    let fullTranscript = "";
+
     recognition.onresult = (event: any) => {
-      const transcript = event.results[0][0].transcript;
-      onTranscript(transcript);
-      setListening(false);
+      let interim = "";
+      fullTranscript = "";
+      for (let i = 0; i < event.results.length; i++) {
+        const result = event.results[i];
+        if (result.isFinal) {
+          fullTranscript += result[0].transcript + " ";
+        } else {
+          interim += result[0].transcript;
+        }
+      }
+      onTranscript(fullTranscript + interim);
     };
 
-    recognition.onerror = () => setListening(false);
-    recognition.onend = () => setListening(false);
+    recognition.onerror = (e: any) => {
+      if (e.error !== "aborted") setListening(false);
+    };
+    recognition.onend = () => {
+      // Only stop if user manually stopped
+      if (recognitionRef.current && listening) {
+        try { recognitionRef.current.start(); } catch {}
+      }
+    };
 
     recognition.start();
     setListening(true);
@@ -519,7 +536,7 @@ export default function CoachChat({ onClose, portfolio }: CoachChatProps) {
           onSubmit={(e) => { e.preventDefault(); send(); }}
           className="flex items-center gap-2"
         >
-          <MicButton onTranscript={(t) => setInput((prev) => prev + t)} disabled={loading} />
+          <MicButton onTranscript={(t) => setInput(t)} disabled={loading} />
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
