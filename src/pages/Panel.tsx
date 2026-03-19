@@ -10,6 +10,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useUserProgress } from "@/hooks/useUserProgress";
 import CoachChat from "@/components/CoachChat";
 import TimeSimulation from "@/components/game/TimeSimulation";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { useTranslation } from "react-i18next";
 import {
   DndContext,
   DragOverlay,
@@ -37,7 +39,6 @@ const MascotIcon = () => (
 
 const mascotToast = (msg: string) => toast(msg, { icon: <MascotIcon />, duration: 3000 });
 
-// Map game IDs to DB instrument IDs
 const investmentToDbId: Record<string, string> = {
   "ch-bond-aaa": "ch-bond-aaa",
   "global-bond": "global-bond-agg",
@@ -70,35 +71,10 @@ function getInvestmentIcon(inv: Investment) {
   return <BarChart2 className="w-5 h-5" />;
 }
 
-function getRiskColor(risk: number): string {
-  if (risk <= 3) return "";
-  if (risk <= 6) return "text-accent";
-  return "text-destructive";
-}
-
-function getRiskInlineColor(risk: number): React.CSSProperties {
-  if (risk <= 3) return { color: CELESTE };
-  return {};
-}
-
 function getRiskBarColor(risk: number): string {
   if (risk <= 3) return CELESTE;
   if (risk <= 6) return "hsl(var(--accent))";
   return "hsl(var(--destructive))";
-}
-
-function getRiskLabel(risk: number): string {
-  if (risk <= 30) return "Low";
-  if (risk <= 60) return "Medium";
-  return "High";
-}
-
-function riskWord(level: number): string {
-  if (level <= 2) return "Very safe";
-  if (level <= 4) return "Safe";
-  if (level <= 6) return "Moderate";
-  if (level <= 8) return "Risky";
-  return "Very risky";
 }
 
 function getSuggestions(profile: string, active: Investment[]): Investment[] {
@@ -115,7 +91,6 @@ function getSuggestions(profile: string, active: Investment[]): Investment[] {
     ? active.reduce((s, i) => s + i.riskLevel, 0) / active.length
     : riskRange[0] + (riskRange[1] - riskRange[0]) / 2;
   const hasType = (t: string) => activeTypes.has(t as any);
-  const slotsLeft = 4 - active.length;
 
   const scored = pool.map((inv) => {
     let score = 0;
@@ -144,20 +119,6 @@ function getSuggestions(profile: string, active: Investment[]): Investment[] {
   return scored.map((s) => s.inv);
 }
 
-const tagDescriptions: Record<string, string> = {
-  "AAA": "Máxima calidad crediticia",
-  "GOV": "Bono gubernamental",
-  "NESN": "Ticker: Nestlé",
-  "NOVN": "Ticker: Novartis",
-  "AAPL": "Ticker: Apple",
-  "MSFT": "Ticker: Microsoft",
-  "NVDA": "Ticker: NVIDIA",
-  "LOGN": "Ticker: Logitech",
-  "UBSG": "Ticker: UBS",
-  "AMZN": "Ticker: Amazon",
-  "HIGH RISK": "Riesgo elevado",
-};
-
 /* ---- Draggable investment card ---- */
 function DraggableCard({
   inv, zone, onClick, onAsk, onSell, onInfo,
@@ -184,6 +145,7 @@ function DraggableCard({
 
 function NestCard({ inv, overlay, onSell, onAsk, onInfo }: { inv: Investment; overlay?: boolean; onSell?: () => void; onAsk?: () => void; onInfo?: () => void }) {
   const [expanded, setExpanded] = useState(false);
+  const { t } = useTranslation();
 
   return (
     <div className={`bg-card rounded-2xl p-3.5 shadow-sm ${overlay ? "shadow-lg rotate-2" : ""} cursor-grab active:cursor-grabbing`} style={overlay ? { boxShadow: `0 0 0 2px ${CELESTE}40` } : {}}>
@@ -198,10 +160,10 @@ function NestCard({ inv, overlay, onSell, onAsk, onInfo }: { inv: Investment; ov
           </div>
           <div className="flex items-center gap-2 mt-1 flex-wrap">
             <span className="text-xs text-muted-foreground" style={nunito}>
-              Riesgo <span style={{ color: getRiskBarColor(inv.riskLevel), fontWeight: 700 }}>{inv.riskLevel}/10</span>
+              {t("panel.riskLabel")} <span style={{ color: getRiskBarColor(inv.riskLevel), fontWeight: 700 }}>{inv.riskLevel}/10</span>
             </span>
             <span className="text-xs" style={{ ...nunito, color: CELESTE, fontWeight: 700 }}>
-              {inv.annualReturn}%/año
+              {inv.annualReturn}%{t("common.perYear")}
             </span>
           </div>
         </div>
@@ -223,13 +185,12 @@ function NestCard({ inv, overlay, onSell, onAsk, onInfo }: { inv: Investment; ov
           <span className="text-[10px] font-bold bg-accent/15 text-accent px-2 py-0.5 rounded-full" style={nunito}>
             {inv.tag}
           </span>
-          {tagDescriptions[inv.tag] && (
-            <span className="text-[10px] text-muted-foreground" style={nunito}>{tagDescriptions[inv.tag]}</span>
+          {inv.tag && t(`tags.${inv.tag}`, { defaultValue: "" }) && (
+            <span className="text-[10px] text-muted-foreground" style={nunito}>{t(`tags.${inv.tag}`)}</span>
           )}
         </div>
       )}
 
-      {/* Expandable actions */}
       <AnimatePresence>
         {expanded && !overlay && (
           <motion.div
@@ -247,7 +208,7 @@ function NestCard({ inv, overlay, onSell, onAsk, onInfo }: { inv: Investment; ov
                 whileTap={{ scale: 0.95 }}
               >
                 <DollarSign className="w-3.5 h-3.5" />
-                Vender
+                {t("panel.sell")}
               </motion.button>
               <motion.button
                 onClick={(e) => { e.stopPropagation(); onAsk?.(); }}
@@ -257,7 +218,7 @@ function NestCard({ inv, overlay, onSell, onAsk, onInfo }: { inv: Investment; ov
                 whileTap={{ scale: 0.95 }}
               >
                 <MessageCircle className="w-3.5 h-3.5" />
-                Preguntar
+                {t("panel.ask")}
               </motion.button>
               <motion.button
                 onClick={(e) => { e.stopPropagation(); onInfo?.(); }}
@@ -267,7 +228,7 @@ function NestCard({ inv, overlay, onSell, onAsk, onInfo }: { inv: Investment; ov
                 whileTap={{ scale: 0.95 }}
               >
                 <BarChart2 className="w-3.5 h-3.5" />
-                Detalle
+                {t("panel.detail")}
               </motion.button>
             </div>
           </motion.div>
@@ -278,6 +239,8 @@ function NestCard({ inv, overlay, onSell, onAsk, onInfo }: { inv: Investment; ov
 }
 
 function ScoutedCard({ inv, overlay, onAsk }: { inv: Investment; overlay?: boolean; onAsk?: () => void }) {
+  const { t } = useTranslation();
+
   return (
     <div className={`bg-card rounded-2xl p-3 shadow-sm border-2 border-dashed border-border ${overlay ? "-rotate-2" : ""} cursor-grab active:cursor-grabbing min-h-[120px] h-full flex flex-col`} style={overlay ? { boxShadow: `0 0 0 2px ${CELESTE}40`, borderColor: `${CELESTE}60` } : {}}>
       <div className="flex items-start gap-2">
@@ -291,7 +254,7 @@ function ScoutedCard({ inv, overlay, onAsk }: { inv: Investment; overlay?: boole
       </div>
       <div className="flex-grow" />
       <div className="flex items-center gap-2 mt-2">
-        <span className="text-[10px] text-muted-foreground" style={nunito}>Riesgo</span>
+        <span className="text-[10px] text-muted-foreground" style={nunito}>{t("panel.riskLabel")}</span>
         <span className="text-[10px] font-bold" style={{ ...nunito, color: getRiskBarColor(inv.riskLevel) }}>{inv.riskLevel}/10</span>
         <span className="text-muted-foreground text-[10px]">·</span>
         <span className="text-[10px] font-bold" style={{ ...nunito, color: CELESTE }}>{inv.annualReturn}%</span>
@@ -301,8 +264,8 @@ function ScoutedCard({ inv, overlay, onAsk }: { inv: Investment; overlay?: boole
           <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${inv.tag === "HIGH RISK" ? "bg-destructive/10 text-destructive" : ""}`} style={{ ...nunito, ...(inv.tag !== "HIGH RISK" ? { backgroundColor: `${CELESTE}18`, color: CELESTE } : {}) }}>
             {inv.tag}
           </span>
-          {tagDescriptions[inv.tag] && (
-            <span className="text-[9px] text-muted-foreground" style={nunito}>{tagDescriptions[inv.tag]}</span>
+          {inv.tag && t(`tags.${inv.tag}`, { defaultValue: "" }) && (
+            <span className="text-[9px] text-muted-foreground" style={nunito}>{t(`tags.${inv.tag}`)}</span>
           )}
         </div>
       )}
@@ -336,8 +299,11 @@ function DropZone({ id, children, isOver }: { id: string; children: React.ReactN
     </div>
   );
 }
+
 /* ---- Buy confirmation dialog ---- */
 function BuyConfirmDialog({ inv, onConfirm, onCancel }: { inv: Investment; onConfirm: (dontShowAgain: boolean) => void; onCancel: () => void }) {
+  const { t } = useTranslation();
+
   return (
     <motion.div
       className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 px-4 pb-6"
@@ -353,7 +319,6 @@ function BuyConfirmDialog({ inv, onConfirm, onCancel }: { inv: Investment; onCon
         exit={{ y: 100, scale: 0.95 }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Owl mascot */}
         <div className="flex items-start gap-3 mb-4">
           <motion.img
             src="/perspectiva1.png"
@@ -363,14 +328,13 @@ function BuyConfirmDialog({ inv, onConfirm, onCancel }: { inv: Investment; onCon
             transition={{ duration: 0.8 }}
           />
           <div>
-            <p className="text-base font-bold text-foreground" style={nunito}>¡Estás comprando!</p>
+            <p className="text-base font-bold text-foreground" style={nunito}>{t("panel.buyDialogTitle")}</p>
             <p className="text-xs text-muted-foreground mt-0.5" style={nunito}>
-              Vas a agregar este huevito a tu nido. Recuerda: comprar = invertir en este activo.
+              {t("panel.buyDialogDesc")}
             </p>
           </div>
         </div>
 
-        {/* Investment preview */}
         <div className="bg-muted/50 rounded-2xl p-3 mb-4 flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${CELESTE}18`, color: CELESTE }}>
             {getInvestmentIcon(inv)}
@@ -378,13 +342,12 @@ function BuyConfirmDialog({ inv, onConfirm, onCancel }: { inv: Investment; onCon
           <div className="flex-1 min-w-0">
             <p className="text-sm font-bold text-foreground" style={nunito}>{inv.name} {inv.flag || ""}</p>
             <div className="flex items-center gap-2 mt-0.5">
-              <span className="text-xs" style={{ ...nunito, color: getRiskBarColor(inv.riskLevel), fontWeight: 700 }}>Riesgo {inv.riskLevel}/10</span>
-              <span className="text-xs" style={{ ...nunito, color: CELESTE, fontWeight: 700 }}>{inv.annualReturn}%/año</span>
+              <span className="text-xs" style={{ ...nunito, color: getRiskBarColor(inv.riskLevel), fontWeight: 700 }}>{t("panel.riskLabel")} {inv.riskLevel}/10</span>
+              <span className="text-xs" style={{ ...nunito, color: CELESTE, fontWeight: 700 }}>{inv.annualReturn}%{t("common.perYear")}</span>
             </div>
           </div>
         </div>
 
-        {/* Buttons */}
         <div className="space-y-2">
           <motion.button
             onClick={() => onConfirm(false)}
@@ -392,7 +355,7 @@ function BuyConfirmDialog({ inv, onConfirm, onCancel }: { inv: Investment; onCon
             style={{ ...nunito, backgroundColor: CELESTE }}
             whileTap={{ scale: 0.97 }}
           >
-            Entendido, ¡comprar!
+            {t("panel.buyDialogConfirm")}
           </motion.button>
           <motion.button
             onClick={() => onConfirm(true)}
@@ -400,7 +363,7 @@ function BuyConfirmDialog({ inv, onConfirm, onCancel }: { inv: Investment; onCon
             style={nunito}
             whileTap={{ scale: 0.97 }}
           >
-            Entendido, no volver a recordarme
+            {t("panel.buyDialogDontRemind")}
           </motion.button>
         </div>
       </motion.div>
@@ -413,6 +376,7 @@ const Panel = () => {
   const navigate = useNavigate();
   const { signOut } = useAuth();
   const { loadProgress, saveProgress } = useUserProgress();
+  const { t } = useTranslation();
   const [activePortfolio, setActivePortfolio] = useState<Investment[]>([]);
   const [profile, setProfile] = useState("balanced");
   const [balance, setBalance] = useState(1000);
@@ -426,28 +390,17 @@ const Panel = () => {
   const [simMonths, setSimMonths] = useState(12);
   const isMobile = useIsMobile();
 
-  // Fetch real stats from DB for all instruments
   const { stats, loading: statsLoading } = useInstrumentStats(allDbIds);
 
-  // Enrich investments with real DB data
   const enrichInvestment = useCallback((inv: Investment): Investment => {
     const dbId = investmentToDbId[inv.id];
     const real = dbId ? stats[dbId] : null;
-    if (real) {
-      return { ...inv, annualReturn: real.avgAnnualReturn, riskLevel: real.riskLevel };
-    }
+    if (real) return { ...inv, annualReturn: real.avgAnnualReturn, riskLevel: real.riskLevel };
     return inv;
   }, [stats]);
 
-  const enrichedPortfolio = useMemo(
-    () => activePortfolio.map(enrichInvestment),
-    [activePortfolio, enrichInvestment]
-  );
-
-  const enrichedAvailable = useMemo(
-    () => availableInvestments.map(enrichInvestment),
-    [enrichInvestment]
-  );
+  const enrichedPortfolio = useMemo(() => activePortfolio.map(enrichInvestment), [activePortfolio, enrichInvestment]);
+  const enrichedAvailable = useMemo(() => availableInvestments.map(enrichInvestment), [enrichInvestment]);
 
   useEffect(() => {
     loadProgress().then((p) => {
@@ -464,11 +417,11 @@ const Panel = () => {
     setLastSimGain(gainPct);
     saveProgress({ simulation_result: finalBalance });
     if (gainPct > 0) {
-      mascotToast(`¡Genial! Tu nido creció ${gainPct.toFixed(1)}% 🎉`);
+      mascotToast(t("panel.nestGrew", { pct: gainPct.toFixed(1) }));
     } else {
-      mascotToast(`Tu nido bajó ${Math.abs(gainPct).toFixed(1)}%, pero aprendiste 💪`);
+      mascotToast(t("panel.nestDropped", { pct: Math.abs(gainPct).toFixed(1) }));
     }
-  }, [saveProgress]);
+  }, [saveProgress, t]);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
   const suggestions = useMemo(() => getSuggestions(profile, enrichedPortfolio), [profile, enrichedPortfolio]);
@@ -477,15 +430,20 @@ const Panel = () => {
     ? Math.round(enrichedPortfolio.reduce((s, i) => s + i.riskLevel, 0) / enrichedPortfolio.length * 10)
     : 0;
 
-  
   const monthlyIncome = enrichedPortfolio.reduce((s, i) => s + Math.round((balance * i.annualReturn) / 100 / 12), 0);
   const avgReturn = enrichedPortfolio.length
     ? (enrichedPortfolio.reduce((s, i) => s + i.annualReturn, 0) / enrichedPortfolio.length).toFixed(1)
     : "0.0";
 
+  const getRiskLabelLocal = (risk: number): string => {
+    if (risk <= 30) return t("portfolio.low");
+    if (risk <= 60) return t("portfolio.medium");
+    return t("portfolio.high");
+  };
+
   const executeBuy = useCallback((inv: Investment) => {
     if (activePortfolio.length >= 4) {
-      mascotToast("¡Tu nido está lleno! Vende un huevo para hacer espacio.");
+      mascotToast(t("panel.nestFull"));
       return;
     }
     if (activePortfolio.find((i) => i.id === inv.id)) return;
@@ -493,14 +451,14 @@ const Panel = () => {
     setActivePortfolio(next);
     saveProgress({ portfolio: next });
     const newRisk = Math.round(next.reduce((s, i) => s + i.riskLevel, 0) / next.length * 10);
-    if (newRisk > 70) mascotToast("¡Cuidado! Compraste algo arriesgado. Tu nido tiembla un poco...");
-    else if (newRisk < 20) mascotToast("¡Buena compra! Un huevito muy seguro para tu nido.");
-    else mascotToast("¡Comprado! Buen ojo, ese huevo se ve prometedor.");
-  }, [activePortfolio, saveProgress]);
+    if (newRisk > 70) mascotToast(t("panel.riskyBuy"));
+    else if (newRisk < 20) mascotToast(t("panel.safeBuy"));
+    else mascotToast(t("panel.normalBuy"));
+  }, [activePortfolio, saveProgress, t]);
 
   const tryBuyInvestment = useCallback((inv: Investment) => {
     if (activePortfolio.length >= 4) {
-      mascotToast("¡Tu nido está lleno! Vende un huevo para hacer espacio.");
+      mascotToast(t("panel.nestFull"));
       return;
     }
     if (activePortfolio.find((i) => i.id === inv.id)) return;
@@ -509,7 +467,7 @@ const Panel = () => {
     } else {
       setBuyDialogInv(inv);
     }
-  }, [activePortfolio, skipBuyDialog, executeBuy]);
+  }, [activePortfolio, skipBuyDialog, executeBuy, t]);
 
   const handleBuyConfirm = useCallback((dontShowAgain: boolean) => {
     if (dontShowAgain) {
@@ -528,9 +486,9 @@ const Panel = () => {
       return next;
     });
     if (sold) {
-      mascotToast(`¡Vendiste ${sold.name}! A veces soltar un huevo es la mejor decisión.`);
+      mascotToast(t("panel.soldMsg", { name: sold.name }));
     } else {
-      mascotToast("Huevo vendido. Tu nido se siente más ligero.");
+      mascotToast(t("panel.soldGeneric"));
     }
   };
 
@@ -558,6 +516,21 @@ const Panel = () => {
     navigate("/auth");
   };
 
+  const periodLabel = (months: number) => {
+    if (months <= 6) return t("simulation.periods.3m").replace("3", String(months));
+    if (months === 3) return t("simulation.periods.3m");
+    if (months === 6) return t("simulation.periods.6m");
+    if (months === 12) return t("simulation.periods.1y");
+    return t("simulation.periods.5y");
+  };
+
+  const simPeriods = [
+    { label: t("simulation.periods.3m"), months: 3 },
+    { label: t("simulation.periods.6m"), months: 6 },
+    { label: t("simulation.periods.1y"), months: 12 },
+    { label: t("simulation.periods.5y"), months: 60 },
+  ];
+
   return (
     <motion.div
       className="min-h-screen bg-background flex flex-col"
@@ -568,10 +541,11 @@ const Panel = () => {
       <div className="px-5 pt-6 pb-3">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs text-muted-foreground font-medium tracking-wide uppercase" style={nunito}>Mi Nido</p>
-            <h1 className="text-2xl text-foreground mt-0.5" style={{ ...nunito, fontWeight: 900 }}>Panel</h1>
+            <p className="text-xs text-muted-foreground font-medium tracking-wide uppercase" style={nunito}>{t("panel.myNest")}</p>
+            <h1 className="text-2xl text-foreground mt-0.5" style={{ ...nunito, fontWeight: 900 }}>{t("panel.panelTitle")}</h1>
           </div>
           <div className="flex items-center gap-2">
+            <LanguageSwitcher />
             <motion.button
               onClick={handleSignOut}
               className="w-10 h-10 rounded-full bg-card shadow-sm flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors"
@@ -616,9 +590,9 @@ const Panel = () => {
       <div className="px-5 pb-3">
         <div className="grid grid-cols-3 gap-3">
           {[
-            { label: "Balance", value: `CHF ${balance.toLocaleString()}`, sub: lastSimGain !== null ? `${lastSimGain > 0 ? "+" : ""}${lastSimGain.toFixed(1)}% última sim.` : `+CHF ${monthlyIncome}/mes`, subStyle: { color: lastSimGain !== null ? (lastSimGain >= 0 ? CELESTE : "hsl(var(--destructive))") : CELESTE } },
-            { label: "Riesgo", value: `${totalRisk}%`, valueStyle: totalRisk > 60 ? { color: "hsl(var(--destructive))" } : totalRisk > 30 ? {} : { color: CELESTE }, valueClass: totalRisk > 30 && totalRisk <= 60 ? "text-accent" : "", sub: totalRisk <= 30 ? "Bajo" : totalRisk <= 60 ? "Medio" : "Alto", subStyle: {} },
-            { label: "Retorno", value: `${avgReturn}%`, valueStyle: { color: CELESTE }, sub: "Anual", subStyle: {} },
+            { label: t("panel.balance"), value: `CHF ${balance.toLocaleString()}`, sub: lastSimGain !== null ? `${lastSimGain > 0 ? "+" : ""}${lastSimGain.toFixed(1)}% ${t("panel.lastSim")}` : `+CHF ${monthlyIncome}${t("panel.perMonth")}`, subStyle: { color: lastSimGain !== null ? (lastSimGain >= 0 ? CELESTE : "hsl(var(--destructive))") : CELESTE } },
+            { label: t("panel.risk"), value: `${totalRisk}%`, valueStyle: totalRisk > 60 ? { color: "hsl(var(--destructive))" } : totalRisk > 30 ? {} : { color: CELESTE }, valueClass: totalRisk > 30 && totalRisk <= 60 ? "text-accent" : "", sub: getRiskLabelLocal(totalRisk), subStyle: {} },
+            { label: t("panel.returnLabel"), value: `${avgReturn}%`, valueStyle: { color: CELESTE }, sub: t("panel.annual"), subStyle: {} },
           ].map((stat, i) => (
             <motion.div key={stat.label} className="bg-card rounded-3xl p-3 shadow-sm" initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 + i * 0.05 }}>
               <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium" style={nunito}>{stat.label}</p>
@@ -632,17 +606,16 @@ const Panel = () => {
       {/* DnD Content */}
       <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
         <div className="flex-1 overflow-y-auto px-5 pb-4">
-          {/* My Nest — always full width on top */}
           <DropZone id="nest">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-bold text-foreground uppercase tracking-wide" style={nunito}>Mi Nido</h2>
+              <h2 className="text-sm font-bold text-foreground uppercase tracking-wide" style={nunito}>{t("panel.myNest")}</h2>
               <span className="text-xs text-muted-foreground" style={nunito}>{enrichedPortfolio.length}/4</span>
             </div>
             {enrichedPortfolio.length === 0 ? (
               <div className="bg-card/50 rounded-3xl p-5 text-center border-2 border-dashed border-border flex flex-col items-center justify-center gap-2">
                 <Inbox className="w-8 h-8 text-muted-foreground/50" />
-                <p className="text-sm text-muted-foreground" style={nunito}>¡Tu nido está vacío!</p>
-                <p className="text-xs text-muted-foreground" style={nunito}>Compra tu primera inversión tocándola abajo 👇</p>
+                <p className="text-sm text-muted-foreground" style={nunito}>{t("panel.nestEmpty")}</p>
+                <p className="text-xs text-muted-foreground" style={nunito}>{t("panel.nestEmptyHint")}</p>
               </div>
             ) : (
               <div className="space-y-2">
@@ -664,9 +637,8 @@ const Panel = () => {
             )}
           </DropZone>
 
-          {/* Scouted — horizontal scroll */}
           <DropZone id="scouted">
-            <h2 className="text-sm font-bold text-foreground uppercase tracking-wide mb-3 mt-4" style={nunito}>🛒 Comprar</h2>
+            <h2 className="text-sm font-bold text-foreground uppercase tracking-wide mb-3 mt-4" style={nunito}>{t("panel.buy")}</h2>
             <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide items-stretch" style={{ scrollSnapType: "x mandatory" }}>
               {suggestions.map((inv) => (
                 <div key={inv.id} className="flex-shrink-0 flex" style={{ width: 190, scrollSnapAlign: "start" }}>
@@ -686,14 +658,8 @@ const Panel = () => {
 
       {/* Bottom Actions */}
       <div className="px-5 pb-6 pt-3 bg-gradient-to-t from-background via-background to-transparent">
-        {/* Period selector */}
         <div className="flex gap-2 mb-3">
-          {([
-            { label: "3 meses", months: 3 },
-            { label: "6 meses", months: 6 },
-            { label: "1 año", months: 12 },
-            { label: "5 años", months: 60 },
-          ] as const).map((p) => (
+          {simPeriods.map((p) => (
             <button
               key={p.months}
               onClick={() => setSimMonths(p.months)}
@@ -725,11 +691,11 @@ const Panel = () => {
           whileTap={activePortfolio.length > 0 ? { scale: 0.97 } : {}}
         >
           <FastForward className="w-4 h-4" />
-          Simular {simMonths <= 6 ? `${simMonths} meses` : simMonths === 12 ? "1 año" : "5 años"}
+          {t("panel.simulate")} {simPeriods.find(p => p.months === simMonths)?.label}
         </motion.button>
         {activePortfolio.length === 0 && (
           <p className="text-[10px] text-muted-foreground text-center mt-2" style={nunito}>
-            Agrega inversiones a tu nido para simular
+            {t("panel.addToSimulate")}
           </p>
         )}
       </div>
@@ -748,7 +714,6 @@ const Panel = () => {
         )}
       </AnimatePresence>
 
-      {/* Buy confirmation dialog */}
       <AnimatePresence>
         {buyDialogInv && (
           <BuyConfirmDialog
