@@ -1131,26 +1131,27 @@ const Panel = () => {
                   >
                     {t("panel.buy")}
                   </h2>
-                  {/* Cards list */}
-                  <div className="flex flex-col gap-2">
-                    {suggestions.map((inv) => (
-                      <div key={inv.id} className="w-full">
-                        <DraggableCard
-                          inv={inv}
-                          zone="scouted"
-                          onClick={() => tryBuyInvestment(inv)}
-                          t={t}
-                          isMobile={isMobile}
-                          onAsk={() => {
-                            setCoachInitQ(
-                              `Explica brevemente qué es ${t(`allocation.classes.${inv.id}`)} y si encaja con mi perfil`,
-                            );
-                            setCoachOpen(true);
-                          }}
-                        />
-                      </div>
-                    ))}
-                  </div>
+                  <ScrollArea className="flex-1 min-h-0">
+                    <div className="space-y-2 pr-1">
+                      {suggestions.map((inv) => (
+                        <div key={inv.id} className="w-full">
+                          <DraggableCard
+                            inv={inv}
+                            zone="scouted"
+                            onClick={() => tryBuyInvestment(inv)}
+                            t={t}
+                            isMobile={isMobile}
+                            onAsk={() => {
+                              setCoachInitQ(
+                                `Explica brevemente qué es ${t(`allocation.classes.${inv.id}`)} y si encaja con mi perfil`,
+                              );
+                              setCoachOpen(true);
+                            }}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </ScrollArea>
                 </div>
               </DropZone>
             </div>
