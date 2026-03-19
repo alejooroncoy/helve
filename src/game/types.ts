@@ -55,11 +55,3 @@ export function getProfile(score: number): RiskProfile {
   if (score <= 4) return "balanced";
   return "growth";
 }
-
-export { simulateRealGrowth } from "./marketData";
-
-import { simulateRealGrowth as _simReal } from "./marketData";
-
-export function simulateGrowth(portfolio: PortfolioSlot[], stormChoice: "stay" | "sell" | null): number {
-  return _simReal(portfolio, stormChoice, 5).finalValue;
-}

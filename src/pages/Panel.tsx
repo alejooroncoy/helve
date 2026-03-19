@@ -1,4 +1,5 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
+import { useInstrumentStats } from "@/hooks/useMarketData";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
@@ -28,6 +29,27 @@ import {
 
 const nunito = { fontFamily: "'Nunito', sans-serif" };
 const CELESTE = "#5BB8F5";
+
+// Map game IDs to DB instrument IDs
+const investmentToDbId: Record<string, string> = {
+  "ch-bond-aaa": "ch-bond-aaa",
+  "global-bond": "global-bond-agg",
+  "ch-govt-10y": "ch-govt-10y",
+  "smi-index": "smi-index",
+  "eurostoxx50": "eurostoxx50",
+  "gold-chf": "gold-chf",
+  "nestle": "nesn-ch",
+  "novartis": "novn-ch",
+  "djia-index": "djia-index",
+  "dax-index": "dax-index",
+  "apple": "aapl-us",
+  "microsoft": "msft-us",
+  "nvidia": "nvda-us",
+  "logitech": "logn-ch",
+  "ubs": "ubsg-ch",
+  "amazon": "amzn-us",
+};
+const allDbIds = Object.values(investmentToDbId);
 
 function getInvestmentIcon(inv: Investment) {
   const name = inv.name.toLowerCase();
@@ -257,6 +279,29 @@ const Panel = () => {
   const [simMonths, setSimMonths] = useState(12);
   const isMobile = useIsMobile();
 
+  // Fetch real stats from DB for all instruments
+  const { stats, loading: statsLoading } = useInstrumentStats(allDbIds);
+
+  // Enrich investments with real DB data
+  const enrichInvestment = useCallback((inv: Investment): Investment => {
+    const dbId = investmentToDbId[inv.id];
+    const real = dbId ? stats[dbId] : null;
+    if (real) {
+      return { ...inv, annualReturn: real.avgAnnualReturn, riskLevel: real.riskLevel };
+    }
+    return inv;
+  }, [stats]);
+
+  const enrichedPortfolio = useMemo(
+    () => activePortfolio.map(enrichInvestment),
+    [activePortfolio, enrichInvestment]
+  );
+
+  const enrichedAvailable = useMemo(
+    () => availableInvestments.map(enrichInvestment),
+    [enrichInvestment]
+  );
+
   useEffect(() => {
     loadProgress().then((p) => {
       if (p) {
@@ -267,16 +312,16 @@ const Panel = () => {
   }, [loadProgress]);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
-  const suggestions = useMemo(() => getSuggestions(profile, activePortfolio), [profile, activePortfolio]);
+  const suggestions = useMemo(() => getSuggestions(profile, enrichedPortfolio), [profile, enrichedPortfolio]);
 
-  const totalRisk = activePortfolio.length
-    ? Math.round(activePortfolio.reduce((s, i) => s + i.riskLevel, 0) / activePortfolio.length * 10)
+  const totalRisk = enrichedPortfolio.length
+    ? Math.round(enrichedPortfolio.reduce((s, i) => s + i.riskLevel, 0) / enrichedPortfolio.length * 10)
     : 0;
 
   const balance = 1000;
-  const monthlyIncome = activePortfolio.reduce((s, i) => s + Math.round((balance * i.annualReturn) / 100 / 12), 0);
-  const avgReturn = activePortfolio.length
-    ? (activePortfolio.reduce((s, i) => s + i.annualReturn, 0) / activePortfolio.length).toFixed(1)
+  const monthlyIncome = enrichedPortfolio.reduce((s, i) => s + Math.round((balance * i.annualReturn) / 100 / 12), 0);
+  const avgReturn = enrichedPortfolio.length
+    ? (enrichedPortfolio.reduce((s, i) => s + i.annualReturn, 0) / enrichedPortfolio.length).toFixed(1)
     : "0.0";
 
   const addInvestment = (inv: Investment) => {
@@ -359,7 +404,7 @@ const Panel = () => {
                   </motion.button>
                 </DrawerTrigger>
                 <DrawerContent className="h-[80vh] p-0">
-                  <CoachChat onClose={() => { setCoachOpen(false); setCoachInitQ(undefined); }} portfolio={activePortfolio} onAddInvestment={(id) => { const inv = availableInvestments.find(i => i.id === id); if (inv) addInvestment(inv); }} onRemoveInvestment={(id) => removeInvestment(id)} initialQuestion={coachInitQ} />
+                  <CoachChat onClose={() => { setCoachOpen(false); setCoachInitQ(undefined); }} portfolio={enrichedPortfolio} onAddInvestment={(id) => { const inv = enrichedAvailable.find(i => i.id === id); if (inv) addInvestment(inv); }} onRemoveInvestment={(id) => removeInvestment(id)} initialQuestion={coachInitQ} />
                 </DrawerContent>
               </Drawer>
             ) : (
@@ -373,7 +418,7 @@ const Panel = () => {
                   </motion.button>
                 </PopoverTrigger>
                 <PopoverContent side="bottom" align="end" className="w-[380px] h-[500px] p-0 rounded-2xl overflow-hidden">
-                  <CoachChat onClose={() => { setCoachOpen(false); setCoachInitQ(undefined); }} portfolio={activePortfolio} onAddInvestment={(id) => { const inv = availableInvestments.find(i => i.id === id); if (inv) addInvestment(inv); }} onRemoveInvestment={(id) => removeInvestment(id)} initialQuestion={coachInitQ} />
+                  <CoachChat onClose={() => { setCoachOpen(false); setCoachInitQ(undefined); }} portfolio={enrichedPortfolio} onAddInvestment={(id) => { const inv = enrichedAvailable.find(i => i.id === id); if (inv) addInvestment(inv); }} onRemoveInvestment={(id) => removeInvestment(id)} initialQuestion={coachInitQ} />
                 </PopoverContent>
               </Popover>
             )}
@@ -406,9 +451,9 @@ const Panel = () => {
             <DropZone id="nest">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-sm font-bold text-foreground uppercase tracking-wide" style={nunito}>My Nest</h2>
-                <span className="text-xs text-muted-foreground" style={nunito}>{activePortfolio.length}/4</span>
+                <span className="text-xs text-muted-foreground" style={nunito}>{enrichedPortfolio.length}/4</span>
               </div>
-              {activePortfolio.length === 0 ? (
+              {enrichedPortfolio.length === 0 ? (
                 <div className="bg-card/50 rounded-3xl p-6 text-center border-2 border-dashed border-border flex-1 flex flex-col items-center justify-center gap-2">
                   <Inbox className="w-8 h-8 text-muted-foreground/50" />
                   <p className="text-sm text-muted-foreground" style={nunito}>Your nest is empty!</p>
@@ -417,7 +462,7 @@ const Panel = () => {
               ) : (
                 <div className="space-y-2">
                   <AnimatePresence>
-                    {activePortfolio.map((inv) => (
+                    {enrichedPortfolio.map((inv) => (
                       <motion.div key={inv.id} initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }} layout>
                         <DraggableCard inv={inv} zone="nest" onClick={() => removeInvestment(inv.id)} />
                       </motion.div>
@@ -499,7 +544,7 @@ const Panel = () => {
       <AnimatePresence>
         {simulationOpen && (
           <TimeSimulation
-            portfolio={activePortfolio}
+            portfolio={enrichedPortfolio}
             initialMonths={simMonths}
             onClose={() => setSimulationOpen(false)}
             onSellInvestment={handleSimSell}
