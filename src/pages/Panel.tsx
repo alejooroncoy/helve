@@ -282,8 +282,10 @@ const Panel = () => {
   const { loadProgress, saveProgress } = useUserProgress();
   const [activePortfolio, setActivePortfolio] = useState<Investment[]>([]);
   const [profile, setProfile] = useState("balanced");
+  const [balance, setBalance] = useState(1000);
+  const [lastSimGain, setLastSimGain] = useState<number | null>(null);
   const [mascotMessage, setMascotMessage] = useState(
-    "Drag an investment into your nest — or just tap it!"
+    "¡Arrastra una inversión a tu nido o tócala!"
   );
   const [draggedItem, setDraggedItem] = useState<{ inv: Investment; zone: string } | null>(null);
   const [coachOpen, setCoachOpen] = useState(false);
