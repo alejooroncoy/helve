@@ -407,7 +407,7 @@ const Panel = () => {
 
   const addInvestment = (inv: Investment) => {
     if (activePortfolio.length >= 4) {
-      setMascotMessage("Your nest is full! Remove one egg to make room.");
+      setMascotMessage("🪺 ¡Tu nido está lleno! Vende un huevo para hacer espacio.");
       return;
     }
     if (activePortfolio.find((i) => i.id === inv.id)) return;
@@ -415,18 +415,23 @@ const Panel = () => {
     setActivePortfolio(next);
     saveProgress({ portfolio: next });
     const newRisk = Math.round(next.reduce((s, i) => s + i.riskLevel, 0) / next.length * 10);
-    if (newRisk > 70) setMascotMessage("Careful! High risk ahead. Maybe add something steadier?");
-    else if (newRisk < 20) setMascotMessage("Very safe nest! Cozy and steady.");
-    else setMascotMessage("Great pick! Your portfolio is looking strong.");
+    if (newRisk > 70) setMascotMessage("🦉 ¡Cuidado! Compraste algo arriesgado. Tu nido tiembla un poco...");
+    else if (newRisk < 20) setMascotMessage("🦉 ¡Buena compra! Un huevito muy seguro para tu nido.");
+    else setMascotMessage("🦉 ¡Comprado! Buen ojo, ese huevo se ve prometedor.");
   };
 
   const removeInvestment = (id: string) => {
+    const sold = activePortfolio.find(i => i.id === id);
     setActivePortfolio((prev) => {
       const next = prev.filter((i) => i.id !== id);
       saveProgress({ portfolio: next });
       return next;
     });
-    setMascotMessage("Investment removed. Pick a new one from Scouted.");
+    if (sold) {
+      setMascotMessage(`🦉 ¡Vendiste ${sold.name}! A veces soltar un huevo es la mejor decisión.`);
+    } else {
+      setMascotMessage("🦉 Huevo vendido. Tu nido se siente más ligero.");
+    }
   };
 
   const handleDragStart = (event: DragStartEvent) => {
