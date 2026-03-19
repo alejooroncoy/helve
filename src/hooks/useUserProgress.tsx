@@ -50,6 +50,7 @@ export function useUserProgress() {
       if (progress.risk_scores !== undefined) updateData.risk_scores = progress.risk_scores;
       if (progress.risk_profile !== undefined) updateData.risk_profile = progress.risk_profile;
       if (progress.portfolio !== undefined) updateData.portfolio = progress.portfolio;
+      if (progress.allocations !== undefined) updateData.allocations = progress.allocations;
       if (progress.game_step !== undefined) updateData.game_step = progress.game_step;
       if (progress.storm_choice !== undefined) updateData.storm_choice = progress.storm_choice;
       if (progress.simulation_result !== undefined) updateData.simulation_result = progress.simulation_result;
