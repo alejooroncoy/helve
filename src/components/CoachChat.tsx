@@ -205,7 +205,7 @@ function MicButton({ onTranscript, disabled }: { onTranscript: (text: string) =>
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) { alert("Your browser doesn't support voice recognition. Try Chrome."); return; }
     const recognition = new SpeechRecognition();
-    recognition.lang = "es-ES";
+    recognition.lang = (document.documentElement.lang || localStorage.getItem("i18nextLng") || "en") === "es" ? "es-ES" : "en-US";
     recognition.interimResults = true;
     recognition.continuous = true;
     recognitionRef.current = recognition;
