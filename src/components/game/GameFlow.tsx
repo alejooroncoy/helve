@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import type { GameStep, PortfolioSlot, Investment, GameState } from "@/game/types";
 import { initialGameState, getProfile } from "@/game/types";
@@ -15,6 +16,7 @@ const riskSteps: GameStep[] = ["risk-1", "risk-2", "risk-3"];
 
 const GameFlow = () => {
   const [state, setState] = useState<GameState>(initialGameState);
+  const navigate = useNavigate();
 
   const go = useCallback((step: GameStep, patch?: Partial<GameState>) => {
     setState((prev) => ({ ...prev, ...patch, step }));
@@ -70,7 +72,10 @@ const GameFlow = () => {
         )}
 
         {state.step === "profile-result" && (
-          <ProfileResult key="profile" profile={state.profile} onContinue={() => go("portfolio")} />
+          <ProfileResult key="profile" profile={state.profile} onContinue={() => {
+            sessionStorage.setItem("helve-profile", state.profile);
+            navigate("/panel");
+          }} />
         )}
 
         {state.step === "portfolio" && (
