@@ -33,7 +33,7 @@ export function useUserProgress() {
       risk_scores: (data.risk_scores as unknown as number[]) ?? [],
       risk_profile: (data.risk_profile as RiskProfile) ?? "balanced",
       portfolio: (data.portfolio as unknown as Investment[]) ?? [],
-      allocations: (data.allocations as unknown as Record<string, number>) ?? {},
+      allocations: ((data as any).allocations as Record<string, number>) ?? {},
       game_step: data.game_step ?? "welcome",
       storm_choice: data.storm_choice ?? null,
       simulation_result: data.simulation_result ?? 0,
