@@ -52,8 +52,8 @@ const ProfileResult = ({ profile, onContinue }: Props) => {
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.3 }}
       >
-        <h2 className="text-4xl text-foreground" style={{ ...nunito, fontWeight: 900 }}>{data.title}</h2>
-        <p className="text-lg text-muted-foreground mt-3 max-w-xs" style={{ ...nunito, fontWeight: 600 }}>{data.desc}</p>
+        <h2 className="text-3xl text-foreground" style={{ ...nunito, fontWeight: 900 }}>{data.title}</h2>
+        <p className="text-base text-muted-foreground mt-3 max-w-xs" style={{ ...nunito, fontWeight: 600 }}>{data.desc}</p>
       </motion.div>
 
       <motion.button
