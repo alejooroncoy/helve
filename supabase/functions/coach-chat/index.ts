@@ -182,6 +182,9 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
+    const liveInstrumentStats = await fetchInstrumentStats();
+    const systemPrompt = buildSystemPrompt(liveInstrumentStats);
+
     // Build portfolio context
     let contextMessage = "";
     if (portfolio && portfolio.length > 0) {
