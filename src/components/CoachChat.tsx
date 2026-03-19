@@ -536,7 +536,7 @@ export default function CoachChat({ onClose, portfolio }: CoachChatProps) {
           onSubmit={(e) => { e.preventDefault(); send(); }}
           className="flex items-center gap-2"
         >
-          <MicButton onTranscript={(t) => setInput((prev) => prev + t)} disabled={loading} />
+          <MicButton onTranscript={(t) => setInput(t)} disabled={loading} />
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
