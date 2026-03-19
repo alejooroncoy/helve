@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
+import { BrowserRouter, Route, Routes, Navigate, useLocation } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -14,9 +14,29 @@ import SplashScreen from "./components/SplashScreen.tsx";
 
 const queryClient = new QueryClient();
 
+function AppRoutes() {
+  const location = useLocation();
+  const [onboardingDone, setOnboardingDone] = useState(
+    () => localStorage.getItem("onboarding_done") === "1"
+  );
+
+  useEffect(() => {
+    setOnboardingDone(localStorage.getItem("onboarding_done") === "1");
+  }, [location]);
+
+  return (
+    <Routes>
+      <Route path="/auth" element={<Auth />} />
+      <Route path="/onboarding" element={<Onboarding />} />
+      <Route path="/" element={onboardingDone ? <Index /> : <Navigate to="/onboarding" replace />} />
+      <Route path="/panel" element={<Panel />} />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  );
+}
+
 const App = () => {
   const [showSplash, setShowSplash] = useState(true);
-  const onboardingDone = localStorage.getItem("onboarding_done");
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -26,13 +46,7 @@ const App = () => {
           <Sonner />
           {showSplash && <SplashScreen onFinish={() => setShowSplash(false)} />}
           <BrowserRouter>
-            <Routes>
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/onboarding" element={<Onboarding />} />
-              <Route path="/" element={onboardingDone ? <Index /> : <Navigate to="/onboarding" replace />} />
-              <Route path="/panel" element={<Panel />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+            <AppRoutes />
           </BrowserRouter>
         </TooltipProvider>
       </AuthProvider>
