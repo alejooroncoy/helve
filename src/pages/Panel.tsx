@@ -782,7 +782,6 @@ const Panel = () => {
   );
 
   const tryBuyInvestment = useCallback(
-  const tryBuyInvestment = useCallback(
     (inv: Investment) => {
       if (activePortfolio.find((i) => i.id === inv.id)) return;
       if (totalAllocated >= 100) {
