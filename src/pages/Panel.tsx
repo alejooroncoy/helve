@@ -340,6 +340,7 @@ const Panel = () => {
               </PopoverContent>
             </Popover>
           )}
+          </div>
         </div>
       </div>
 
