@@ -199,7 +199,7 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, onClose,
     setPlaying(true);
   };
 
-  const isFinished = currentStep >= timeMonths.length - 1;
+  const isFinished = currentStep >= totalSteps;
   const lastValue = data[data.length - 1]?.value || startBalance;
   const isPositive = lastValue >= startBalance;
 
