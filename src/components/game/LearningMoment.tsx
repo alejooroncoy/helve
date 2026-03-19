@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { TrendingUp } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { AssetAllocation, RiskProfile } from "@/game/types";
 import { getAllocationRiskScore, getProfileRiskRange, ASSET_CLASSES } from "@/game/types";
