@@ -918,20 +918,24 @@ const Panel = () => {
 
         {/* Stat Cards — Capital & Invested (global), Risk & Return (per nest) */}
         <div className="grid grid-cols-3 gap-2.5">
-          <div className="bg-card rounded-2xl p-3 shadow-sm flex flex-col">
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium" style={nunito}>
-              {t("panel.capital")}
-            </p>
-            <p className="text-lg font-bold text-foreground mt-0.5" style={nunito}>
-              CHF {Math.round(balance * (100 - totalAllocated) / 100).toLocaleString()}
-            </p>
-            <Separator className="my-1.5" />
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium" style={nunito}>
-              {t("panel.invested")}
-            </p>
-            <p className="text-sm font-bold mt-0.5" style={{ ...nunito, color: CELESTE }}>
-              CHF {Math.round(balance * totalAllocated / 100).toLocaleString()}
-            </p>
+          <div className="bg-card rounded-2xl p-3 shadow-sm flex items-stretch gap-2.5">
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium" style={nunito}>
+                {t("panel.capital")}
+              </p>
+              <p className="text-lg font-bold text-foreground mt-0.5" style={nunito}>
+                CHF {Math.round(balance * (100 - totalAllocated) / 100).toLocaleString()}
+              </p>
+            </div>
+            <Separator orientation="vertical" />
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium" style={nunito}>
+                {t("panel.invested")}
+              </p>
+              <p className="text-sm font-bold mt-0.5" style={{ ...nunito, color: CELESTE }}>
+                CHF {Math.round(balance * totalAllocated / 100).toLocaleString()}
+              </p>
+            </div>
           </div>
           <div className="bg-card rounded-2xl p-3 shadow-sm">
             <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium" style={nunito}>
