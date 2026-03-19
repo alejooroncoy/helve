@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Line, LineChart, ResponsiveContainer } from "recharts";
 
 export interface CategoryTrendSnapshot {
@@ -27,7 +27,6 @@ export function getCategoryColor(index: number) {
 
 interface TimeSimulationCategoryChartsProps {
   items: CategoryTrendSnapshot[];
-  /** Render a single item in "detail" mode (taller chart, no animation stagger) */
   detail?: boolean;
 }
 
@@ -54,12 +53,19 @@ export default function TimeSimulationCategoryCharts({
             {/* Label row */}
             <div className="flex items-baseline justify-between mb-0.5 px-1">
               <p className="text-sm font-bold text-foreground">{item.label}</p>
-              <p
-                className="text-sm font-bold tabular-nums"
-                style={{ color: positive ? "hsl(var(--primary))" : "hsl(var(--destructive))" }}
-              >
-                {positive ? "+" : ""}{item.changePct.toFixed(1)}%
-              </p>
+              <AnimatePresence mode="wait">
+                <motion.p
+                  key={item.changePct.toFixed(1)}
+                  initial={{ opacity: 0, y: -6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 6 }}
+                  transition={{ duration: 0.3 }}
+                  className="text-sm font-bold tabular-nums"
+                  style={{ color: positive ? "hsl(var(--primary))" : "hsl(var(--destructive))" }}
+                >
+                  {positive ? "+" : ""}{item.changePct.toFixed(1)}%
+                </motion.p>
+              </AnimatePresence>
             </div>
 
             {/* Sparkline */}
@@ -72,7 +78,9 @@ export default function TimeSimulationCategoryCharts({
                     stroke={lineColor}
                     strokeWidth={2.5}
                     dot={false}
-                    isAnimationActive={false}
+                    isAnimationActive
+                    animationDuration={800}
+                    animationEasing="ease-in-out"
                   />
                 </LineChart>
               </ResponsiveContainer>
