@@ -406,11 +406,20 @@ const Panel = () => {
     loadProgress().then((p) => {
       if (p) {
         setProfile(p.risk_profile);
-        if (p.portfolio && p.portfolio.length > 0) setActivePortfolio(p.portfolio);
+        if (p.portfolio && p.portfolio.length > 0) {
+          setActivePortfolio(p.portfolio);
+        } else {
+          // Auto-fill nest with top 4 suggestions based on risk profile
+          const defaults = getSuggestions(p.risk_profile, []).slice(0, 4);
+          if (defaults.length > 0) {
+            setActivePortfolio(defaults);
+            saveProgress({ portfolio: defaults });
+          }
+        }
         if (p.simulation_result && p.simulation_result > 0) setBalance(p.simulation_result);
       }
     });
-  }, [loadProgress]);
+  }, [loadProgress, saveProgress]);
 
   const handleSimulationComplete = useCallback((finalBalance: number, gainPct: number) => {
     setBalance(finalBalance);
