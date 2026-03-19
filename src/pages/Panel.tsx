@@ -216,7 +216,6 @@ function ScoutedCard({ inv, overlay, onAsk, t, isMobile, dragHandleProps }: { in
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
-            <span className="text-sm">{inv.emoji}</span>
             <p className="text-xs font-bold text-foreground leading-snug" style={nunito}>{displayName}</p>
           </div>
         </div>
