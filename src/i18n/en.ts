@@ -3,7 +3,7 @@ const en = {
   auth: {
     tagline: "Learn to invest by playing. Hatch your golden eggs.",
     signInGoogle: "Sign in with Google",
-    demoUser: "🎮 Demo User",
+    demoUser: "Demo User",
     disclaimer: "By continuing, you agree that this is an educational game and not real financial advice.",
   },
 

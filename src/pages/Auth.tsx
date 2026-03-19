@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Hand } from "lucide-react";
 import { lovable } from "@/integrations/lovable/index";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
@@ -105,6 +105,7 @@ const Auth = () => {
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.97 }}
         >
+          <Hand className="w-4 h-4" />
           {t("auth.demoUser")}
           <ChevronRight className="w-4 h-4" />
         </motion.button>

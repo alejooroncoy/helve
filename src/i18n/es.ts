@@ -3,7 +3,7 @@ const es = {
   auth: {
     tagline: "Aprende a invertir jugando. Incuba tus huevos de oro.",
     signInGoogle: "Iniciar sesión con Google",
-    demoUser: "🎮 Usuario Demo",
+    demoUser: "Usuario Demo",
     disclaimer: "Al continuar, aceptas que esto es un juego educativo y no asesoramiento financiero real.",
   },
 
