@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import { useMonthlyPrices } from "@/hooks/useMarketData";
-import { Timer, TrendingUp, TrendingDown, Users, ChevronRight } from "lucide-react";
+import { Timer, TrendingUp, TrendingDown, Users, ChevronRight, AlertTriangle } from "lucide-react";
 import type { AssetClass, MarketEvent as MarketEventType } from "@/game/types";
 import { ASSET_CLASSES, MARKET_EVENTS_POOL, ALL_ASSET_DB_IDS } from "@/game/types";
 import type { useMultiplayer } from "@/hooks/useMultiplayer";
