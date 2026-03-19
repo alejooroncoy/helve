@@ -457,7 +457,7 @@ const Panel = () => {
       <div className="px-5 pb-3">
         <div className="grid grid-cols-3 gap-3">
           {[
-            { label: "Balance", value: `CHF ${balance.toLocaleString()}`, sub: `+CHF ${monthlyIncome}/mes`, subStyle: { color: CELESTE } },
+            { label: "Balance", value: `CHF ${balance.toLocaleString()}`, sub: lastSimGain !== null ? `${lastSimGain > 0 ? "+" : ""}${lastSimGain.toFixed(1)}% última sim.` : `+CHF ${monthlyIncome}/mes`, subStyle: { color: lastSimGain !== null ? (lastSimGain >= 0 ? CELESTE : "hsl(var(--destructive))") : CELESTE } },
             { label: "Riesgo", value: `${totalRisk}%`, valueStyle: totalRisk > 60 ? { color: "hsl(var(--destructive))" } : totalRisk > 30 ? {} : { color: CELESTE }, valueClass: totalRisk > 30 && totalRisk <= 60 ? "text-accent" : "", sub: totalRisk <= 30 ? "Bajo" : totalRisk <= 60 ? "Medio" : "Alto", subStyle: {} },
             { label: "Retorno", value: `${avgReturn}%`, valueStyle: { color: CELESTE }, sub: "Anual", subStyle: {} },
           ].map((stat, i) => (
