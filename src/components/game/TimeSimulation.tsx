@@ -8,6 +8,7 @@ interface TimeSimulationProps {
   portfolio: Investment[];
   onClose: () => void;
   onSellInvestment: (id: string) => void;
+  onAskCoach?: (question: string) => void;
 }
 
 interface TimePoint {
