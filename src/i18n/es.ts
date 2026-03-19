@@ -189,6 +189,7 @@ const es = {
     normalBuy: "¡Agregado! Buen ojo, ese huevo se ve prometedor.",
     soldMsg: "¡{{name}} fue quitado de tu nido! Haciendo espacio para algo mejor.",
     soldGeneric: "Huevo quitado. Tu nido se siente más ligero.",
+    swapMsg: "¡Cambio hecho! Sacamos {{removed}} y agregamos {{added}} a tu nido 🔄",
     nestGrew: "¡Genial! Tu nido creció {{pct}}% 🎉",
     nestDropped: "Tu nido bajó {{pct}}%, pero aprendiste 💪",
     buyDialogTitle: "¡Estás comprando!",

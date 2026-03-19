@@ -603,7 +603,7 @@ const Panel = () => {
                   </motion.button>
                 </PopoverTrigger>
                 <PopoverContent side="bottom" align="end" className="w-[380px] h-[500px] p-0 rounded-2xl overflow-hidden">
-                  <CoachChat onClose={() => { setCoachOpen(false); setCoachInitQ(undefined); }} portfolio={enrichedPortfolio} onAddInvestment={(id) => { const inv = enrichedAvailable.find(i => i.id === id); if (inv) tryBuyInvestment(inv); }} onRemoveInvestment={(id) => removeInvestment(id)} initialQuestion={coachInitQ} />
+                  <CoachChat onClose={() => { setCoachOpen(false); setCoachInitQ(undefined); }} portfolio={enrichedPortfolio} onAddInvestment={(id) => { const inv = enrichedAvailable.find(i => i.id === id); if (inv) tryBuyInvestment(inv); }} onRemoveInvestment={(id) => removeInvestment(id)} initialQuestion={coachInitQ} onSwapAccepted={handleSwapFromCoach} />
                 </PopoverContent>
               </Popover>
             )}
