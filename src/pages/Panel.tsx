@@ -611,7 +611,7 @@ const Panel = () => {
     setActiveNestId(nest.id);
     setActivePortfolio(nest.portfolio);
     setAllocations(nest.allocations);
-    setBalance(nest.balance);
+    // Balance is global — don't change it when switching nests
     setLastSimGain(null);
   }, []);
 
