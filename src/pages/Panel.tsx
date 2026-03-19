@@ -1282,6 +1282,7 @@ const Panel = () => {
             onConfirm={handleBuyConfirm}
             onCancel={() => setBuyDialogInv(null)}
             t={t}
+            availablePct={100 - totalAllocated}
           />
         )}
       </AnimatePresence>
