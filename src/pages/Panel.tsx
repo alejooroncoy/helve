@@ -1138,6 +1138,7 @@ const Panel = () => {
                       ))}
                     </AnimatePresence>
                   </div>
+                </ScrollArea>
                 )}
               </DropZone>
             </div>
