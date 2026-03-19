@@ -12,6 +12,7 @@ import MarketEvent from "./MarketEvent";
 import SimulationScreen from "./SimulationScreen";
 import LearningMoment from "./LearningMoment";
 import LoopScreen from "./LoopScreen";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 const riskSteps: GameStep[] = ["risk-1", "risk-2", "risk-3"];
 
@@ -76,7 +77,8 @@ const GameFlow = () => {
     }));
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative">
+      <LanguageSwitcher className="absolute top-4 right-4 z-50" />
       <AnimatePresence mode="wait">
         {state.step === "welcome" && (
           <WelcomeScreen key="welcome" onStart={() => go("risk-1")} />

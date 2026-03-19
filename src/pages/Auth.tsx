@@ -5,6 +5,7 @@ import { lovable } from "@/integrations/lovable/index";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 const nunito = { fontFamily: "'Nunito', sans-serif" };
 
@@ -62,6 +63,7 @@ const Auth = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
     >
+      <LanguageSwitcher className="absolute top-6 right-6" />
       <motion.div
         className="text-center mb-10"
         initial={{ y: -20, opacity: 0 }}

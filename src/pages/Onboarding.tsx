@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { ChevronRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 const nunito = { fontFamily: "'Nunito', sans-serif" };
 
@@ -27,7 +28,8 @@ const Onboarding = () => {
   const step = steps[current];
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-between px-6 py-10">
+    <div className="min-h-screen bg-background flex flex-col items-center justify-between px-6 py-10 relative">
+      <LanguageSwitcher className="absolute top-4 right-4" />
       <div className="flex gap-2 pt-2">
         {steps.map((_, i) => (
           <div
