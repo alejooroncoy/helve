@@ -203,22 +203,23 @@ function getEventCount(initialMonths: number, portfolio: Investment[]) {
   const normalizedRisk = clamp((avgRisk - 2) / 7, 0, 1);
 
   if (initialMonths <= 3) {
-    return Math.random() < 0.28 + normalizedRisk * 0.37 ? 1 : 0;
+    return Math.random() < 0.35 + normalizedRisk * 0.35 ? 1 : 0;
   }
 
   if (initialMonths <= 6) {
-    return Math.random() < 0.48 + normalizedRisk * 0.28 ? 1 : 0;
+    return 1;
   }
 
   if (initialMonths <= 12) {
-    return 1 + (normalizedRisk > 0.5 && portfolio.length > 1 ? 1 : 0);
+    return Math.min(2, 1 + (normalizedRisk > 0.35 || portfolio.length > 1 ? 1 : 0));
   }
 
   if (initialMonths <= 24) {
-    return Math.min(3, 2 + (normalizedRisk > 0.58 ? 1 : 0));
+    return Math.min(3, 2 + (normalizedRisk > 0.4 ? 1 : 0));
   }
 
-  return Math.min(Math.min(5, portfolio.length || 1), 3 + Math.round(normalizedRisk * 2));
+  // 5 years: 3-5 events across different categories
+  return Math.min(Math.min(5, portfolio.length), 3 + Math.round(normalizedRisk * 2));
 }
 
 function pickEventSteps(totalSteps: number, eventCount: number) {
