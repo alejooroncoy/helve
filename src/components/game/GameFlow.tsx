@@ -72,7 +72,10 @@ const GameFlow = () => {
         )}
 
         {state.step === "profile-result" && (
-          <ProfileResult key="profile" profile={state.profile} onContinue={() => go("portfolio")} />
+          <ProfileResult key="profile" profile={state.profile} onContinue={() => {
+            sessionStorage.setItem("helve-profile", state.profile);
+            navigate("/panel");
+          }} />
         )}
 
         {state.step === "portfolio" && (
