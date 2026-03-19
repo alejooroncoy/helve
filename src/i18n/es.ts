@@ -204,6 +204,14 @@ const es = {
     allSafeInsight: "Jugar seguro preservó tu dinero, pero el crecimiento fue limitado. Un poco de riesgo puede dar mucho.",
     stayInsight: "Mantenerte invertido durante la tormenta ayudó a tu jardín a recuperarse y crecer más fuerte.",
     balancedInsight: "Un enfoque equilibrado te dio un crecimiento constante sin demasiadas sorpresas.",
+    tooAggressiveInsight: "Tu portafolio fue más arriesgado de lo que tu perfil sugería. La volatilidad extra puede dar frutos, ¡pero asegúrate de poder manejar las caídas!",
+    tooConservativeInsight: "Tu portafolio fue más seguro de lo necesario para tu perfil. Evitaste pérdidas, pero también perdiste crecimiento potencial. Encontrar el balance correcto es clave.",
+    highEquityInsight: "Alta exposición a acciones significa gran potencial de subida — pero también caídas más pronunciadas en mercados bajistas. La diversificación suaviza el camino.",
+    highBondsInsight: "Los bonos brindan estabilidad e ingreso predecible. Genial para metas a corto plazo, pero el crecimiento a largo plazo puede requerir algo de exposición a acciones.",
+    yourAllocation: "TU ASIGNACIÓN",
+    riskScore: "Puntaje de riesgo: {{score}}/10",
+    aligned: "Alineado con tu perfil ✅",
+    misaligned: "Diferente a tu perfil ⚠️",
   },
 
   // Loop screen
