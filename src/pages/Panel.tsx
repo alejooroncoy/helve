@@ -445,7 +445,7 @@ function DropZone({ id, children, isOver }: { id: string; children: React.ReactN
       className="flex-1 min-w-0 rounded-3xl transition-all duration-200 p-1 -m-1 flex flex-col"
       style={active ? { backgroundColor: `${CELESTE}08`, outline: `2px dashed ${CELESTE}40` } : {}}
     >
-      {children}
+      <ScrollArea>{children}</ScrollArea>
     </div>
   );
 }
