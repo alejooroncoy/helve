@@ -1080,7 +1080,7 @@ const Panel = () => {
         <div className="flex-1 min-h-0 px-5 pb-4 flex flex-col overflow-hidden">
           <div className="flex flex-col md:flex-row gap-4 flex-1 min-h-0">
             {/* My Nest */}
-            <div className="flex-1 min-h-0 md:pr-2 flex flex-col">
+            <div className="flex-1 min-h-0 md:pr-2 flex flex-col overflow-hidden">
               <DropZone id="nest">
                 <div className="flex items-center justify-between mb-3">
                   <h2 className="text-sm font-bold text-foreground uppercase tracking-wide" style={nunito}>
@@ -1101,7 +1101,8 @@ const Panel = () => {
                     </p>
                   </div>
                 ) : (
-                  <div className="space-y-2">
+                <ScrollArea className="flex-1 min-h-0 max-h-[40vh]">
+                  <div className="space-y-2 pr-2">
                     <AnimatePresence>
                       {enrichedPortfolio.map((inv) => (
                         <motion.div
@@ -1137,6 +1138,7 @@ const Panel = () => {
                       ))}
                     </AnimatePresence>
                   </div>
+                </ScrollArea>
                 )}
               </DropZone>
             </div>
