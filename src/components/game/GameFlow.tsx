@@ -12,6 +12,7 @@ import MarketEvent from "./MarketEvent";
 import SimulationScreen from "./SimulationScreen";
 import LearningMoment from "./LearningMoment";
 import LoopScreen from "./LoopScreen";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 const riskSteps: GameStep[] = ["risk-1", "risk-2", "risk-3"];
 
