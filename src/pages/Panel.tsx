@@ -730,7 +730,7 @@ const Panel = () => {
                   ))}
                 </div>
                 {/* Desktop: vertical list */}
-                <div className="hidden lg:flex lg:flex-col gap-2">
+                <div className="hidden md:flex md:flex-col gap-2">
                   {suggestions.map((inv) => (
                     <div key={inv.id} className="w-full">
                       <DraggableCard inv={inv} zone="scouted" onClick={() => tryBuyInvestment(inv)} onAsk={() => { setCoachInitQ(`Explica brevemente qué es ${inv.name} y si encaja con mi perfil`); setCoachOpen(true); }} />
