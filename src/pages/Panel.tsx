@@ -315,7 +315,9 @@ const Panel = () => {
   const navigate = useNavigate();
   const { signOut } = useAuth();
   const { loadProgress, saveProgress } = useUserProgress();
+  const { nests, loading: nestsLoading, createNest, updateNest, deleteNest } = useUserPortfolios();
   const { t } = useTranslation();
+  const [activeNestId, setActiveNestId] = useState<string | null>(null);
   const [activePortfolio, setActivePortfolio] = useState<Investment[]>([]);
   const [allocations, setAllocations] = useState<Record<string, number>>({});
   const [profile, setProfile] = useState("balanced");
@@ -328,6 +330,8 @@ const Panel = () => {
   const [coachInitQ, setCoachInitQ] = useState<string | undefined>(undefined);
   const [simulationOpen, setSimulationOpen] = useState(false);
   const [simMonths, setSimMonths] = useState(12);
+  const [renamingNest, setRenamingNest] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState("");
   const isMobile = useIsMobile();
 
   const { stats, loading: statsLoading } = useInstrumentStats(allDbIds);
@@ -346,37 +350,68 @@ const Panel = () => {
   const enrichedPortfolio = useMemo(() => activePortfolio.map(enrichInvestment), [activePortfolio, enrichInvestment]);
   const enrichedAvailable = useMemo(() => availableInvestments.map(enrichInvestment), [enrichInvestment]);
 
+  // Load profile from user_progress
   useEffect(() => {
     loadProgress().then((p) => {
-      if (p) {
-        setProfile(p.risk_profile);
-        if (p.portfolio && p.portfolio.length > 0) {
-          setActivePortfolio(p.portfolio);
-          if (p.allocations && Object.keys(p.allocations).length > 0) {
-            setAllocations(p.allocations);
-          } else {
-            const evenPct = Math.floor(100 / p.portfolio.length);
-            const allocs: Record<string, number> = {};
-            p.portfolio.forEach(inv => { allocs[inv.id] = evenPct; });
-            setAllocations(allocs);
-            saveProgress({ allocations: allocs });
-          }
-        } else {
-          // Default: pick 3 suggested categories
-          const defaults = getSuggestions(p.risk_profile, []).slice(0, 3);
-          if (defaults.length > 0) {
-            setActivePortfolio(defaults);
-            const evenPct = Math.floor(100 / defaults.length);
-            const allocs: Record<string, number> = {};
-            defaults.forEach(inv => { allocs[inv.id] = evenPct; });
-            setAllocations(allocs);
-            saveProgress({ portfolio: defaults, allocations: allocs });
-          }
-        }
-        if (p.simulation_result && p.simulation_result > 0) setBalance(p.simulation_result);
-      }
+      if (p) setProfile(p.risk_profile);
     });
-  }, [loadProgress, saveProgress]);
+  }, [loadProgress]);
+
+  // When nests load, select first or create default
+  useEffect(() => {
+    if (nestsLoading) return;
+    if (nests.length > 0) {
+      if (!activeNestId || !nests.find(n => n.id === activeNestId)) {
+        switchToNest(nests[0]);
+      }
+    } else {
+      // Auto-create first nest
+      createNest(t("panel.myNest")).then((nest) => {
+        if (nest) switchToNest(nest);
+      });
+    }
+  }, [nests, nestsLoading]);
+
+  const switchToNest = useCallback((nest: NestPortfolio) => {
+    setActiveNestId(nest.id);
+    setActivePortfolio(nest.portfolio);
+    setAllocations(nest.allocations);
+    setBalance(nest.balance);
+    setLastSimGain(null);
+  }, []);
+
+  // Sync when activeNestId changes from tabs
+  const handleTabClick = useCallback((nest: NestPortfolio) => {
+    switchToNest(nest);
+  }, [switchToNest]);
+
+  const handleCreateNest = useCallback(async () => {
+    if (nests.length >= 4) { mascotToast(t("panel.maxNests")); return; }
+    const name = t("panel.nestTab", { n: nests.length + 1 });
+    const nest = await createNest(name);
+    if (nest) switchToNest(nest);
+  }, [nests.length, createNest, switchToNest, t]);
+
+  const handleDeleteNest = useCallback(async (nestId: string) => {
+    if (nests.length <= 1) return; // keep at least 1
+    await deleteNest(nestId);
+    if (activeNestId === nestId) {
+      const remaining = nests.filter(n => n.id !== nestId);
+      if (remaining.length > 0) switchToNest(remaining[0]);
+    }
+  }, [nests, activeNestId, deleteNest, switchToNest]);
+
+  const handleRenameNest = useCallback(async (nestId: string, newName: string) => {
+    if (!newName.trim()) return;
+    await updateNest(nestId, { name: newName.trim() });
+    setRenamingNest(null);
+  }, [updateNest]);
+
+  // Save helpers that persist to the active nest
+  const saveNestData = useCallback((patch: Partial<Pick<NestPortfolio, "portfolio" | "allocations" | "balance">>) => {
+    if (!activeNestId) return;
+    updateNest(activeNestId, patch);
+  }, [activeNestId, updateNest]);
 
   const handleSimulationComplete = useCallback((finalBalance: number, gainPct: number) => {
     setBalance(finalBalance);
