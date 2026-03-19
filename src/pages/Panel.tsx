@@ -289,6 +289,7 @@ function ScoutedCard({ inv, overlay, onAsk }: { inv: Investment; overlay?: boole
           {inv.flag && <span className="text-[10px]">{inv.flag}</span>}
         </div>
       </div>
+      <div className="flex-grow" />
       <div className="flex items-center gap-2 mt-2">
         <span className="text-[10px] text-muted-foreground" style={nunito}>Riesgo</span>
         <span className="text-[10px] font-bold" style={{ ...nunito, color: getRiskBarColor(inv.riskLevel) }}>{inv.riskLevel}/10</span>
