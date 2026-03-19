@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { AnimatePresence } from "framer-motion";
-import type { GameStep, PortfolioSlot, GameState } from "@/game/types";
+import type { GameStep, PortfolioSlot, Investment, GameState } from "@/game/types";
 import { initialGameState, getProfile } from "@/game/types";
 import WelcomeScreen from "./WelcomeScreen";
 import RiskScreen from "./RiskScreen";

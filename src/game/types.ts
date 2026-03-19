@@ -51,6 +51,7 @@ export const initialGameState: GameState = {
   riskScore: 0,
   profile: "balanced",
   portfolio: [],
+  portfolioSlots: [],
   stormChoice: null,
   simulationResult: 0,
 };
