@@ -437,7 +437,7 @@ const Panel = () => {
                 <span className="text-xs text-muted-foreground">{activePortfolio.length}/4</span>
               </div>
               {activePortfolio.length === 0 ? (
-                <div className="bg-card/50 rounded-3xl p-6 text-center border-2 border-dashed border-border">
+                <div className="bg-card/50 rounded-3xl p-6 text-center border-2 border-dashed border-border flex-1 flex flex-col items-center justify-center">
                   <p className="text-3xl mb-2">🪹</p>
                   <p className="text-sm text-muted-foreground">Your nest is empty!</p>
                   <p className="text-xs text-muted-foreground mt-1">Drag investments here →</p>
