@@ -592,17 +592,22 @@ const Panel = () => {
     });
   }, [loadProgress]);
 
-  // When nests load, select first or create default
+  // When nests load, select first or create default. Balance is global from first nest.
   useEffect(() => {
     if (nestsLoading) return;
     if (nests.length > 0) {
+      // Use first nest's balance as the global balance
+      setBalance(nests[0].balance);
       if (!activeNestId || !nests.find((n) => n.id === activeNestId)) {
         switchToNest(nests[0]);
       }
     } else {
       // Auto-create first nest
       createNest(t("panel.myNest")).then((nest) => {
-        if (nest) switchToNest(nest);
+        if (nest) {
+          setBalance(nest.balance);
+          switchToNest(nest);
+        }
       });
     }
   }, [nests, nestsLoading]);
@@ -611,7 +616,7 @@ const Panel = () => {
     setActiveNestId(nest.id);
     setActivePortfolio(nest.portfolio);
     setAllocations(nest.allocations);
-    setBalance(nest.balance);
+    // Balance is global — don't change it when switching nests
     setLastSimGain(null);
   }, []);
 
@@ -667,11 +672,14 @@ const Panel = () => {
     (finalBalance: number, gainPct: number) => {
       setBalance(finalBalance);
       setLastSimGain(gainPct);
-      saveNestData({ balance: finalBalance });
+      // Balance is global — sync to ALL nests
+      nests.forEach((nest) => {
+        updateNest(nest.id, { balance: finalBalance });
+      });
       if (gainPct > 0) mascotToast(t("panel.nestGrew", { pct: gainPct.toFixed(1) }));
       else mascotToast(t("panel.nestDropped", { pct: Math.abs(gainPct).toFixed(1) }));
     },
-    [saveNestData, t],
+    [nests, updateNest, t],
   );
 
   const sensors = useSensors(
@@ -698,12 +706,30 @@ const Panel = () => {
   }, 0);
   const avgReturn =
     enrichedPortfolio.length && totalAllocated > 0
-      ? (enrichedPortfolio.reduce((s, i) => s + i.annualReturn * (allocations[i.id] ?? 0), 0) / totalAllocated).toFixed(
-          1,
-        )
+      ? (enrichedPortfolio.reduce((s, i) => s + i.annualReturn * (allocations[i.id] ?? 0), 0) / totalAllocated).toFixed(1)
       : enrichedPortfolio.length
         ? (enrichedPortfolio.reduce((s, i) => s + i.annualReturn, 0) / enrichedPortfolio.length).toFixed(1)
         : "0.0";
+
+  // Per-nest stats for tab badges
+  const getNestStats = useCallback((nest: NestPortfolio) => {
+    const portfolio = (nest.portfolio || []).map(enrichInvestment);
+    const allocs = nest.allocations || {};
+    const totalAlloc = portfolio.reduce((s, i) => s + (allocs[i.id] ?? 0), 0);
+    const risk = portfolio.length
+      ? Math.round(
+          totalAlloc > 0
+            ? (portfolio.reduce((s, i) => s + i.riskLevel * (allocs[i.id] ?? 0), 0) / totalAlloc) * 10
+            : (portfolio.reduce((s, i) => s + i.riskLevel, 0) / portfolio.length) * 10,
+        )
+      : 0;
+    const ret = portfolio.length && totalAlloc > 0
+      ? (portfolio.reduce((s, i) => s + i.annualReturn * (allocs[i.id] ?? 0), 0) / totalAlloc).toFixed(1)
+      : portfolio.length
+        ? (portfolio.reduce((s, i) => s + i.annualReturn, 0) / portfolio.length).toFixed(1)
+        : "0";
+    return { risk, ret, count: portfolio.length };
+  }, [enrichInvestment]);
 
   const executeBuy = useCallback(
     (inv: Investment) => {
@@ -831,19 +857,53 @@ const Panel = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
     >
-      {/* Header */}
-      <div className="px-5 pt-6 pb-2">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl text-foreground mt-0.5" style={{ ...nunito, fontWeight: 900 }}>
-              {t("panel.panelTitle")}
-            </h1>
+      {/* Header — Global Balance + Per-Nest Risk/Return */}
+      <div className="px-5 pt-5 pb-2">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-baseline gap-5">
+            {/* Balance */}
+            <div>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium" style={nunito}>
+                {t("panel.balance")}
+              </p>
+              <h1 className="text-3xl text-foreground" style={{ ...nunito, fontWeight: 900 }}>
+                CHF {balance.toLocaleString()}
+              </h1>
+              <p className="text-xs mt-0.5" style={{ ...nunito, color: lastSimGain !== null ? (lastSimGain >= 0 ? CELESTE : "hsl(var(--destructive))") : CELESTE }}>
+                {lastSimGain !== null
+                  ? `${lastSimGain > 0 ? "+" : ""}${lastSimGain.toFixed(1)}% ${t("panel.lastSim")}`
+                  : `+CHF ${monthlyIncome}${t("panel.perMonth")}`}
+              </p>
+            </div>
+            {/* Risk & Return — per nest */}
+            {enrichedPortfolio.length > 0 && (
+              <div className="flex gap-4">
+                <div>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium" style={nunito}>
+                    {t("panel.risk")}
+                  </p>
+                  <p className="text-xl font-bold" style={{ ...nunito, color: totalRisk > 60 ? "hsl(var(--destructive))" : totalRisk > 30 ? "hsl(var(--accent-foreground))" : CELESTE }}>
+                    {totalRisk}%
+                  </p>
+                  <p className="text-[10px] text-muted-foreground" style={nunito}>{getRiskLabelLocal(totalRisk)}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium" style={nunito}>
+                    {t("panel.returnLabel")}
+                  </p>
+                  <p className="text-xl font-bold" style={{ ...nunito, color: CELESTE }}>
+                    {avgReturn}%
+                  </p>
+                  <p className="text-[10px] text-muted-foreground" style={nunito}>{t("panel.annual")}</p>
+                </div>
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-2">
             <LanguageSwitcher />
             <motion.button
               onClick={handleSignOut}
-              className="w-10 h-10 rounded-full bg-card shadow-sm flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors"
+              className="w-9 h-9 rounded-full bg-card shadow-sm flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors"
               whileTap={{ scale: 0.9 }}
             >
               <LogOut className="w-4 h-4" />
@@ -852,7 +912,7 @@ const Panel = () => {
               <Drawer open={coachOpen} onOpenChange={setCoachOpen}>
                 <DrawerTrigger asChild>
                   <motion.button
-                    className="w-12 h-12 rounded-full bg-card shadow-md overflow-hidden border-2"
+                    className="w-11 h-11 rounded-full bg-card shadow-md overflow-hidden border-2"
                     style={{ borderColor: `${CELESTE}40` }}
                     whileTap={{ scale: 0.9 }}
                   >
@@ -861,15 +921,9 @@ const Panel = () => {
                 </DrawerTrigger>
                 <DrawerContent className="h-[80vh] p-0">
                   <CoachChat
-                    onClose={() => {
-                      setCoachOpen(false);
-                      setCoachInitQ(undefined);
-                    }}
+                    onClose={() => { setCoachOpen(false); setCoachInitQ(undefined); }}
                     portfolio={enrichedPortfolio}
-                    onAddInvestment={(id) => {
-                      const inv = enrichedAvailable.find((i) => i.id === id);
-                      if (inv) tryBuyInvestment(inv);
-                    }}
+                    onAddInvestment={(id) => { const inv = enrichedAvailable.find((i) => i.id === id); if (inv) tryBuyInvestment(inv); }}
                     onRemoveInvestment={(id) => removeInvestment(id)}
                     initialQuestion={coachInitQ}
                     onSwapAccepted={handleSwapFromCoach}
@@ -880,28 +934,18 @@ const Panel = () => {
               <Popover open={coachOpen} onOpenChange={setCoachOpen}>
                 <PopoverTrigger asChild>
                   <motion.button
-                    className="w-12 h-12 rounded-full bg-card shadow-md overflow-hidden border-2"
+                    className="w-11 h-11 rounded-full bg-card shadow-md overflow-hidden border-2"
                     style={{ borderColor: `${CELESTE}40` }}
                     whileTap={{ scale: 0.9 }}
                   >
                     <img src="/perspectiva1.png" alt="Coach" className="w-full h-full object-cover" />
                   </motion.button>
                 </PopoverTrigger>
-                <PopoverContent
-                  side="bottom"
-                  align="end"
-                  className="w-[380px] h-[500px] p-0 rounded-2xl overflow-hidden"
-                >
+                <PopoverContent side="bottom" align="end" className="w-[380px] h-[500px] p-0 rounded-2xl overflow-hidden">
                   <CoachChat
-                    onClose={() => {
-                      setCoachOpen(false);
-                      setCoachInitQ(undefined);
-                    }}
+                    onClose={() => { setCoachOpen(false); setCoachInitQ(undefined); }}
                     portfolio={enrichedPortfolio}
-                    onAddInvestment={(id) => {
-                      const inv = enrichedAvailable.find((i) => i.id === id);
-                      if (inv) tryBuyInvestment(inv);
-                    }}
+                    onAddInvestment={(id) => { const inv = enrichedAvailable.find((i) => i.id === id); if (inv) tryBuyInvestment(inv); }}
                     onRemoveInvestment={(id) => removeInvestment(id)}
                     initialQuestion={coachInitQ}
                     onSwapAccepted={handleSwapFromCoach}
@@ -913,69 +957,76 @@ const Panel = () => {
         </div>
       </div>
 
-      {/* Nest Tabs */}
+      {/* Nest Tabs with per-nest stats */}
       <div className="px-5 pb-3">
         <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-1">
-          {nests.map((nest) => (
-            <div key={nest.id} className="flex-shrink-0 relative group">
-              {renamingNest === nest.id ? (
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    handleRenameNest(nest.id, renameValue);
-                  }}
-                  className="flex items-center"
-                >
-                  <input
-                    autoFocus
-                    value={renameValue}
-                    onChange={(e) => setRenameValue(e.target.value)}
-                    onBlur={() => handleRenameNest(nest.id, renameValue)}
-                    className="text-xs font-bold px-3 py-2 rounded-2xl bg-card border-2 outline-none w-24"
-                    style={{ ...nunito, borderColor: CELESTE }}
-                  />
-                </form>
-              ) : (
-                <button
-                  onClick={() => handleTabClick(nest)}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-2xl text-xs font-bold transition-all border-2"
-                  style={{
-                    ...nunito,
-                    borderColor: activeNestId === nest.id ? CELESTE : "hsl(var(--border))",
-                    backgroundColor: activeNestId === nest.id ? CELESTE + "15" : "hsl(var(--card))",
-                    color: activeNestId === nest.id ? CELESTE : "hsl(var(--muted-foreground))",
-                  }}
-                >
-                  <span>{nest.name}</span>
-                  {activeNestId === nest.id && (
-                    <span className="flex items-center gap-0.5 ml-1">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setRenamingNest(nest.id);
-                          setRenameValue(nest.name);
-                        }}
-                        className="p-0.5 rounded hover:bg-black/10 transition-colors"
-                      >
-                        <Pencil className="w-3 h-3" />
-                      </button>
-                      {nests.length > 1 && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteNest(nest.id);
-                          }}
-                          className="p-0.5 rounded hover:bg-destructive/20 text-destructive/70 hover:text-destructive transition-colors"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </button>
+          {nests.map((nest) => {
+            const ns = getNestStats(nest);
+            const isActive = activeNestId === nest.id;
+            return (
+              <div key={nest.id} className="flex-shrink-0 relative">
+                {renamingNest === nest.id ? (
+                  <form
+                    onSubmit={(e) => { e.preventDefault(); handleRenameNest(nest.id, renameValue); }}
+                    className="flex items-center"
+                  >
+                    <input
+                      autoFocus
+                      value={renameValue}
+                      onChange={(e) => setRenameValue(e.target.value)}
+                      onBlur={() => handleRenameNest(nest.id, renameValue)}
+                      className="text-xs font-bold px-3 py-2 rounded-2xl bg-card border-2 outline-none w-24"
+                      style={{ ...nunito, borderColor: CELESTE }}
+                    />
+                  </form>
+                ) : (
+                  <button
+                    onClick={() => handleTabClick(nest)}
+                    className="flex flex-col items-start px-3 py-2 rounded-2xl text-xs transition-all border-2 min-w-[90px]"
+                    style={{
+                      ...nunito,
+                      fontWeight: 700,
+                      borderColor: isActive ? CELESTE : "hsl(var(--border))",
+                      backgroundColor: isActive ? CELESTE + "15" : "hsl(var(--card))",
+                      color: isActive ? CELESTE : "hsl(var(--muted-foreground))",
+                    }}
+                  >
+                    <div className="flex items-center gap-1.5 w-full">
+                      <span className="truncate">{nest.name}</span>
+                      {isActive && (
+                        <span className="flex items-center gap-0.5 ml-auto">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setRenamingNest(nest.id); setRenameValue(nest.name); }}
+                            className="p-0.5 rounded hover:bg-black/10 transition-colors"
+                          >
+                            <Pencil className="w-3 h-3" />
+                          </button>
+                          {nests.length > 1 && (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleDeleteNest(nest.id); }}
+                              className="p-0.5 rounded hover:bg-destructive/20 text-destructive/70 hover:text-destructive transition-colors"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          )}
+                        </span>
                       )}
-                    </span>
-                  )}
-                </button>
-              )}
-            </div>
-          ))}
+                    </div>
+                    {ns.count > 0 && (
+                      <div className="flex items-center gap-2 mt-1 text-[10px] font-medium" style={nunito}>
+                        <span style={{ color: ns.risk > 60 ? "hsl(var(--destructive))" : ns.risk > 30 ? "hsl(var(--accent-foreground))" : CELESTE }}>
+                          R {ns.risk}%
+                        </span>
+                        <span style={{ color: CELESTE }}>
+                          {ns.ret}%/yr
+                        </span>
+                      </div>
+                    )}
+                  </button>
+                )}
+              </div>
+            );
+          })}
           {nests.length < 4 && (
             <motion.button
               onClick={handleCreateNest}
@@ -988,68 +1039,7 @@ const Panel = () => {
             </motion.button>
           )}
         </div>
-      </div>
 
-      {/* Stats */}
-      <div className="px-5 pb-3">
-        <div className="grid grid-cols-3 gap-3">
-          {[
-            {
-              label: t("panel.balance"),
-              value: `CHF ${balance.toLocaleString()}`,
-              sub:
-                lastSimGain !== null
-                  ? `${lastSimGain > 0 ? "+" : ""}${lastSimGain.toFixed(1)}% ${t("panel.lastSim")}`
-                  : `+CHF ${monthlyIncome}${t("panel.perMonth")}`,
-              subStyle: {
-                color: lastSimGain !== null ? (lastSimGain >= 0 ? CELESTE : "hsl(var(--destructive))") : CELESTE,
-              },
-            },
-            {
-              label: t("panel.risk"),
-              value: `${totalRisk}%`,
-              valueStyle:
-                totalRisk > 60 ? { color: "hsl(var(--destructive))" } : totalRisk > 30 ? {} : { color: CELESTE },
-              valueClass: totalRisk > 30 && totalRisk <= 60 ? "text-accent" : "",
-              sub: getRiskLabelLocal(totalRisk),
-              subStyle: {},
-            },
-            {
-              label: t("panel.returnLabel"),
-              value: `${avgReturn}%`,
-              valueStyle: { color: CELESTE },
-              sub: t("panel.annual"),
-              subStyle: {},
-            },
-          ].map((stat, i) => (
-            <motion.div
-              key={stat.label}
-              className="bg-card rounded-3xl p-2.5 sm:p-3 shadow-sm"
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.1 + i * 0.05 }}
-            >
-              <p
-                className="text-[9px] sm:text-[10px] text-muted-foreground uppercase tracking-wider font-medium"
-                style={nunito}
-              >
-                {stat.label}
-              </p>
-              <p
-                className={`text-sm sm:text-lg font-bold mt-0.5 ${"valueClass" in stat ? stat.valueClass : "text-foreground"}`}
-                style={{ ...nunito, ...("valueStyle" in stat ? stat.valueStyle : {}) }}
-              >
-                {stat.value}
-              </p>
-              <p
-                className="text-[9px] sm:text-[10px] text-muted-foreground font-medium mt-0.5"
-                style={{ ...nunito, ...stat.subStyle }}
-              >
-                {stat.sub}
-              </p>
-            </motion.div>
-          ))}
-        </div>
       </div>
 
       {/* DnD Content */}
