@@ -230,7 +230,7 @@ function DropZone({
   return (
     <div
       ref={setNodeRef}
-      className={`flex-1 min-w-0 rounded-3xl transition-all duration-200 p-1 -m-1 ${
+      className={`flex-1 min-w-0 rounded-3xl transition-all duration-200 p-1 -m-1 flex flex-col ${
         active ? "bg-primary/5 ring-2 ring-primary/20 ring-dashed" : ""
       }`}
     >
@@ -429,7 +429,7 @@ const Panel = () => {
       {/* DnD Content */}
       <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
         <div className="flex-1 overflow-y-auto px-5 pb-4">
-          <div className="flex gap-4">
+          <div className="flex gap-4 h-full">
             {/* LEFT: My Nest */}
             <DropZone id="nest">
               <div className="flex items-center justify-between mb-3">
@@ -437,7 +437,7 @@ const Panel = () => {
                 <span className="text-xs text-muted-foreground">{activePortfolio.length}/4</span>
               </div>
               {activePortfolio.length === 0 ? (
-                <div className="bg-card/50 rounded-3xl p-6 text-center border-2 border-dashed border-border">
+                <div className="bg-card/50 rounded-3xl p-6 text-center border-2 border-dashed border-border flex-1 flex flex-col items-center justify-center">
                   <p className="text-3xl mb-2">🪹</p>
                   <p className="text-sm text-muted-foreground">Your nest is empty!</p>
                   <p className="text-xs text-muted-foreground mt-1">Drag investments here →</p>
