@@ -929,10 +929,10 @@ export default function TimeSimulation({
                 const snap = categorySnapshots.find((s) => s.id === activeAIEvent.investmentId);
                 if (!snap) return null;
                 const dirLabel = activeAIEvent.direction === "drop"
-                  ? (i18n.language === "es" ? "Caída" : "Drop")
+                  ? t("timeSim.dirDrop")
                   : activeAIEvent.direction === "surge"
-                    ? (i18n.language === "es" ? "Subida" : "Surge")
-                    : (i18n.language === "es" ? "Tensión" : "Volatile");
+                    ? t("timeSim.dirSurge")
+                    : t("timeSim.dirVolatile");
                 const stepIdx = activeAIEvent.step;
                 const tLabel = filteredLabels[stepIdx] || "";
                 const marker: EventMarker = {
