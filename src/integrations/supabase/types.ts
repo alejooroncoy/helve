@@ -302,6 +302,14 @@ export type Database = {
           volatility: number
         }[]
       }
+      is_room_host: {
+        Args: { _room_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_room_member: {
+        Args: { _room_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
