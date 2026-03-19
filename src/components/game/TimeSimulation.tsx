@@ -37,26 +37,11 @@ interface MarketEvent {
   type: "positive" | "negative" | "neutral";
 }
 
-// Map game investment IDs to DB instrument IDs
-const investmentToDbId: Record<string, string> = {
-  "ch-bond-aaa": "ch-bond-aaa",
-  "global-bond": "global-bond-agg",
-  "ch-govt-10y": "ch-govt-10y",
-  "smi-index": "smi-index",
-  "eurostoxx50": "eurostoxx50",
-  "gold-chf": "gold-chf",
-  "nestle": "nesn-ch",
-  "novartis": "novn-ch",
-  "djia-index": "djia-index",
-  "dax-index": "dax-index",
-  "apple": "aapl-us",
-  "microsoft": "msft-us",
-  "nvidia": "nvda-us",
-  "logitech": "logn-ch",
-  "ubs": "ubsg-ch",
-  "amazon": "amzn-us",
-  "green-energy": "smi-index",
-};
+// Map category keys to their representative DB IDs
+const categoryToDbIds: Record<string, string[]> = {};
+ASSET_CLASSES.forEach(cls => {
+  categoryToDbIds[cls.key] = cls.dbIds;
+});
 
 const marketEvents: MarketEvent[] = [
   { id: "boom", emoji: "☀️", title: "¡Primavera financiera!", description: "El mercado florece. Tu nido brilla.", impact: 1.12, type: "positive" },
