@@ -39,7 +39,17 @@ const Auth = () => {
     // Reset demo user progress so onboarding always starts fresh
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
-      await supabase.from("user_progress").delete().eq("user_id", user.id);
+      await supabase.from("user_progress").upsert({
+        user_id: user.id,
+        onboarding_completed: false,
+        game_step: null,
+        risk_profile: null,
+        risk_score: null,
+        risk_scores: null,
+        portfolio: null,
+        simulation_result: null,
+        storm_choice: null,
+      }, { onConflict: "user_id" });
     }
     localStorage.removeItem("helve_skip_buy_dialog");
     navigate("/");
