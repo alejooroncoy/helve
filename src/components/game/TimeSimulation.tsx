@@ -8,7 +8,9 @@ import { useMonthlyPrices } from "@/hooks/useMarketData";
 interface TimeSimulationProps {
   portfolio: Investment[];
   initialMonths?: number;
+  initialBalance?: number;
   onClose: () => void;
+  onComplete?: (finalBalance: number, totalGainPct: number) => void;
   onSellInvestment: (id: string) => void;
   onAskCoach?: (question: string) => void;
 }
@@ -132,7 +134,7 @@ function computeRealMultipliers(
   });
 }
 
-export default function TimeSimulation({ portfolio, initialMonths = 12, onClose, onSellInvestment, onAskCoach }: TimeSimulationProps) {
+export default function TimeSimulation({ portfolio, initialMonths = 12, initialBalance = 1000, onClose, onComplete, onSellInvestment, onAskCoach }: TimeSimulationProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [data, setData] = useState<TimePoint[]>([]);
@@ -169,7 +171,7 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, onClose,
     return computeRealMultipliers(prices, currentPortfolio.map(i => i.id), filteredMonths);
   }, [prices, pricesLoading, currentPortfolio, filteredMonths]);
 
-  const startBalance = 1000;
+  const startBalance = initialBalance;
 
   // Initialize first data point
   useEffect(() => {
@@ -499,7 +501,11 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, onClose,
               }
             </motion.div>
             <motion.button
-              onClick={onClose}
+              onClick={() => {
+                const finalVal = data.length > 0 ? data[data.length - 1].value : startBalance;
+                onComplete?.(Math.round(finalVal), totalGain);
+                onClose();
+              }}
               className="w-full bg-primary text-primary-foreground py-4 rounded-3xl text-base font-bold"
               whileTap={{ scale: 0.97 }}
             >

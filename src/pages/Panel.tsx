@@ -282,8 +282,10 @@ const Panel = () => {
   const { loadProgress, saveProgress } = useUserProgress();
   const [activePortfolio, setActivePortfolio] = useState<Investment[]>([]);
   const [profile, setProfile] = useState("balanced");
+  const [balance, setBalance] = useState(1000);
+  const [lastSimGain, setLastSimGain] = useState<number | null>(null);
   const [mascotMessage, setMascotMessage] = useState(
-    "Drag an investment into your nest — or just tap it!"
+    "¡Arrastra una inversión a tu nido o tócala!"
   );
   const [draggedItem, setDraggedItem] = useState<{ inv: Investment; zone: string } | null>(null);
   const [coachOpen, setCoachOpen] = useState(false);
@@ -320,9 +322,21 @@ const Panel = () => {
       if (p) {
         setProfile(p.risk_profile);
         if (p.portfolio && p.portfolio.length > 0) setActivePortfolio(p.portfolio);
+        if (p.simulation_result && p.simulation_result > 0) setBalance(p.simulation_result);
       }
     });
   }, [loadProgress]);
+
+  const handleSimulationComplete = useCallback((finalBalance: number, gainPct: number) => {
+    setBalance(finalBalance);
+    setLastSimGain(gainPct);
+    saveProgress({ simulation_result: finalBalance });
+    if (gainPct > 0) {
+      setMascotMessage(`¡Genial! Tu nido creció ${gainPct.toFixed(1)}% 🎉`);
+    } else {
+      setMascotMessage(`Tu nido bajó ${Math.abs(gainPct).toFixed(1)}%, pero aprendiste 💪`);
+    }
+  }, [saveProgress]);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
   const suggestions = useMemo(() => getSuggestions(profile, enrichedPortfolio), [profile, enrichedPortfolio]);
@@ -331,7 +345,7 @@ const Panel = () => {
     ? Math.round(enrichedPortfolio.reduce((s, i) => s + i.riskLevel, 0) / enrichedPortfolio.length * 10)
     : 0;
 
-  const balance = 1000;
+  
   const monthlyIncome = enrichedPortfolio.reduce((s, i) => s + Math.round((balance * i.annualReturn) / 100 / 12), 0);
   const avgReturn = enrichedPortfolio.length
     ? (enrichedPortfolio.reduce((s, i) => s + i.annualReturn, 0) / enrichedPortfolio.length).toFixed(1)
@@ -443,7 +457,7 @@ const Panel = () => {
       <div className="px-5 pb-3">
         <div className="grid grid-cols-3 gap-3">
           {[
-            { label: "Balance", value: `CHF ${balance.toLocaleString()}`, sub: `+CHF ${monthlyIncome}/mes`, subStyle: { color: CELESTE } },
+            { label: "Balance", value: `CHF ${balance.toLocaleString()}`, sub: lastSimGain !== null ? `${lastSimGain > 0 ? "+" : ""}${lastSimGain.toFixed(1)}% última sim.` : `+CHF ${monthlyIncome}/mes`, subStyle: { color: lastSimGain !== null ? (lastSimGain >= 0 ? CELESTE : "hsl(var(--destructive))") : CELESTE } },
             { label: "Riesgo", value: `${totalRisk}%`, valueStyle: totalRisk > 60 ? { color: "hsl(var(--destructive))" } : totalRisk > 30 ? {} : { color: CELESTE }, valueClass: totalRisk > 30 && totalRisk <= 60 ? "text-accent" : "", sub: totalRisk <= 30 ? "Bajo" : totalRisk <= 60 ? "Medio" : "Alto", subStyle: {} },
             { label: "Retorno", value: `${avgReturn}%`, valueStyle: { color: CELESTE }, sub: "Anual", subStyle: {} },
           ].map((stat, i) => (
@@ -559,7 +573,9 @@ const Panel = () => {
           <TimeSimulation
             portfolio={enrichedPortfolio}
             initialMonths={simMonths}
+            initialBalance={balance}
             onClose={() => setSimulationOpen(false)}
+            onComplete={handleSimulationComplete}
             onSellInvestment={handleSimSell}
             onAskCoach={(q) => { setCoachInitQ(q); setCoachOpen(true); }}
           />
