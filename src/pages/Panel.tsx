@@ -31,6 +31,7 @@ import { availableInvestments } from "@/game/types";
 import {
   LogOut, X, AlertTriangle, Inbox, Shield, TrendingUp, BarChart2,
   Building2, Leaf, Globe, Landmark, Zap, FastForward, MessageCircle, DollarSign, Info, Wallet, GripVertical,
+  Plus, Trash2, Pencil,
 } from "lucide-react";
 
 const nunito = { fontFamily: "'Nunito', sans-serif" };
