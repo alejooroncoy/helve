@@ -97,6 +97,142 @@ export type Database = {
           },
         ]
       }
+      multiplayer_rooms: {
+        Row: {
+          available_assets: Json
+          code: string
+          created_at: string
+          event_count: number
+          finished_at: string | null
+          host_user_id: string
+          id: string
+          max_players: number
+          simulation_years: number
+          started_at: string | null
+          status: string
+        }
+        Insert: {
+          available_assets?: Json
+          code: string
+          created_at?: string
+          event_count?: number
+          finished_at?: string | null
+          host_user_id: string
+          id?: string
+          max_players?: number
+          simulation_years?: number
+          started_at?: string | null
+          status?: string
+        }
+        Update: {
+          available_assets?: Json
+          code?: string
+          created_at?: string
+          event_count?: number
+          finished_at?: string | null
+          host_user_id?: string
+          id?: string
+          max_players?: number
+          simulation_years?: number
+          started_at?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
+      room_events: {
+        Row: {
+          description: string
+          emoji: string
+          event_index: number
+          id: string
+          impact_data: Json
+          impact_type: string
+          room_id: string
+          title: string
+          triggered_at: string
+        }
+        Insert: {
+          description: string
+          emoji?: string
+          event_index?: number
+          id?: string
+          impact_data?: Json
+          impact_type?: string
+          room_id: string
+          title: string
+          triggered_at?: string
+        }
+        Update: {
+          description?: string
+          emoji?: string
+          event_index?: number
+          id?: string
+          impact_data?: Json
+          impact_type?: string
+          room_id?: string
+          title?: string
+          triggered_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "room_events_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "multiplayer_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      room_players: {
+        Row: {
+          balance: number
+          created_at: string
+          decisions: Json
+          display_name: string
+          final_score: number | null
+          id: string
+          is_ready: boolean
+          portfolio: Json
+          rank: number | null
+          room_id: string
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          created_at?: string
+          decisions?: Json
+          display_name?: string
+          final_score?: number | null
+          id?: string
+          is_ready?: boolean
+          portfolio?: Json
+          rank?: number | null
+          room_id: string
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          created_at?: string
+          decisions?: Json
+          display_name?: string
+          final_score?: number | null
+          id?: string
+          is_ready?: boolean
+          portfolio?: Json
+          rank?: number | null
+          room_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "room_players_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "multiplayer_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_progress: {
         Row: {
           allocations: Json | null
