@@ -79,7 +79,9 @@ const GameFlow = () => {
 
   return (
     <div className="min-h-screen bg-background relative">
-      <LanguageSwitcher className="absolute top-4 right-4 z-50" />
+      <div className="flex justify-end px-4 pt-2">
+        <LanguageSwitcher />
+      </div>
       <AnimatePresence mode="wait">
         {state.step === "welcome" && (
           <WelcomeScreen key="welcome" onStart={() => go("risk-1")} />
