@@ -211,7 +211,7 @@ const SimulationScreen = ({ allocation, profile, stormChoice, onContinue }: Prop
                 <p className="text-xs tracking-widest text-muted-foreground" style={{ ...nunito, fontWeight: 700 }}>{t("simulation.yourPortfolio")}</p>
                 {ASSET_CLASSES.filter(c => allocation[c.key] > 0).map((c) => (
                   <div key={c.key} className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-card">
-                    <span>{c.emoji}</span>
+                    <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: CLASS_COLORS[c.key] }} />
                     <span className="text-xs text-foreground flex-1" style={{ ...nunito, fontWeight: 600 }}>{t(`allocation.classes.${c.key}`)}</span>
                     <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
                       <div className="h-full rounded-full transition-all" style={{ width: `${allocation[c.key]}%`, backgroundColor: CLASS_COLORS[c.key] }} />
@@ -241,7 +241,7 @@ const SimulationScreen = ({ allocation, profile, stormChoice, onContinue }: Prop
               </div>
               <div className="flex gap-2 flex-wrap justify-center px-4">
                 {ASSET_CLASSES.filter(c => allocation[c.key] > 0).map((c) => (
-                  <span key={c.key} className="text-xs px-3 py-1.5 rounded-full bg-card border" style={nunito}>{c.emoji} {t(`allocation.classes.${c.key}`)} {allocation[c.key]}%</span>
+                  <span key={c.key} className="text-xs px-3 py-1.5 rounded-full bg-card border" style={nunito}>{t(`allocation.classes.${c.key}`)} {allocation[c.key]}%</span>
                 ))}
               </div>
             </motion.div>

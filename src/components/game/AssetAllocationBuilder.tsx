@@ -109,7 +109,6 @@ const AssetAllocationBuilder = ({ profile, onComplete }: Props) => {
       {/* Header */}
       <div className="px-5 pt-8 pb-2">
         <div className="flex items-center gap-3 mb-2">
-          <span className="text-3xl">{pLabel.emoji}</span>
           <div>
             <h2 className="text-xl text-foreground" style={{ ...nunito, fontWeight: 800 }}>{pLabel.name}</h2>
             <p className="text-sm text-muted-foreground" style={nunito}>{pLabel.desc}</p>
@@ -125,7 +124,7 @@ const AssetAllocationBuilder = ({ profile, onComplete }: Props) => {
             <div key={c.key} className="flex items-center gap-1">
               <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: CLASS_COLORS[c.key] }} />
               <span className="text-[10px] text-muted-foreground" style={nunito}>
-                {c.emoji} {t(`allocation.classes.${c.key}`)} {alloc[c.key]}%
+                {t(`allocation.classes.${c.key}`)} {alloc[c.key]}%
               </span>
             </div>
           ))}
@@ -147,7 +146,7 @@ const AssetAllocationBuilder = ({ profile, onComplete }: Props) => {
           <div key={c.key} className="space-y-1">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="text-base">{c.emoji}</span>
+                <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: CLASS_COLORS[c.key] }} />
                 <div>
                   <span className="text-sm font-bold text-foreground" style={nunito}>
                     {t(`allocation.classes.${c.key}`)}

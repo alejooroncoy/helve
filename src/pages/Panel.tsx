@@ -145,7 +145,6 @@ function NestCard({ inv, overlay, onSell, onAsk, onInfo, allocation, balance, t,
         </div>
         <div className="flex-1 min-w-0" onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }} onPointerDown={(e) => e.stopPropagation()}>
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-base">{inv.emoji}</span>
             <p className="text-sm font-bold text-foreground" style={nunito}>{displayName}</p>
           </div>
           <div className="flex items-center gap-2 mt-1 flex-wrap">
@@ -217,7 +216,6 @@ function ScoutedCard({ inv, overlay, onAsk, t, isMobile, dragHandleProps }: { in
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
-            <span className="text-sm">{inv.emoji}</span>
             <p className="text-xs font-bold text-foreground leading-snug" style={nunito}>{displayName}</p>
           </div>
         </div>
@@ -288,7 +286,7 @@ function BuyConfirmDialog({ inv, onConfirm, onCancel, t }: { inv: Investment; on
             {getCategoryIcon(inv.id)}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold text-foreground" style={nunito}>{inv.emoji} {displayName}</p>
+            <p className="text-sm font-bold text-foreground" style={nunito}>{displayName}</p>
             <div className="flex items-center gap-2 mt-0.5">
               <span className="text-xs" style={{ ...nunito, color: getRiskBarColor(inv.riskLevel), fontWeight: 700 }}>{t("panel.riskLabel")} {inv.riskLevel}/10</span>
               <span className="text-xs" style={{ ...nunito, color, fontWeight: 700 }}>{inv.annualReturn}%{t("common.perYear")}</span>

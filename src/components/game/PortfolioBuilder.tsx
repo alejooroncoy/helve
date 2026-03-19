@@ -114,7 +114,6 @@ const PortfolioBuilder = ({ profile, onComplete }: Props) => {
     >
       <div className="px-5 pt-8 pb-4">
         <div className="flex items-center gap-3 mb-4">
-          <span className="text-3xl">{pLabel.emoji}</span>
           <div>
             <h2 className="text-xl text-foreground" style={{ ...nunito, fontWeight: 800 }}>{pLabel.name}</h2>
             <p className="text-sm text-muted-foreground" style={nunito}>{pLabel.desc}</p>
@@ -163,7 +162,6 @@ const PortfolioBuilder = ({ profile, onComplete }: Props) => {
                 layout
               >
                 <div className="flex items-start gap-3">
-                  <span className="text-2xl mt-0.5">{inv.emoji}</span>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <p className="text-foreground truncate" style={{ ...nunito, fontWeight: 700 }}>{inv.name}</p>
@@ -250,7 +248,6 @@ const PortfolioBuilder = ({ profile, onComplete }: Props) => {
                   style={{ borderColor: "hsl(var(--border))" }}
                   whileTap={{ scale: 0.97 }}
                 >
-                  <span className="text-xl">{inv.emoji}</span>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-foreground truncate" style={{ ...nunito, fontWeight: 600 }}>
                       {inv.name} {inv.flag || ""}

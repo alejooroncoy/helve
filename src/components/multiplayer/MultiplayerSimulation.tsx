@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import { useMonthlyPrices } from "@/hooks/useMarketData";
-import { Timer, TrendingUp, TrendingDown, Users, ChevronRight } from "lucide-react";
+import { Timer, TrendingUp, TrendingDown, Users, ChevronRight, AlertTriangle } from "lucide-react";
 import type { AssetClass, MarketEvent as MarketEventType } from "@/game/types";
 import { ASSET_CLASSES, MARKET_EVENTS_POOL, ALL_ASSET_DB_IDS } from "@/game/types";
 import type { useMultiplayer } from "@/hooks/useMultiplayer";
@@ -269,7 +269,7 @@ const MultiplayerSimulation = ({ mp }: Props) => {
                 initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
               >
                 <div className="flex items-center gap-1 mb-0.5">
-                  <span className="text-sm">{h.event.emoji}</span>
+                  <span className="w-2 h-2 rounded-full bg-primary flex-shrink-0" />
                   <span className="text-[9px] font-bold text-foreground truncate" style={nunito}>{t(h.event.title)}</span>
                 </div>
                 <span className={`text-[9px] font-bold ${h.decision === "hold" ? "text-primary" : "text-destructive"}`} style={nunito}>
@@ -313,7 +313,7 @@ const MultiplayerSimulation = ({ mp }: Props) => {
           const cls = ASSET_CLASSES.find(c => c.key === key);
           return cls ? (
             <span key={key} className="text-[10px] px-2 py-0.5 rounded-full bg-muted flex items-center gap-1" style={nunito}>
-              {cls.emoji} {t(`allocation.classes.${key}`)}
+              {t(`allocation.classes.${key}`)}
             </span>
           ) : null;
         })}
@@ -335,7 +335,7 @@ const MultiplayerSimulation = ({ mp }: Props) => {
             <motion.div className="bg-card rounded-3xl p-6 w-full max-w-sm shadow-2xl"
               initial={{ scale: 0.8, y: 40 }} animate={{ scale: 1, y: 0 }}>
               <div className="text-center mb-4">
-                <div className="text-4xl mb-2">{activeEvent.emoji}</div>
+                <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-2"><AlertTriangle className="w-6 h-6 text-primary" /></div>
                 <h2 className="text-xl font-black text-foreground" style={nunito}>{t(activeEvent.title)}</h2>
                 <p className="text-sm text-muted-foreground mt-1" style={nunito}>{t(activeEvent.description)}</p>
               </div>

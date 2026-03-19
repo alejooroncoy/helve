@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { TrendingUp } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { AssetAllocation, RiskProfile } from "@/game/types";
 import { getAllocationRiskScore, getProfileRiskRange, ASSET_CLASSES } from "@/game/types";
@@ -48,9 +49,9 @@ const LearningMoment = ({ allocation, profile, stormChoice, result, onContinue }
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -30 }}
     >
-      <motion.span className="text-6xl mb-6" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", delay: 0.2 }}>
-        {insight.emoji}
-      </motion.span>
+      <motion.div className="w-16 h-16 mb-6 rounded-2xl bg-primary/10 flex items-center justify-center" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", delay: 0.2 }}>
+        <TrendingUp className="w-8 h-8 text-primary" />
+      </motion.div>
 
       <h2 className="text-xl text-foreground text-center mb-4" style={{ ...nunito, fontWeight: 800 }}>
         {t("learning.title")}
@@ -84,7 +85,7 @@ const LearningMoment = ({ allocation, profile, stormChoice, result, onContinue }
         <div className="flex flex-wrap gap-2 justify-center">
           {ASSET_CLASSES.filter(c => allocation[c.key] > 0).map(c => (
             <span key={c.key} className="text-[10px] text-muted-foreground" style={nunito}>
-              {c.emoji} {allocation[c.key]}%
+              {allocation[c.key]}%
             </span>
           ))}
         </div>

@@ -313,11 +313,11 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, initialB
         <div className="bg-card rounded-3xl p-4 shadow-sm h-full flex flex-col">
           <div className="flex items-center justify-between mb-2">
             <p className="text-xs font-bold text-foreground" style={nunito}>
-              📈 {data.length > 1 ? filteredLabels[currentStep] : t("timeSim.today")}
+              {data.length > 1 ? filteredLabels[currentStep] : t("timeSim.today")}
             </p>
             <div className="flex items-center gap-1">
               {currentPortfolio.map((inv) => (
-                <span key={inv.id} className="text-sm" title={inv.name}>{inv.emoji}</span>
+                <span key={inv.id} className="text-xs font-medium text-muted-foreground">{inv.name.slice(0, 3)}</span>
               ))}
             </div>
           </div>
@@ -386,7 +386,6 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, initialB
               exit={{ scale: 0.8, opacity: 0 }}
               className="bg-card rounded-3xl p-6 shadow-xl max-w-sm w-full text-center"
             >
-              <span className="text-5xl block mb-3">{currentEvent.emoji}</span>
               <h2 className="text-lg font-bold text-foreground mb-1" style={nunito}>{currentEvent.title}</h2>
               <p className="text-sm text-muted-foreground mb-4" style={nunito}>{currentEvent.description}</p>
 
@@ -434,7 +433,7 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, initialB
                         style={nunito}
                         whileTap={{ scale: 0.97 }}
                       >
-                        {inv.emoji} {t("timeSim.sellInv", { name: inv.name })}
+                        {t("timeSim.sellInv", { name: inv.name })}
                       </motion.button>
                     ))}
                   </div>
