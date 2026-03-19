@@ -1,89 +1,85 @@
 import { motion } from "framer-motion";
 import { Line, LineChart, ResponsiveContainer } from "recharts";
-import { TrendingDown, TrendingUp } from "lucide-react";
 
 export interface CategoryTrendSnapshot {
   id: string;
   label: string;
   riskLevel: number;
   changePct: number;
+  color: string;
   points: Array<{ index: number; value: number }>;
 }
 
+const CATEGORY_COLORS = [
+  "hsl(30, 80%, 55%)",   // warm orange
+  "hsl(220, 55%, 55%)",  // slate blue
+  "hsl(165, 50%, 50%)",  // teal
+  "hsl(270, 50%, 55%)",  // purple
+  "hsl(350, 60%, 55%)",  // rose
+  "hsl(45, 80%, 50%)",   // gold
+  "hsl(190, 60%, 45%)",  // cyan
+  "hsl(100, 45%, 45%)",  // green
+];
+
+export function getCategoryColor(index: number) {
+  return CATEGORY_COLORS[index % CATEGORY_COLORS.length];
+}
+
 interface TimeSimulationCategoryChartsProps {
-  title: string;
-  subtitle: string;
-  riskLabel: (level: number) => string;
   items: CategoryTrendSnapshot[];
+  /** Render a single item in "detail" mode (taller chart, no animation stagger) */
+  detail?: boolean;
 }
 
 export default function TimeSimulationCategoryCharts({
-  title,
-  subtitle,
-  riskLabel,
   items,
+  detail = false,
 }: TimeSimulationCategoryChartsProps) {
   if (items.length === 0) return null;
 
   return (
-    <div className="space-y-3">
-      <div>
-        <p className="text-sm font-bold text-foreground">{title}</p>
-        <p className="text-xs text-muted-foreground">{subtitle}</p>
-      </div>
+    <div className={detail ? "space-y-0" : "space-y-1"}>
+      {items.map((item, index) => {
+        const positive = item.changePct >= 0;
+        const lineColor = item.color;
 
-      <div className="flex gap-3 overflow-x-auto pb-1 snap-x snap-mandatory">
-        {items.map((item, index) => {
-          const positive = item.changePct >= 0;
-          const TrendIcon = positive ? TrendingUp : TrendingDown;
-          const lineColor = positive ? "hsl(var(--primary))" : "hsl(var(--destructive))";
+        return (
+          <motion.div
+            key={item.id}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: detail ? 0 : index * 0.06 }}
+            className={detail ? "py-1" : "py-0.5"}
+          >
+            {/* Label row */}
+            <div className="flex items-baseline justify-between mb-0.5 px-1">
+              <p className="text-sm font-bold text-foreground">{item.label}</p>
+              <p
+                className="text-sm font-bold tabular-nums"
+                style={{ color: positive ? "hsl(var(--primary))" : "hsl(var(--destructive))" }}
+              >
+                {positive ? "+" : ""}{item.changePct.toFixed(1)}%
+              </p>
+            </div>
 
-          return (
-            <motion.div
-              key={item.id}
-              initial={{ opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.06 }}
-              className="min-w-[220px] snap-start rounded-3xl border bg-card/90 p-4 shadow-sm"
-              style={{
-                borderColor: "hsl(var(--border))",
-              }}
-            >
-              <div className="mb-3 flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-sm font-semibold text-foreground">{item.label}</p>
-                  <p className="text-[11px] text-muted-foreground">{riskLabel(item.riskLevel)}</p>
-                </div>
-                <div
-                  className="flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold"
-                  style={{
-                    backgroundColor: positive ? "hsl(var(--primary) / 0.12)" : "hsl(var(--destructive) / 0.12)",
-                    color: lineColor,
-                  }}
-                >
-                  <TrendIcon className="h-3.5 w-3.5" />
-                  <span>{positive ? "+" : ""}{item.changePct.toFixed(1)}%</span>
-                </div>
-              </div>
-
-              <div className="h-20 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={item.points} margin={{ top: 6, right: 0, left: 0, bottom: 0 }}>
-                    <Line
-                      type="monotone"
-                      dataKey="value"
-                      stroke={lineColor}
-                      strokeWidth={2.5}
-                      dot={false}
-                      isAnimationActive={false}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </motion.div>
-          );
-        })}
-      </div>
+            {/* Sparkline */}
+            <div className={detail ? "h-16" : "h-12"}>
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={item.points} margin={{ top: 4, right: 4, left: 4, bottom: 0 }}>
+                  <Line
+                    type="monotone"
+                    dataKey="value"
+                    stroke={lineColor}
+                    strokeWidth={2.5}
+                    dot={false}
+                    isAnimationActive={false}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </motion.div>
+        );
+      })}
     </div>
   );
 }
