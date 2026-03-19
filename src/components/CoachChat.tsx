@@ -299,6 +299,17 @@ export default function CoachChat({ onClose, portfolio, onAddInvestment, onRemov
     }
   };
 
+  const handleAcceptSwap = useCallback((swap: string) => {
+    // Format: "id_remove -> id_add"
+    const parts = swap.split("->").map(s => s.trim());
+    if (parts.length === 2) {
+      if (onRemoveInvestment) onRemoveInvestment(parts[0]);
+      setTimeout(() => {
+        if (onAddInvestment) onAddInvestment(parts[1]);
+      }, 300);
+    }
+  }, [onAddInvestment, onRemoveInvestment]);
+
   const quickQuestions = portfolio && portfolio.length > 0
     ? ["How is my nest doing?", "Should I diversify?", "What's my risk level?"]
     : ["What is risk?", "How do I start investing?", "What is an ETF?"];
