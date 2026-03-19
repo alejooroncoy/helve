@@ -105,7 +105,7 @@ const RiskScreen = ({ questionIndex, onAnswer, onBack }: Props) => {
               transition={{ delay: 0.1 + i * 0.08 }}
               whileTap={{ scale: 0.97 }}
             >
-              <span className="text-2xl">{opt.emoji}</span>
+              <span className="text-muted-foreground">{opt.icon}</span>
               <span
                 className="text-foreground text-base"
                 style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 600, color: isSelected ? CELESTE : undefined }}
