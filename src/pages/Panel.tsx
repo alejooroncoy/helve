@@ -564,7 +564,7 @@ const Panel = () => {
               <div className="bg-card/50 rounded-3xl p-5 text-center border-2 border-dashed border-border flex flex-col items-center justify-center gap-2">
                 <Inbox className="w-8 h-8 text-muted-foreground/50" />
                 <p className="text-sm text-muted-foreground" style={nunito}>¡Tu nido está vacío!</p>
-                <p className="text-xs text-muted-foreground" style={nunito}>Toca una inversión para agregarla</p>
+                <p className="text-xs text-muted-foreground" style={nunito}>Compra tu primera inversión tocándola abajo 👇</p>
               </div>
             ) : (
               <div className="space-y-2">
