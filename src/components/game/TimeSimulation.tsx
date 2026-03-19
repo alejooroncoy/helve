@@ -678,7 +678,7 @@ export default function TimeSimulation({
     filteredMonths,
     filteredLabels,
     aiEventMap,
-    i18n.language,
+    t,
     ensureScenario,
     data,
   ]);
