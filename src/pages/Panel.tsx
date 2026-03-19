@@ -391,7 +391,7 @@ function BuyConfirmDialog({ inv, onConfirm, onCancel }: { inv: Investment; onCon
             style={{ ...nunito, backgroundColor: CELESTE }}
             whileTap={{ scale: 0.97 }}
           >
-            🪺 Entendido, ¡comprar!
+            Entendido, ¡comprar!
           </motion.button>
           <motion.button
             onClick={() => onConfirm(true)}
@@ -484,7 +484,7 @@ const Panel = () => {
 
   const executeBuy = useCallback((inv: Investment) => {
     if (activePortfolio.length >= 4) {
-      mascotToast("🪺 ¡Tu nido está lleno! Vende un huevo para hacer espacio.");
+      mascotToast("¡Tu nido está lleno! Vende un huevo para hacer espacio.");
       return;
     }
     if (activePortfolio.find((i) => i.id === inv.id)) return;
@@ -492,14 +492,14 @@ const Panel = () => {
     setActivePortfolio(next);
     saveProgress({ portfolio: next });
     const newRisk = Math.round(next.reduce((s, i) => s + i.riskLevel, 0) / next.length * 10);
-    if (newRisk > 70) mascotToast("🦉 ¡Cuidado! Compraste algo arriesgado. Tu nido tiembla un poco...");
-    else if (newRisk < 20) mascotToast("🦉 ¡Buena compra! Un huevito muy seguro para tu nido.");
-    else mascotToast("🦉 ¡Comprado! Buen ojo, ese huevo se ve prometedor.");
+    if (newRisk > 70) mascotToast("¡Cuidado! Compraste algo arriesgado. Tu nido tiembla un poco...");
+    else if (newRisk < 20) mascotToast("¡Buena compra! Un huevito muy seguro para tu nido.");
+    else mascotToast("¡Comprado! Buen ojo, ese huevo se ve prometedor.");
   }, [activePortfolio, saveProgress]);
 
   const tryBuyInvestment = useCallback((inv: Investment) => {
     if (activePortfolio.length >= 4) {
-      mascotToast("🪺 ¡Tu nido está lleno! Vende un huevo para hacer espacio.");
+      mascotToast("¡Tu nido está lleno! Vende un huevo para hacer espacio.");
       return;
     }
     if (activePortfolio.find((i) => i.id === inv.id)) return;
@@ -527,9 +527,9 @@ const Panel = () => {
       return next;
     });
     if (sold) {
-      mascotToast(`🦉 ¡Vendiste ${sold.name}! A veces soltar un huevo es la mejor decisión.`);
+      mascotToast(`¡Vendiste ${sold.name}! A veces soltar un huevo es la mejor decisión.`);
     } else {
-      mascotToast("🦉 Huevo vendido. Tu nido se siente más ligero.");
+      mascotToast("Huevo vendido. Tu nido se siente más ligero.");
     }
   };
 
