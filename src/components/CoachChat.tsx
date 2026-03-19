@@ -324,6 +324,15 @@ export default function CoachChat({ onClose, portfolio, onAddInvestment, onRemov
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
 
+  // Auto-send initial question
+  useEffect(() => {
+    if (initialQuestion && !initSent && messages.length === 0) {
+      setInitSent(true);
+      // Small delay so the UI renders first
+      setTimeout(() => send(initialQuestion), 300);
+    }
+  }, [initialQuestion, initSent]);
+
   const stopAudio = useCallback(() => {
     if (audioRef.current) {
       audioRef.current.pause();
