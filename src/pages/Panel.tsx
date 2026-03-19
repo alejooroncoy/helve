@@ -8,6 +8,7 @@ import { Drawer, DrawerTrigger, DrawerContent } from "@/components/ui/drawer";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserProgress } from "@/hooks/useUserProgress";
+import { useUserPortfolios, type NestPortfolio } from "@/hooks/useUserPortfolios";
 import CoachChat from "@/components/CoachChat";
 import TimeSimulation from "@/components/game/TimeSimulation";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
