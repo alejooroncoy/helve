@@ -171,7 +171,7 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, initialB
     return computeRealMultipliers(prices, currentPortfolio.map(i => i.id), filteredMonths);
   }, [prices, pricesLoading, currentPortfolio, filteredMonths]);
 
-  const startBalance = 1000;
+  const startBalance = initialBalance;
 
   // Initialize first data point
   useEffect(() => {
