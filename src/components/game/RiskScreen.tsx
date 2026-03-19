@@ -16,27 +16,27 @@ interface Props {
 
 const questions: { title: string; options: RiskOption[] }[] = [
   {
-    title: "¿Cómo buscará su comida tu pajarito hoy?",
+    title: "¡Hola! Imagina que eres un pajarito de mi bandada. ¿Cómo buscarías tu comida hoy?",
     options: [
-      { label: "Comer semillas de su comedero. Siempre habrá comida garantizada, pero crecerá muy lento.", score: 0, emoji: "🟢" },
-      { label: "Buscar bayas en las ramas medias. A veces volverá con las alas vacías, pero cuando encuentre, crecerá más.", score: 1, emoji: "🟡" },
-      { label: "Volar hasta la cima por la Fruta Dorada. Es muy arriesgado, pero si la consigue, crecerá muchísimo de golpe.", score: 2, emoji: "🔴" },
+      { label: "Comería semillas de los comederos seguros. Siempre habrá comida, pero creceré muy lento.", score: 0, emoji: "🟢" },
+      { label: "Buscaría bayas en las ramas medias. A veces no encontraré, pero cuando lo haga, creceré más.", score: 1, emoji: "🟡" },
+      { label: "Volaría hasta la cima por la Fruta Dorada. Es arriesgado, pero si la consigo, creceré muchísimo de golpe.", score: 2, emoji: "🔴" },
     ],
   },
   {
-    title: "¡Oh no! Una fuerte tormenta sacude el árbol y el nido se tambalea. ¿Qué haces?",
+    title: "¡Oh no! Una fuerte tormenta sacude el árbol y el nido donde guardas tus ramas se tambalea. ¿Qué haces?",
     options: [
-      { label: "Lo llamo rápido para que baje al suelo, prefiero que esté a salvo aunque el nido se rompa.", score: 0, emoji: "🟢" },
-      { label: "Le digo que se refugie bien en el nido y espere con calma a que vuelva a salir el sol.", score: 1, emoji: "🟡" },
-      { label: "¡Aprovecho! El viento botó ramas nuevas, le digo que salga a buscar más para hacer un nido más grande.", score: 2, emoji: "🔴" },
+      { label: "Salgo volando y busco una cueva. Pierdo el nido, pero prefiero estar a salvo de la lluvia.", score: 0, emoji: "🟢" },
+      { label: "Me quedo tranquilo en el nido y espero pacientemente a que vuelva a salir el sol.", score: 1, emoji: "🟡" },
+      { label: "¡Aprovecho el viento! Salgo a buscar las ramas que se cayeron para hacer mi nido más grande.", score: 2, emoji: "🔴" },
     ],
   },
   {
-    title: "¿Para qué aventura estás entrenando a tu pajarito?",
+    title: "Última pregunta. ¿Para qué gran aventura te estás entrenando en el bosque?",
     options: [
-      { label: "Para vuelos cortos cerca de casa. Lo necesito cerca por si hay alguna emergencia pronto.", score: 0, emoji: "🟢" },
-      { label: "Para explorar el bosque. Tardará un par de temporadas en volver, pero descubrirá cosas nuevas.", score: 1, emoji: "🟡" },
-      { label: "Para la Gran Migración. No lo veré por muchos años, pero volverá convertido en un ave majestuosa.", score: 2, emoji: "🔴" },
+      { label: "Para vuelos cortos de fin de semana. Necesito estar cerca de casa por si hay una emergencia.", score: 0, emoji: "🟢" },
+      { label: "Para explorar el bosque la próxima temporada. Tardaré un poco en volver.", score: 1, emoji: "🟡" },
+      { label: "Para la Gran Migración anual. No volveré por mucho tiempo, pero regresaré mucho más fuerte.", score: 2, emoji: "🔴" },
     ],
   },
 ];
