@@ -12,8 +12,8 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 const nunito = { fontFamily: "'Nunito', sans-serif" };
 const INITIAL_BALANCE = 1000;
 const TOTAL_MONTHS = 36;
-const MONTHS_PER_TICK = 3;          // advance 3 months per tick → visible jumps
-const TOTAL_TICKS = TOTAL_MONTHS / MONTHS_PER_TICK; // 12 ticks
+const MONTHS_PER_TICK = 1;          // 1 month per tick → realistic month-by-month
+const TOTAL_TICKS = TOTAL_MONTHS / MONTHS_PER_TICK; // 36 ticks
 const CELESTE = "#5BB8F5";
 
 const CAT_COLORS: Record<string, string> = {
@@ -31,9 +31,9 @@ const BTN_SELL = { bg: "#fb923c18", border: "#fb923c", color: "#fb923c" };
 const BTN_HOLD = { bg: "#60a5fa18", border: "#60a5fa", color: "#60a5fa" };
 const BTN_BUY  = { bg: "#a78bfa18", border: "#a78bfa", color: "#a78bfa" };
 
-const STEP_INTERVAL = 400;
-const READING_TIME = 3;
-const EVENT_TIMER = 5;
+const STEP_INTERVAL = 1100; // 36 ticks × 1100ms = 39.6s pure + events
+const READING_TIME = 2;
+const EVENT_TIMER = 4;
 const NUM_EVENTS = 5;
 
 function generateEventTicks(totalTicks: number, count: number): number[] {
