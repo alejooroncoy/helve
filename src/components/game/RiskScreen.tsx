@@ -40,6 +40,7 @@ const questions: { title: string; options: RiskOption[] }[] = [
     ],
   },
 ];
+const CELESTE = "#5BB8F5";
 
 const RiskScreen = ({ questionIndex, onAnswer, onBack }: Props) => {
   const [selected, setSelected] = useState<number | null>(null);
