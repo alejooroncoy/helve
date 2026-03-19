@@ -71,7 +71,6 @@ const Hub = () => {
                 </h1>
               );
             })()}
-            </h1>
             <p className="text-xs text-muted-foreground" style={nunito}>
               {t("hub.subtitle")}
             </p>
