@@ -457,9 +457,9 @@ const Panel = () => {
     setLastSimGain(gainPct);
     saveProgress({ simulation_result: finalBalance });
     if (gainPct > 0) {
-      setMascotMessage(`¡Genial! Tu nido creció ${gainPct.toFixed(1)}% 🎉`);
+      toast(`¡Genial! Tu nido creció ${gainPct.toFixed(1)}% 🎉`, { icon: "🦉", duration: 3000 });
     } else {
-      setMascotMessage(`Tu nido bajó ${Math.abs(gainPct).toFixed(1)}%, pero aprendiste 💪`);
+      toast(`Tu nido bajó ${Math.abs(gainPct).toFixed(1)}%, pero aprendiste 💪`, { icon: "🦉", duration: 3000 });
     }
   }, [saveProgress]);
 
@@ -478,7 +478,7 @@ const Panel = () => {
 
   const executeBuy = useCallback((inv: Investment) => {
     if (activePortfolio.length >= 4) {
-      setMascotMessage("🪺 ¡Tu nido está lleno! Vende un huevo para hacer espacio.");
+      toast("🪺 ¡Tu nido está lleno! Vende un huevo para hacer espacio.", { icon: "🦉", duration: 3000 });
       return;
     }
     if (activePortfolio.find((i) => i.id === inv.id)) return;
@@ -486,14 +486,14 @@ const Panel = () => {
     setActivePortfolio(next);
     saveProgress({ portfolio: next });
     const newRisk = Math.round(next.reduce((s, i) => s + i.riskLevel, 0) / next.length * 10);
-    if (newRisk > 70) setMascotMessage("🦉 ¡Cuidado! Compraste algo arriesgado. Tu nido tiembla un poco...");
-    else if (newRisk < 20) setMascotMessage("🦉 ¡Buena compra! Un huevito muy seguro para tu nido.");
-    else setMascotMessage("🦉 ¡Comprado! Buen ojo, ese huevo se ve prometedor.");
+    if (newRisk > 70) toast("🦉 ¡Cuidado! Compraste algo arriesgado. Tu nido tiembla un poco...", { icon: "🦉", duration: 3000 });
+    else if (newRisk < 20) toast("🦉 ¡Buena compra! Un huevito muy seguro para tu nido.", { icon: "🦉", duration: 3000 });
+    else toast("🦉 ¡Comprado! Buen ojo, ese huevo se ve prometedor.", { icon: "🦉", duration: 3000 });
   }, [activePortfolio, saveProgress]);
 
   const tryBuyInvestment = useCallback((inv: Investment) => {
     if (activePortfolio.length >= 4) {
-      setMascotMessage("🪺 ¡Tu nido está lleno! Vende un huevo para hacer espacio.");
+      toast("🪺 ¡Tu nido está lleno! Vende un huevo para hacer espacio.", { icon: "🦉", duration: 3000 });
       return;
     }
     if (activePortfolio.find((i) => i.id === inv.id)) return;
@@ -521,9 +521,9 @@ const Panel = () => {
       return next;
     });
     if (sold) {
-      setMascotMessage(`🦉 ¡Vendiste ${sold.name}! A veces soltar un huevo es la mejor decisión.`);
+      toast(`🦉 ¡Vendiste ${sold.name}! A veces soltar un huevo es la mejor decisión.`, { icon: "🦉", duration: 3000 });
     } else {
-      setMascotMessage("🦉 Huevo vendido. Tu nido se siente más ligero.");
+      toast("🦉 Huevo vendido. Tu nido se siente más ligero.", { icon: "🦉", duration: 3000 });
     }
   };
 
