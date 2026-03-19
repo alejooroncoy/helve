@@ -37,7 +37,7 @@ const Auth = () => {
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.2 }}
       >
-        <img src="/face.png" alt="Helve" className="w-20 h-20 rounded-full mx-auto mb-4 shadow-lg" />
+        <img src="/face.png" alt="Helve" className="w-20 h-20 rounded-full mx-auto mb-4 shadow-lg object-cover" />
         <h1 className="text-3xl font-bold text-foreground" style={{ fontFamily: "'Instrument Serif', serif" }}>
           Helve
         </h1>
