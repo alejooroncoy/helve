@@ -167,7 +167,7 @@ function DraggableCard({
     <div
       ref={setNodeRef}
       {...rootDragProps}
-      onClick={zone === "scouted" && !isMobile ? onClick : undefined}
+      onClick={zone === "scouted" ? onClick : undefined}
       className={`select-none transition-all h-full w-full ${isDragging ? "opacity-30 scale-95" : ""}`}
     >
       {zone === "nest" ? (
