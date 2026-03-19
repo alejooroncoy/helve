@@ -523,8 +523,11 @@ export default function TimeSimulation({
   const categorySnapshots = useMemo<CategoryTrendSnapshot[]>(() => {
     if (!categoryMultipliers) return [];
 
+    const visibleSteps = Math.min(currentStep + 1, filteredMonths.length);
+
     return currentPortfolio.map((investment, idx) => {
-      const series = categoryMultipliers[investment.id] || filteredMonths.map(() => 1);
+      const fullSeries = categoryMultipliers[investment.id] || filteredMonths.map(() => 1);
+      const series = fullSeries.slice(0, visibleSteps);
       const first = series[0] || 1;
       const last = series[series.length - 1] || first;
       const changePct = ((last / first) - 1) * 100;
@@ -541,7 +544,7 @@ export default function TimeSimulation({
         })),
       };
     });
-  }, [categoryMultipliers, currentPortfolio, filteredMonths, t]);
+  }, [categoryMultipliers, currentPortfolio, filteredMonths, t, currentStep]);
 
   const startBalance = initialBalance;
 
