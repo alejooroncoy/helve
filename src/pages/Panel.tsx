@@ -241,6 +241,7 @@ const Panel = () => {
     if (activePortfolio.find((i) => i.id === inv.id)) return;
     const next = [...activePortfolio, inv];
     setActivePortfolio(next);
+    saveProgress({ portfolio: next });
     const newRisk = Math.round(next.reduce((s, i) => s + i.riskLevel, 0) / next.length * 10);
     if (newRisk > 70) setMascotMessage("Careful! Risky airspace! 🦅 Maybe add something steadier?");
     else if (newRisk < 20) setMascotMessage("Very cozy nest! 🪺 Safe and warm.");
@@ -248,7 +249,11 @@ const Panel = () => {
   };
 
   const removeInvestment = (id: string) => {
-    setActivePortfolio((prev) => prev.filter((i) => i.id !== id));
+    setActivePortfolio((prev) => {
+      const next = prev.filter((i) => i.id !== id);
+      saveProgress({ portfolio: next });
+      return next;
+    });
     setMascotMessage("Egg removed! 🥚 Pick a new one from Scouted.");
   };
 
