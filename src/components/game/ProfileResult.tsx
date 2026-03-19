@@ -6,18 +6,21 @@ interface Props {
   onContinue: () => void;
 }
 
-const profileData: Record<RiskProfile, { title: string; desc: string }> = {
+const profileData: Record<RiskProfile, { title: string; desc: string; stat: string }> = {
   conservative: {
-    title: "You are Conservative",
-    desc: "You prefer safety and steady, predictable growth.",
+    title: "¡Tu pajarito es un Guardián Prudente! 🛡️",
+    desc: "Como el 20% de los principiantes, prefieres la seguridad ante todo. Tu pajarito crecerá lento pero seguro, siempre con comida en el comedero.",
+    stat: "20%",
   },
   balanced: {
-    title: "You are Balanced",
-    desc: "You prefer steady growth with moderate risk.",
+    title: "¡Tu pajarito es un Explorador Equilibrado! 🌿",
+    desc: "Como el 65% de los principiantes, buscas crecer a buen ritmo pero prefieres tener siempre un refugio seguro para las tormentas.",
+    stat: "65%",
   },
   growth: {
-    title: "You are a Grower",
-    desc: "You're comfortable with risk for bigger rewards.",
+    title: "¡Tu pajarito es un Águila Audaz! 🦅",
+    desc: "Como el 15% de los principiantes, no le temes al riesgo. Tu pajarito volará alto buscando la Fruta Dorada, aunque a veces las tormentas lo sacudan.",
+    stat: "15%",
   },
 };
 
@@ -49,8 +52,8 @@ const ProfileResult = ({ profile, onContinue }: Props) => {
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.3 }}
       >
-        <h2 className="text-4xl text-foreground" style={{ ...nunito, fontWeight: 900 }}>{data.title}</h2>
-        <p className="text-lg text-muted-foreground mt-3 max-w-xs" style={{ ...nunito, fontWeight: 600 }}>{data.desc}</p>
+        <h2 className="text-3xl text-foreground" style={{ ...nunito, fontWeight: 900 }}>{data.title}</h2>
+        <p className="text-base text-muted-foreground mt-3 max-w-xs" style={{ ...nunito, fontWeight: 600 }}>{data.desc}</p>
       </motion.div>
 
       <motion.button
@@ -63,7 +66,7 @@ const ProfileResult = ({ profile, onContinue }: Props) => {
         whileHover={{ scale: 1.03 }}
         whileTap={{ scale: 0.97 }}
       >
-        Start Building Your Nest
+        Construir su Nido
       </motion.button>
     </motion.div>
   );

@@ -16,27 +16,27 @@ interface Props {
 
 const questions: { title: string; options: RiskOption[] }[] = [
   {
-    title: "Pones $1,000 en un negocio y al mes siguiente te dicen que ahora vale $800. ¿Qué haces?",
+    title: "¿Cómo buscará su comida tu pajarito hoy?",
     options: [
-      { label: "Saco lo que queda, no quiero perder más", score: 0, emoji: "😱" },
-      { label: "Lo dejo, los negocios tienen altas y bajas", score: 1, emoji: "🧘" },
-      { label: "¡Meto más! Si bajó, es oportunidad", score: 2, emoji: "🤑" },
+      { label: "Comer semillas de su comedero. Siempre habrá comida garantizada, pero crecerá muy lento.", score: 0, emoji: "🟢" },
+      { label: "Buscar bayas en las ramas medias. A veces volverá con las alas vacías, pero cuando encuentre, crecerá más.", score: 1, emoji: "🟡" },
+      { label: "Volar hasta la cima por la Fruta Dorada. Es muy arriesgado, pero si la consigue, crecerá muchísimo de golpe.", score: 2, emoji: "🔴" },
     ],
   },
   {
-    title: "¿Para cuándo necesitarías usar ese dinero?",
+    title: "¡Oh no! Una fuerte tormenta sacude el árbol y el nido se tambalea. ¿Qué haces?",
     options: [
-      { label: "Pronto, en menos de 2 años", score: 0, emoji: "⏰" },
-      { label: "En unos 5 a 10 años", score: 1, emoji: "📅" },
-      { label: "No lo necesito por mucho tiempo (10+ años)", score: 2, emoji: "🌅" },
+      { label: "Lo llamo rápido para que baje al suelo, prefiero que esté a salvo aunque el nido se rompa.", score: 0, emoji: "🟢" },
+      { label: "Le digo que se refugie bien en el nido y espere con calma a que vuelva a salir el sol.", score: 1, emoji: "🟡" },
+      { label: "¡Aprovecho! El viento botó ramas nuevas, le digo que salga a buscar más para hacer un nido más grande.", score: 2, emoji: "🔴" },
     ],
   },
   {
-    title: "Un amigo te propone un negocio: puedes ganar mucho, pero también perder todo. ¿Qué haces?",
+    title: "¿Para qué aventura estás entrenando a tu pajarito?",
     options: [
-      { label: "No gracias, prefiero lo seguro", score: 0, emoji: "🛡️" },
-      { label: "Le meto algo, pero no todo", score: 1, emoji: "⚖️" },
-      { label: "¡Vamos con todo!", score: 2, emoji: "🔥" },
+      { label: "Para vuelos cortos cerca de casa. Lo necesito cerca por si hay alguna emergencia pronto.", score: 0, emoji: "🟢" },
+      { label: "Para explorar el bosque. Tardará un par de temporadas en volver, pero descubrirá cosas nuevas.", score: 1, emoji: "🟡" },
+      { label: "Para la Gran Migración. No lo veré por muchos años, pero volverá convertido en un ave majestuosa.", score: 2, emoji: "🔴" },
     ],
   },
 ];
