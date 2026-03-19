@@ -16,11 +16,11 @@ interface Props {
 
 const questions: { title: string; options: RiskOption[] }[] = [
   {
-    title: "Imagina que ahorras $1,000 y de repente bajan a $800. ¿Qué harías?",
+    title: "Pones $1,000 en un negocio y al mes siguiente te dicen que ahora vale $800. ¿Qué haces?",
     options: [
-      { label: "Saco todo mi dinero, no quiero perder más", score: 0, emoji: "😱" },
-      { label: "Espero tranquilo, ya subirá de nuevo", score: 1, emoji: "🧘" },
-      { label: "¡Meto más dinero! Está barato ahora", score: 2, emoji: "🤑" },
+      { label: "Saco lo que queda, no quiero perder más", score: 0, emoji: "😱" },
+      { label: "Lo dejo, los negocios tienen altas y bajas", score: 1, emoji: "🧘" },
+      { label: "¡Meto más! Si bajó, es oportunidad", score: 2, emoji: "🤑" },
     ],
   },
   {
