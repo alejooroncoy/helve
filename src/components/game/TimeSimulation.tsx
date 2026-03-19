@@ -758,20 +758,12 @@ export default function TimeSimulation({
 
   const periodLabel =
     initialMonths <= 3
-      ? i18n.language === "es"
-        ? "3 meses"
-        : "3 months"
+      ? t("timeSim.periods.3m")
       : initialMonths <= 6
-        ? i18n.language === "es"
-          ? "6 meses"
-          : "6 months"
+        ? t("timeSim.periods.6m")
         : initialMonths === 12
-          ? i18n.language === "es"
-            ? "1 año"
-            : "1 year"
-          : i18n.language === "es"
-            ? "5 años"
-            : "5 years";
+          ? t("timeSim.periods.1y")
+          : t("timeSim.periods.5y");
 
   return (
     <motion.div
