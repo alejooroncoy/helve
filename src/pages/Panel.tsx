@@ -672,11 +672,14 @@ const Panel = () => {
     (finalBalance: number, gainPct: number) => {
       setBalance(finalBalance);
       setLastSimGain(gainPct);
-      saveNestData({ balance: finalBalance });
+      // Balance is global — sync to ALL nests
+      nests.forEach((nest) => {
+        updateNest(nest.id, { balance: finalBalance });
+      });
       if (gainPct > 0) mascotToast(t("panel.nestGrew", { pct: gainPct.toFixed(1) }));
       else mascotToast(t("panel.nestDropped", { pct: Math.abs(gainPct).toFixed(1) }));
     },
-    [saveNestData, t],
+    [nests, updateNest, t],
   );
 
   const sensors = useSensors(
