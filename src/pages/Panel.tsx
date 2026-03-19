@@ -329,71 +329,75 @@ function DropZone({ id, children, isOver }: { id: string; children: React.ReactN
     </div>
   );
 }
-/* ---- Virtual horizontal scroll for Scouted ---- */
-function VirtualScoutedList({ suggestions, onBuy, onAsk }: { suggestions: Investment[]; onBuy: (inv: Investment) => void; onAsk: (inv: Investment) => void }) {
-  const parentRef = useRef<HTMLDivElement>(null);
-  const CARD_WIDTH = 200;
-  const GAP = 12;
-
-  const virtualizer = useVirtualizer({
-    count: suggestions.length,
-    getScrollElement: () => parentRef.current,
-    estimateSize: () => CARD_WIDTH + GAP,
-    horizontal: true,
-    overscan: 3,
-  });
-
-  if (suggestions.length === 0) {
-    return <p className="text-xs text-muted-foreground py-4 text-center" style={nunito}>No hay inversiones disponibles</p>;
-  }
-
+/* ---- Buy confirmation dialog ---- */
+function BuyConfirmDialog({ inv, onConfirm, onCancel }: { inv: Investment; onConfirm: (dontShowAgain: boolean) => void; onCancel: () => void }) {
   return (
-    <div
-      ref={parentRef}
-      className="overflow-x-auto pb-2 scrollbar-hide"
-      style={{ scrollSnapType: "x mandatory", height: 180 }}
+    <motion.div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 px-4 pb-6"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      onClick={onCancel}
     >
-      <div
-        style={{
-          width: `${virtualizer.getTotalSize()}px`,
-          height: "100%",
-          position: "relative",
-        }}
+      <motion.div
+        className="w-full max-w-sm bg-card rounded-3xl p-5 shadow-xl"
+        initial={{ y: 100, scale: 0.95 }}
+        animate={{ y: 0, scale: 1 }}
+        exit={{ y: 100, scale: 0.95 }}
+        onClick={(e) => e.stopPropagation()}
       >
-        {virtualizer.getVirtualItems().map((virtualItem) => {
-          const inv = suggestions[virtualItem.index];
-          if (!inv) return null;
-          return (
-            <div
-              key={inv.id}
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                width: `${CARD_WIDTH}px`,
-                height: "100%",
-                transform: `translateX(${virtualItem.start}px)`,
-                scrollSnapAlign: "start",
-              }}
-            >
-              <div className="flex flex-col h-full">
-                <div className="flex-1">
-                  <ScoutedCard inv={inv} onAsk={() => onAsk(inv)} />
-                </div>
-                <motion.button
-                  onClick={() => onBuy(inv)}
-                  className="w-full mt-1.5 py-1.5 rounded-xl text-[10px] font-bold flex items-center justify-center gap-1 transition-colors"
-                  style={{ ...nunito, backgroundColor: `${CELESTE}15`, color: CELESTE }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <DollarSign className="w-3 h-3" /> Comprar
-                </motion.button>
-              </div>
+        {/* Owl mascot */}
+        <div className="flex items-start gap-3 mb-4">
+          <motion.img
+            src="/perspectiva1.png"
+            alt="Búho"
+            className="w-14 h-14 rounded-full shadow-md flex-shrink-0"
+            animate={{ rotate: [0, -8, 8, -4, 0] }}
+            transition={{ duration: 0.8 }}
+          />
+          <div>
+            <p className="text-base font-bold text-foreground" style={nunito}>¡Estás comprando!</p>
+            <p className="text-xs text-muted-foreground mt-0.5" style={nunito}>
+              Vas a agregar este huevito a tu nido. Recuerda: comprar = invertir en este activo.
+            </p>
+          </div>
+        </div>
+
+        {/* Investment preview */}
+        <div className="bg-muted/50 rounded-2xl p-3 mb-4 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${CELESTE}18`, color: CELESTE }}>
+            {getInvestmentIcon(inv)}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-bold text-foreground" style={nunito}>{inv.name} {inv.flag || ""}</p>
+            <div className="flex items-center gap-2 mt-0.5">
+              <span className="text-xs" style={{ ...nunito, color: getRiskBarColor(inv.riskLevel), fontWeight: 700 }}>Riesgo {inv.riskLevel}/10</span>
+              <span className="text-xs" style={{ ...nunito, color: CELESTE, fontWeight: 700 }}>{inv.annualReturn}%/año</span>
             </div>
-          );
-        })}
-      </div>
-    </div>
+          </div>
+        </div>
+
+        {/* Buttons */}
+        <div className="space-y-2">
+          <motion.button
+            onClick={() => onConfirm(false)}
+            className="w-full py-3 rounded-2xl text-sm font-bold text-white"
+            style={{ ...nunito, backgroundColor: CELESTE }}
+            whileTap={{ scale: 0.97 }}
+          >
+            🪺 Entendido, ¡comprar!
+          </motion.button>
+          <motion.button
+            onClick={() => onConfirm(true)}
+            className="w-full py-2.5 rounded-2xl text-xs font-bold text-muted-foreground bg-muted/60"
+            style={nunito}
+            whileTap={{ scale: 0.97 }}
+          >
+            Entendido, no volver a recordarme
+          </motion.button>
+        </div>
+      </motion.div>
+    </motion.div>
   );
 }
 
