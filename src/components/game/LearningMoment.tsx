@@ -30,14 +30,14 @@ const LearningMoment = ({ allocation, profile, stormChoice, result, onContinue }
   const isAligned = riskScore >= minR && riskScore <= maxR;
   const isTooAggressive = riskScore > maxR;
 
-  const getInsight = (): { emoji: string; text: string } => {
-    if (stormChoice === "sell") return { emoji: "🌧️", text: t("learning.sellInsight") };
-    if (!isAligned && isTooAggressive) return { emoji: "⚡", text: t("learning.tooAggressiveInsight") };
-    if (!isAligned && !isTooAggressive) return { emoji: "🛡️", text: t("learning.tooConservativeInsight") };
-    if (allocation.equity >= 60) return { emoji: "🦅", text: t("learning.highEquityInsight") };
-    if (allocation.bonds >= 50) return { emoji: "🏦", text: t("learning.highBondsInsight") };
-    if (stormChoice === "stay") return { emoji: "💪", text: t("learning.stayInsight") };
-    return { emoji: "🌿", text: t("learning.balancedInsight") };
+  const getInsight = (): { text: string } => {
+    if (stormChoice === "sell") return { text: t("learning.sellInsight") };
+    if (!isAligned && isTooAggressive) return { text: t("learning.tooAggressiveInsight") };
+    if (!isAligned && !isTooAggressive) return { text: t("learning.tooConservativeInsight") };
+    if (allocation.equity >= 60) return { text: t("learning.highEquityInsight") };
+    if (allocation.bonds >= 50) return { text: t("learning.highBondsInsight") };
+    if (stormChoice === "stay") return { text: t("learning.stayInsight") };
+    return { text: t("learning.balancedInsight") };
   };
 
   const insight = getInsight();

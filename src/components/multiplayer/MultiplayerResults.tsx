@@ -79,7 +79,7 @@ const MultiplayerResults = ({ mp }: Props) => {
               transition={{ delay: 0.3 + i * 0.15 }}
             >
               <div className="flex items-center gap-3">
-                <span className="text-3xl">{RANK_ICONS[i] || `${i + 1}`}</span>
+                <span className="text-lg font-black" style={{ ...nunito, color: RANK_COLORS[i] || "hsl(var(--muted-foreground))" }}>{RANK_LABELS[i] || `${i + 1}`}</span>
                 <div className="flex-1">
                   <p className="text-sm font-black text-foreground" style={nunito}>
                     {p.display_name} {isMe ? `(${t("multiplayer.you")})` : ""}

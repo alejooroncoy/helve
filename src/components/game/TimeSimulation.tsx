@@ -229,7 +229,7 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, initialB
   const handleHold = () => {
     setShowSellPrompt(false);
     setShowEvent(false);
-    setBirdMsg("💪");
+    setBirdMsg("Aguantas firme!");
     setPlaying(true);
   };
 
