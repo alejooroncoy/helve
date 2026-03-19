@@ -289,7 +289,7 @@ export default function CoachChat({ onClose, portfolio, onAddInvestment, onRemov
   }, [messages]);
 
   useEffect(() => {
-    if (initialQuestion && !initSent && !loadingHistory && messages.length >= 0) {
+    if (initialQuestion && !initSent && !loadingHistory) {
       setInitSent(true);
       setTimeout(() => send(initialQuestion), 300);
     }
