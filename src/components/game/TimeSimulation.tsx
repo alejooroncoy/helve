@@ -169,7 +169,7 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, onClose,
 
   // Auto-play timer
   useEffect(() => {
-    if (playing && currentStep < timeMonths.length - 1) {
+    if (playing && currentStep < totalSteps) {
       intervalRef.current = setTimeout(advanceStep, 1500);
     }
     return () => {
