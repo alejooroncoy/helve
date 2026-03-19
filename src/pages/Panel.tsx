@@ -486,7 +486,7 @@ const Panel = () => {
       const newAllocations = { ...allocations };
       delete newAllocations[id];
       setAllocations(newAllocations);
-      saveProgress({ portfolio: next, allocations: newAllocations });
+      saveNestData({ portfolio: next, allocations: newAllocations });
       return next;
     });
     if (removed) {
