@@ -165,7 +165,7 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, onClose,
     }
 
     setCurrentStep(nextStep);
-  }, [currentStep, getMonthlyReturn]);
+  }, [currentStep, getMonthlyReturn, totalSteps, filteredMonths, filteredLabels]);
 
   // Auto-play timer
   useEffect(() => {
