@@ -1,8 +1,10 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Send, Volume2, VolumeX, TrendingUp, ArrowRightLeft, Lightbulb, Mic, MicOff, MessageCircle } from "lucide-react";
+import { X, Send, Volume2, VolumeX, TrendingUp, ArrowRightLeft, Lightbulb, Mic, MicOff, MessageCircle, Check, ArrowRight, Trash2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import type { Investment } from "@/game/types";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -41,7 +43,7 @@ async function chatWithTools({
 }
 
 interface StrategyCard { type: "strategy"; título: string; riesgo: string; emoji: string; descripción: string; }
-interface ComparisonCard { type: "comparison"; opción_a: string; opción_b: string; veredicto: string; }
+interface ComparisonCard { type: "comparison"; opción_a: string; opción_b: string; veredicto: string; swap?: string; }
 interface TipCard { type: "tip"; emoji: string; título: string; contenido: string; }
 type VisualCard = StrategyCard | ComparisonCard | TipCard;
 
@@ -60,7 +62,7 @@ function parseCards(content: string): { text: string; cards: VisualCard[] } {
     if (type === "strategy") {
       cards.push({ type: "strategy", título: fields["título"] || fields["titulo"] || "Strategy", riesgo: fields["riesgo"] || "medio", emoji: fields["emoji"] || "", descripción: fields["descripción"] || fields["descripcion"] || "" });
     } else if (type === "comparison") {
-      cards.push({ type: "comparison", opción_a: fields["opción_a"] || fields["opcion_a"] || "", opción_b: fields["opción_b"] || fields["opcion_b"] || "", veredicto: fields["veredicto"] || "" });
+      cards.push({ type: "comparison", opción_a: fields["opción_a"] || fields["opcion_a"] || "", opción_b: fields["opción_b"] || fields["opcion_b"] || "", veredicto: fields["veredicto"] || "", swap: fields["swap"] || undefined });
     } else if (type === "tip") {
       cards.push({ type: "tip", emoji: fields["emoji"] || "", título: fields["título"] || fields["titulo"] || "Tip", contenido: fields["contenido"] || "" });
     }
@@ -93,34 +95,66 @@ function StrategyCardUI({ card }: { card: StrategyCard }) {
   );
 }
 
-function ComparisonCardUI({ card }: { card: ComparisonCard }) {
+function ComparisonCardUI({ card, onAcceptSwap }: { card: ComparisonCard; onAcceptSwap?: (swap: string) => void }) {
+  const [accepted, setAccepted] = useState(false);
   const parseOption = (opt: string) => {
     const parts = opt.split("|").map((s) => s.trim());
-    return { name: parts[0] || "", risk: parts[1] || "", ret: parts[2] || "" };
+    return { name: parts[0] || "—", risk: parts[1] || "—", ret: parts[2] || "—" };
   };
   const a = parseOption(card.opción_a);
   const b = parseOption(card.opción_b);
+
+  const handleAccept = () => {
+    if (card.swap && onAcceptSwap) {
+      setAccepted(true);
+      onAcceptSwap(card.swap);
+    }
+  };
+
   return (
     <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-card rounded-2xl p-3.5 shadow-sm border border-border mt-2">
-      <div className="flex items-center gap-2 mb-2.5">
-        <ArrowRightLeft className="w-4 h-4 text-accent" />
-        <p className="text-xs font-bold text-foreground uppercase tracking-wide" style={nunito}>Comparison</p>
+      <div className="flex items-center gap-2 mb-2">
+        <ArrowRightLeft className="w-3.5 h-3.5 text-accent" />
+        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide" style={nunito}>vs</p>
       </div>
-      <div className="grid grid-cols-2 gap-2 mb-2.5">
-        <div className="rounded-xl p-2.5 text-center" style={{ backgroundColor: `${CELESTE}10` }}>
-          <p className="text-xs font-bold text-foreground" style={nunito}>{a.name}</p>
-          <p className="text-[10px] text-muted-foreground mt-1" style={nunito}>Risk: {a.risk}</p>
-          <p className="text-[10px] font-bold" style={{ color: CELESTE, ...nunito }}>{a.ret}</p>
+      <div className="grid grid-cols-[1fr_auto_1fr] gap-1.5 mb-2 items-center">
+        <div className="rounded-xl p-2 text-center" style={{ backgroundColor: `${CELESTE}10` }}>
+          <p className="text-[11px] font-bold text-foreground truncate" style={nunito}>{a.name}</p>
+          <p className="text-[9px] text-muted-foreground mt-0.5" style={nunito}>📊 {a.risk}</p>
+          <p className="text-[9px] font-bold mt-0.5" style={{ color: CELESTE, ...nunito }}>💰 {a.ret}</p>
         </div>
-        <div className="bg-accent/5 rounded-xl p-2.5 text-center">
-          <p className="text-xs font-bold text-foreground" style={nunito}>{b.name}</p>
-          <p className="text-[10px] text-muted-foreground mt-1" style={nunito}>Risk: {b.risk}</p>
-          <p className="text-[10px] text-accent font-bold" style={nunito}>{b.ret}</p>
+        <ArrowRight className="w-3.5 h-3.5 text-muted-foreground/50" />
+        <div className="bg-accent/5 rounded-xl p-2 text-center">
+          <p className="text-[11px] font-bold text-foreground truncate" style={nunito}>{b.name}</p>
+          <p className="text-[9px] text-muted-foreground mt-0.5" style={nunito}>📊 {b.risk}</p>
+          <p className="text-[9px] text-accent font-bold mt-0.5" style={nunito}>💰 {b.ret}</p>
         </div>
       </div>
-      <p className="text-[11px] text-foreground font-medium bg-muted rounded-lg px-2.5 py-1.5" style={nunito}>
+      <p className="text-[10px] text-foreground font-medium bg-muted rounded-lg px-2 py-1.5" style={nunito}>
         {card.veredicto}
       </p>
+      {card.swap && (
+        <motion.button
+          onClick={handleAccept}
+          disabled={accepted}
+          className="w-full mt-2.5 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all"
+          style={{
+            ...nunito,
+            backgroundColor: accepted ? "hsl(var(--primary)/0.1)" : CELESTE,
+            color: accepted ? "hsl(var(--primary))" : "white",
+            cursor: accepted ? "default" : "pointer",
+          }}
+          whileTap={!accepted ? { scale: 0.96 } : {}}
+          animate={accepted ? { scale: [1, 1.05, 1] } : {}}
+          transition={{ duration: 0.3 }}
+        >
+          {accepted ? (
+            <><Check className="w-3.5 h-3.5" /> Change applied!</>
+          ) : (
+            <><ArrowRightLeft className="w-3.5 h-3.5" /> Accept change</>
+          )}
+        </motion.button>
+      )}
     </motion.div>
   );
 }
@@ -139,9 +173,9 @@ function TipCardUI({ card }: { card: TipCard }) {
   );
 }
 
-function VisualCardRenderer({ card }: { card: VisualCard }) {
+function VisualCardRenderer({ card, onAcceptSwap }: { card: VisualCard; onAcceptSwap?: (swap: string) => void }) {
   if (card.type === "strategy") return <StrategyCardUI card={card} />;
-  if (card.type === "comparison") return <ComparisonCardUI card={card} />;
+  if (card.type === "comparison") return <ComparisonCardUI card={card} onAcceptSwap={onAcceptSwap} />;
   if (card.type === "tip") return <TipCardUI card={card} />;
   return null;
 }
@@ -208,27 +242,58 @@ interface CoachChatProps {
   onAddInvestment?: (investmentId: string) => void;
   onRemoveInvestment?: (investmentId: string) => void;
   initialQuestion?: string;
+  onSwapAccepted?: (removeId: string, addId: string) => void;
 }
 
-export default function CoachChat({ onClose, portfolio, onAddInvestment, onRemoveInvestment, initialQuestion }: CoachChatProps) {
+export default function CoachChat({ onClose, portfolio, onAddInvestment, onRemoveInvestment, initialQuestion, onSwapAccepted }: CoachChatProps) {
+  const { user } = useAuth();
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [loadingHistory, setLoadingHistory] = useState(true);
   const [initSent, setInitSent] = useState(false);
   const [playingIdx, setPlayingIdx] = useState<number | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Load chat history from DB
+  useEffect(() => {
+    if (!user) { setLoadingHistory(false); return; }
+    supabase
+      .from("chat_messages")
+      .select("role, content")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: true })
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          setMessages(data.map(m => ({ role: m.role as "user" | "assistant", content: m.content })));
+        }
+        setLoadingHistory(false);
+      });
+  }, [user]);
+
+  // Save message to DB
+  const persistMessage = useCallback(async (msg: Msg) => {
+    if (!user) return;
+    await supabase.from("chat_messages").insert({ user_id: user.id, role: msg.role, content: msg.content });
+  }, [user]);
+
+  const clearChat = useCallback(async () => {
+    if (!user) return;
+    await supabase.from("chat_messages").delete().eq("user_id", user.id);
+    setMessages([]);
+  }, [user]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
 
   useEffect(() => {
-    if (initialQuestion && !initSent && messages.length === 0) {
+    if (initialQuestion && !initSent && !loadingHistory) {
       setInitSent(true);
       setTimeout(() => send(initialQuestion), 300);
     }
-  }, [initialQuestion, initSent]);
+  }, [initialQuestion, initSent, loadingHistory]);
 
   const stopAudio = useCallback(() => {
     if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
@@ -252,6 +317,7 @@ export default function CoachChat({ onClose, portfolio, onAddInvestment, onRemov
     const userMsg: Msg = { role: "user", content: text };
     if (!overrideText) setInput("");
     setMessages((prev) => [...prev, userMsg]);
+    persistMessage(userMsg);
     setLoading(true);
     try {
       const { text: responseText, actions } = await chatWithTools({ messages: [...messages, userMsg], portfolio });
@@ -259,13 +325,32 @@ export default function CoachChat({ onClose, portfolio, onAddInvestment, onRemov
         if (action.type === "add" && onAddInvestment) onAddInvestment(action.investmentId);
         else if (action.type === "remove" && onRemoveInvestment) onRemoveInvestment(action.investmentId);
       }
-      setMessages((prev) => [...prev, { role: "assistant", content: responseText }]);
+      const assistantMsg: Msg = { role: "assistant", content: responseText };
+      setMessages((prev) => [...prev, assistantMsg]);
+      persistMessage(assistantMsg);
     } catch (e) {
-      setMessages((prev) => [...prev, { role: "assistant", content: e instanceof Error ? e.message : "Connection error" }]);
+      const errMsg: Msg = { role: "assistant", content: e instanceof Error ? e.message : "Connection error" };
+      setMessages((prev) => [...prev, errMsg]);
     } finally {
       setLoading(false);
     }
   };
+
+  const handleAcceptSwap = useCallback((swap: string) => {
+    const parts = swap.split("->").map(s => s.trim());
+    if (parts.length === 2) {
+      if (onSwapAccepted) {
+        onSwapAccepted(parts[0], parts[1]);
+      } else {
+        if (onRemoveInvestment) onRemoveInvestment(parts[0]);
+        setTimeout(() => {
+          if (onAddInvestment) onAddInvestment(parts[1]);
+        }, 300);
+      }
+      // Close chat after swap to show portfolio changes
+      setTimeout(() => onClose(), 800);
+    }
+  }, [onAddInvestment, onRemoveInvestment, onSwapAccepted, onClose]);
 
   const quickQuestions = portfolio && portfolio.length > 0
     ? ["How is my nest doing?", "Should I diversify?", "What's my risk level?"]
@@ -286,6 +371,11 @@ export default function CoachChat({ onClose, portfolio, onAddInvestment, onRemov
               : "Your investment guide"}
           </p>
         </div>
+        {messages.length > 0 && (
+          <button onClick={clearChat} className="p-1.5 rounded-full hover:bg-destructive/10 transition-colors" title="Clear chat">
+            <Trash2 className="w-4 h-4 text-muted-foreground hover:text-destructive" />
+          </button>
+        )}
         <button onClick={onClose} className="p-1.5 rounded-full hover:bg-muted transition-colors">
           <X className="w-4 h-4 text-muted-foreground" />
         </button>
@@ -340,7 +430,7 @@ export default function CoachChat({ onClose, portfolio, onAddInvestment, onRemov
                     ) : msg.content}
                   </div>
                 )}
-                {cards.map((card, ci) => <VisualCardRenderer key={ci} card={card} />)}
+                {cards.map((card, ci) => <VisualCardRenderer key={ci} card={card} onAcceptSwap={handleAcceptSwap} />)}
                 {isAssistant && !loading && (
                   <motion.button
                     initial={{ opacity: 0 }} animate={{ opacity: 1 }}

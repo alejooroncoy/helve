@@ -10,22 +10,26 @@ import { useAuth } from "@/hooks/useAuth";
 import { useUserProgress } from "@/hooks/useUserProgress";
 import CoachChat from "@/components/CoachChat";
 import TimeSimulation from "@/components/game/TimeSimulation";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { useTranslation } from "react-i18next";
 import {
   DndContext,
   DragOverlay,
   useDraggable,
   useDroppable,
   PointerSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   type DragStartEvent,
   type DragEndEvent,
 } from "@dnd-kit/core";
-import type { Investment } from "@/game/types";
+import type { Investment, AssetClass } from "@/game/types";
+import { ASSET_CLASSES, ALL_ASSET_DB_IDS } from "@/game/types";
 import { availableInvestments } from "@/game/types";
 import {
   LogOut, X, AlertTriangle, Inbox, Shield, TrendingUp, BarChart2,
-  Building2, Leaf, Globe, Landmark, Zap, FastForward, MessageCircle, DollarSign, Info,
+  Building2, Leaf, Globe, Landmark, Zap, FastForward, MessageCircle, DollarSign, Info, Wallet, GripVertical,
 } from "lucide-react";
 
 const nunito = { fontFamily: "'Nunito', sans-serif" };
@@ -37,48 +41,31 @@ const MascotIcon = () => (
 
 const mascotToast = (msg: string) => toast(msg, { icon: <MascotIcon />, duration: 3000 });
 
-// Map game IDs to DB instrument IDs
-const investmentToDbId: Record<string, string> = {
-  "ch-bond-aaa": "ch-bond-aaa",
-  "global-bond": "global-bond-agg",
-  "ch-govt-10y": "ch-govt-10y",
-  "smi-index": "smi-index",
-  "eurostoxx50": "eurostoxx50",
-  "gold-chf": "gold-chf",
-  "nestle": "nesn-ch",
-  "novartis": "novn-ch",
-  "djia-index": "djia-index",
-  "dax-index": "dax-index",
-  "apple": "aapl-us",
-  "microsoft": "msft-us",
-  "nvidia": "nvda-us",
-  "logitech": "logn-ch",
-  "ubs": "ubsg-ch",
-  "amazon": "amzn-us",
+// Map category keys to their representative DB IDs for stats enrichment
+const categoryToDbIds: Record<string, string[]> = {};
+ASSET_CLASSES.forEach(cls => {
+  categoryToDbIds[cls.key] = cls.dbIds;
+});
+const allDbIds = ALL_ASSET_DB_IDS;
+
+const CLASS_COLORS: Record<AssetClass, string> = {
+  bonds: "hsl(210, 60%, 55%)", equity: "hsl(145, 58%, 36%)", gold: "hsl(38, 92%, 50%)",
+  fx: "hsl(200, 70%, 50%)", swissStocks: "hsl(0, 72%, 51%)", usStocks: "hsl(220, 70%, 50%)",
+  crypto: "hsl(270, 60%, 55%)", cleanEnergy: "hsl(150, 60%, 45%)",
 };
-const allDbIds = Object.values(investmentToDbId);
 
-function getInvestmentIcon(inv: Investment) {
-  const name = inv.name.toLowerCase();
-  if (name.includes("bond") || name.includes("treasury")) return <Landmark className="w-5 h-5" />;
-  if (name.includes("real estate")) return <Building2 className="w-5 h-5" />;
-  if (name.includes("energy") || name.includes("green")) return <Leaf className="w-5 h-5" />;
-  if (name.includes("global") || name.includes("world")) return <Globe className="w-5 h-5" />;
-  if (name.includes("tech") || name.includes("innovation")) return <Zap className="w-5 h-5" />;
-  if (inv.type === "safe") return <Shield className="w-5 h-5" />;
-  if (inv.type === "growth") return <TrendingUp className="w-5 h-5" />;
-  return <BarChart2 className="w-5 h-5" />;
-}
-
-function getRiskColor(risk: number): string {
-  if (risk <= 3) return "";
-  if (risk <= 6) return "text-accent";
-  return "text-destructive";
-}
-
-function getRiskInlineColor(risk: number): React.CSSProperties {
-  if (risk <= 3) return { color: CELESTE };
-  return {};
+function getCategoryIcon(key: string) {
+  switch (key) {
+    case "bonds": return <Landmark className="w-5 h-5" />;
+    case "equity": return <Globe className="w-5 h-5" />;
+    case "gold": return <Shield className="w-5 h-5" />;
+    case "fx": return <DollarSign className="w-5 h-5" />;
+    case "swissStocks": return <BarChart2 className="w-5 h-5" />;
+    case "usStocks": return <TrendingUp className="w-5 h-5" />;
+    case "crypto": return <Zap className="w-5 h-5" />;
+    case "cleanEnergy": return <Leaf className="w-5 h-5" />;
+    default: return <BarChart2 className="w-5 h-5" />;
+  }
 }
 
 function getRiskBarColor(risk: number): string {
@@ -87,23 +74,8 @@ function getRiskBarColor(risk: number): string {
   return "hsl(var(--destructive))";
 }
 
-function getRiskLabel(risk: number): string {
-  if (risk <= 30) return "Low";
-  if (risk <= 60) return "Medium";
-  return "High";
-}
-
-function riskWord(level: number): string {
-  if (level <= 2) return "Very safe";
-  if (level <= 4) return "Safe";
-  if (level <= 6) return "Moderate";
-  if (level <= 8) return "Risky";
-  return "Very risky";
-}
-
 function getSuggestions(profile: string, active: Investment[]): Investment[] {
   const activeIds = new Set(active.map((i) => i.id));
-  const activeTypes = new Set(active.map((i) => i.type));
   const pool = availableInvestments.filter((i) => !activeIds.has(i.id));
   if (pool.length === 0) return [];
 
@@ -111,32 +83,14 @@ function getSuggestions(profile: string, active: Investment[]): Investment[] {
     : profile === "growth" ? [5, 10]
     : [3, 7];
 
-  const avgRisk = active.length
-    ? active.reduce((s, i) => s + i.riskLevel, 0) / active.length
-    : riskRange[0] + (riskRange[1] - riskRange[0]) / 2;
-  const hasType = (t: string) => activeTypes.has(t as any);
-  const slotsLeft = 4 - active.length;
-
   const scored = pool.map((inv) => {
     let score = 0;
     const inRange = inv.riskLevel >= riskRange[0] && inv.riskLevel <= riskRange[1];
     if (inRange) score += 30;
     else score -= Math.abs(inv.riskLevel - (riskRange[0] + riskRange[1]) / 2) * 3;
-    if (!hasType(inv.type)) score += 25;
-    if (active.length > 0) {
-      if (avgRisk > 7 && inv.riskLevel <= 4) score += 20;
-      if (avgRisk < 3 && inv.riskLevel >= 5) score += 15;
-    }
-    const efficiency = inv.annualReturn / Math.max(inv.riskLevel, 1);
-    score += efficiency * 2;
     if (profile === "conservative" && inv.riskLevel <= 3) score += 10;
     if (profile === "balanced" && inv.riskLevel >= 3 && inv.riskLevel <= 6) score += 10;
-    if (active.length === 0) {
-      if (profile === "conservative" && inv.type === "safe") score += 20;
-      if (profile === "balanced" && inv.type === "balanced") score += 20;
-      if (profile === "growth" && inv.type === "growth") score += 20;
-    }
-    if (profile === "conservative" && inv.riskLevel >= 8) score -= 15;
+    if (profile === "growth" && inv.riskLevel >= 6) score += 10;
     return { inv, score };
   });
 
@@ -144,130 +98,103 @@ function getSuggestions(profile: string, active: Investment[]): Investment[] {
   return scored.map((s) => s.inv);
 }
 
-const tagDescriptions: Record<string, string> = {
-  "AAA": "Máxima calidad crediticia",
-  "GOV": "Bono gubernamental",
-  "NESN": "Ticker: Nestlé",
-  "NOVN": "Ticker: Novartis",
-  "AAPL": "Ticker: Apple",
-  "MSFT": "Ticker: Microsoft",
-  "NVDA": "Ticker: NVIDIA",
-  "LOGN": "Ticker: Logitech",
-  "UBSG": "Ticker: UBS",
-  "AMZN": "Ticker: Amazon",
-  "HIGH RISK": "Riesgo elevado",
-};
-
-/* ---- Draggable investment card ---- */
+/* ---- Draggable category card ---- */
 function DraggableCard({
-  inv, zone, onClick, onAsk, onSell, onInfo,
+  inv, zone, onClick, onAsk, onSell, onInfo, allocation, balance, t, isMobile,
 }: {
   inv: Investment; zone: "scouted" | "nest"; onClick: () => void; onAsk?: () => void; onSell?: () => void; onInfo?: () => void;
+  allocation?: number; balance?: number; t: any; isMobile?: boolean;
 }) {
-  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+  const { attributes, listeners, setNodeRef, setActivatorNodeRef, isDragging } = useDraggable({
     id: `${zone}-${inv.id}`,
     data: { inv, zone },
   });
 
+  const dragHandleProps = isMobile
+    ? { ref: setActivatorNodeRef, ...listeners, ...attributes }
+    : undefined;
+
+  const rootDragProps = isMobile ? {} : { ...listeners, ...attributes };
+
   return (
     <div
       ref={setNodeRef}
-      {...listeners}
-      {...attributes}
-      onClick={zone === "scouted" ? onClick : undefined}
-      className={`touch-none select-none transition-all h-full ${isDragging ? "opacity-30 scale-95" : ""}`}
+      {...rootDragProps}
+      onClick={zone === "scouted" && !isMobile ? onClick : undefined}
+      className={`select-none transition-all h-full w-full ${isDragging ? "opacity-30 scale-95" : ""}`}
     >
-      {zone === "nest" ? <NestCard inv={inv} onSell={onSell} onAsk={onAsk} onInfo={onInfo} /> : <ScoutedCard inv={inv} onAsk={onAsk} />}
+      {zone === "nest"
+        ? <NestCard inv={inv} onSell={onSell} onAsk={onAsk} onInfo={onInfo} allocation={allocation} balance={balance} t={t} overlay={false} isMobile={isMobile} dragHandleProps={dragHandleProps} />
+        : <ScoutedCard inv={inv} onAsk={onAsk} t={t} overlay={false} isMobile={isMobile} dragHandleProps={dragHandleProps} />}
     </div>
   );
 }
 
-function NestCard({ inv, overlay, onSell, onAsk, onInfo }: { inv: Investment; overlay?: boolean; onSell?: () => void; onAsk?: () => void; onInfo?: () => void }) {
+function NestCard({ inv, overlay, onSell, onAsk, onInfo, allocation, balance, t, isMobile, dragHandleProps }: { inv: Investment; overlay?: boolean; onSell?: () => void; onAsk?: () => void; onInfo?: () => void; allocation?: number; balance?: number; t: any; isMobile?: boolean; dragHandleProps?: any }) {
   const [expanded, setExpanded] = useState(false);
+  const pct = allocation ?? 25;
+  const chfAmount = balance ? Math.round(balance * pct / 100) : 0;
+  const displayName = t(`allocation.classes.${inv.id}`, { defaultValue: inv.name });
+  const color = CLASS_COLORS[inv.id as AssetClass] || CELESTE;
 
   return (
-    <div className={`bg-card rounded-2xl p-3.5 shadow-sm ${overlay ? "shadow-lg rotate-2" : ""} cursor-grab active:cursor-grabbing`} style={overlay ? { boxShadow: `0 0 0 2px ${CELESTE}40` } : {}}>
+    <div className={`bg-card rounded-2xl p-3.5 shadow-sm ${overlay ? "shadow-lg rotate-2 cursor-grabbing" : isMobile ? "" : "cursor-grab active:cursor-grabbing"}`} style={overlay ? { boxShadow: `0 0 0 2px ${color}40` } : {}}>
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${CELESTE}18`, color: CELESTE }}>
-          {getInvestmentIcon(inv)}
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${color}18`, color }}>
+          {getCategoryIcon(inv.id)}
         </div>
         <div className="flex-1 min-w-0" onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }} onPointerDown={(e) => e.stopPropagation()}>
           <div className="flex items-center gap-1.5 flex-wrap">
-            <p className="text-sm font-bold text-foreground" style={nunito}>{inv.name}</p>
-            {inv.flag && <span className="text-xs">{inv.flag}</span>}
+            <p className="text-sm font-bold text-foreground" style={nunito}>{displayName}</p>
           </div>
           <div className="flex items-center gap-2 mt-1 flex-wrap">
             <span className="text-xs text-muted-foreground" style={nunito}>
-              Riesgo <span style={{ color: getRiskBarColor(inv.riskLevel), fontWeight: 700 }}>{inv.riskLevel}/10</span>
+              {t("panel.riskLabel")} <span style={{ color: getRiskBarColor(inv.riskLevel), fontWeight: 700 }}>{inv.riskLevel}/10</span>
             </span>
-            <span className="text-xs" style={{ ...nunito, color: CELESTE, fontWeight: 700 }}>
-              {inv.annualReturn}%/año
+            <span className="text-xs" style={{ ...nunito, color, fontWeight: 700 }}>
+              {inv.annualReturn}%{t("common.perYear")}
             </span>
           </div>
         </div>
         {!overlay && (
-          <div
-            className="w-7 h-7 rounded-full bg-muted flex items-center justify-center flex-shrink-0 cursor-pointer"
-            onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
-            onPointerDown={(e) => e.stopPropagation()}
-          >
-            <motion.div animate={{ rotate: expanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
-              <Info className="w-3.5 h-3.5 text-muted-foreground" />
-            </motion.div>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <div className="flex flex-col items-end" onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }} onPointerDown={(e) => e.stopPropagation()}>
+              <span className="text-sm font-bold" style={{ ...nunito, color }}>{pct}%</span>
+              <span className="text-[10px] text-muted-foreground" style={nunito}>CHF {chfAmount}</span>
+            </div>
+            {isMobile && dragHandleProps && (
+              <button
+                type="button"
+                {...dragHandleProps}
+                onClick={(e) => e.stopPropagation()}
+                className="w-8 h-8 rounded-xl bg-muted text-muted-foreground flex items-center justify-center"
+                aria-label={t("panel.myNest")}
+              >
+                <GripVertical className="w-4 h-4" />
+              </button>
+            )}
           </div>
         )}
       </div>
 
-      {inv.tag && (
-        <div className="mt-2 flex items-center gap-1.5">
-          <span className="text-[10px] font-bold bg-accent/15 text-accent px-2 py-0.5 rounded-full" style={nunito}>
-            {inv.tag}
-          </span>
-          {tagDescriptions[inv.tag] && (
-            <span className="text-[10px] text-muted-foreground" style={nunito}>{tagDescriptions[inv.tag]}</span>
-          )}
-        </div>
-      )}
-
-      {/* Expandable actions */}
       <AnimatePresence>
         {expanded && !overlay && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden"
-          >
+          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+            <p className="text-[10px] text-muted-foreground mt-2 px-1" style={nunito}>
+              {t(`allocation.classDesc.${inv.id}`, { defaultValue: "" })}
+            </p>
             <div className="flex gap-2 mt-3 pt-3 border-t border-border">
-              <motion.button
-                onClick={(e) => { e.stopPropagation(); onSell?.(); }}
-                onPointerDown={(e) => e.stopPropagation()}
-                className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold bg-destructive/10 text-destructive transition-colors"
-                style={nunito}
-                whileTap={{ scale: 0.95 }}
-              >
-                <DollarSign className="w-3.5 h-3.5" />
-                Vender
+              <motion.button onClick={(e) => { e.stopPropagation(); onSell?.(); }} onPointerDown={(e) => e.stopPropagation()}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold bg-destructive/10 text-destructive transition-colors" style={nunito} whileTap={{ scale: 0.95 }}>
+                <DollarSign className="w-3.5 h-3.5" /> {t("panel.sell")}
               </motion.button>
-              <motion.button
-                onClick={(e) => { e.stopPropagation(); onAsk?.(); }}
-                onPointerDown={(e) => e.stopPropagation()}
-                className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold transition-colors"
-                style={{ ...nunito, backgroundColor: `${CELESTE}15`, color: CELESTE }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <MessageCircle className="w-3.5 h-3.5" />
-                Preguntar
+              <motion.button onClick={(e) => { e.stopPropagation(); onAsk?.(); }} onPointerDown={(e) => e.stopPropagation()}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold transition-colors" style={{ ...nunito, backgroundColor: `${color}15`, color }} whileTap={{ scale: 0.95 }}>
+                <MessageCircle className="w-3.5 h-3.5" /> {t("panel.ask")}
               </motion.button>
-              <motion.button
-                onClick={(e) => { e.stopPropagation(); onInfo?.(); }}
-                onPointerDown={(e) => e.stopPropagation()}
-                className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold bg-muted text-muted-foreground transition-colors"
-                style={nunito}
-                whileTap={{ scale: 0.95 }}
-              >
-                <BarChart2 className="w-3.5 h-3.5" />
-                Detalle
+              <motion.button onClick={(e) => { e.stopPropagation(); onInfo?.(); }} onPointerDown={(e) => e.stopPropagation()}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold bg-muted text-muted-foreground transition-colors" style={nunito} whileTap={{ scale: 0.95 }}>
+                <BarChart2 className="w-3.5 h-3.5" /> {t("panel.detail")}
               </motion.button>
             </div>
           </motion.div>
@@ -277,45 +204,46 @@ function NestCard({ inv, overlay, onSell, onAsk, onInfo }: { inv: Investment; ov
   );
 }
 
-function ScoutedCard({ inv, overlay, onAsk }: { inv: Investment; overlay?: boolean; onAsk?: () => void }) {
+function ScoutedCard({ inv, overlay, onAsk, t, isMobile, dragHandleProps }: { inv: Investment; overlay?: boolean; onAsk?: () => void; t: any; isMobile?: boolean; dragHandleProps?: any }) {
+  const displayName = t(`allocation.classes.${inv.id}`, { defaultValue: inv.name });
+  const color = CLASS_COLORS[inv.id as AssetClass] || CELESTE;
+
   return (
-    <div className={`bg-card rounded-2xl p-3 shadow-sm border-2 border-dashed border-border ${overlay ? "-rotate-2" : ""} cursor-grab active:cursor-grabbing min-h-[120px] h-full flex flex-col`} style={overlay ? { boxShadow: `0 0 0 2px ${CELESTE}40`, borderColor: `${CELESTE}60` } : {}}>
+    <div className={`bg-card rounded-2xl p-3 shadow-sm border-2 border-dashed border-border ${overlay ? "-rotate-2 cursor-grabbing" : isMobile ? "" : "cursor-grab active:cursor-grabbing"} min-h-[110px] h-full flex flex-col`} style={overlay ? { boxShadow: `0 0 0 2px ${color}40`, borderColor: `${color}60` } : {}}>
       <div className="flex items-start gap-2">
-        <div className="w-9 h-9 bg-secondary rounded-xl flex items-center justify-center text-muted-foreground flex-shrink-0">
-          {getInvestmentIcon(inv)}
+        <div className="w-9 h-9 bg-secondary rounded-xl flex items-center justify-center text-muted-foreground flex-shrink-0" style={{ color }}>
+          {getCategoryIcon(inv.id)}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-bold text-foreground leading-snug" style={nunito}>{inv.name}</p>
-          {inv.flag && <span className="text-[10px]">{inv.flag}</span>}
+          <div className="flex items-center gap-1.5">
+            <p className="text-xs font-bold text-foreground leading-snug" style={nunito}>{displayName}</p>
+          </div>
         </div>
+        {!overlay && isMobile && dragHandleProps && (
+          <button
+            type="button"
+            {...dragHandleProps}
+            onClick={(e) => e.stopPropagation()}
+            className="w-8 h-8 rounded-xl bg-muted text-muted-foreground flex items-center justify-center flex-shrink-0"
+            aria-label={t("panel.buy")}
+          >
+            <GripVertical className="w-4 h-4" />
+          </button>
+        )}
       </div>
       <div className="flex-grow" />
       <div className="flex items-center gap-2 mt-2">
-        <span className="text-[10px] text-muted-foreground" style={nunito}>Riesgo</span>
+        <span className="text-[10px] text-muted-foreground" style={nunito}>{t("panel.riskLabel")}</span>
         <span className="text-[10px] font-bold" style={{ ...nunito, color: getRiskBarColor(inv.riskLevel) }}>{inv.riskLevel}/10</span>
         <span className="text-muted-foreground text-[10px]">·</span>
-        <span className="text-[10px] font-bold" style={{ ...nunito, color: CELESTE }}>{inv.annualReturn}%</span>
+        <span className="text-[10px] font-bold" style={{ ...nunito, color }}>{inv.annualReturn}%</span>
       </div>
-      {inv.tag && (
-        <div className="mt-1.5 flex items-center gap-1">
-          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${inv.tag === "HIGH RISK" ? "bg-destructive/10 text-destructive" : ""}`} style={{ ...nunito, ...(inv.tag !== "HIGH RISK" ? { backgroundColor: `${CELESTE}18`, color: CELESTE } : {}) }}>
-            {inv.tag}
-          </span>
-          {tagDescriptions[inv.tag] && (
-            <span className="text-[9px] text-muted-foreground" style={nunito}>{tagDescriptions[inv.tag]}</span>
-          )}
-        </div>
-      )}
       <div className="flex items-center justify-end mt-1.5 gap-1">
         {!overlay && onAsk && (
-          <span
-            onClick={(e) => { e.stopPropagation(); e.preventDefault(); onAsk(); }}
-            onPointerDown={(e) => e.stopPropagation()}
-            className="w-6 h-6 rounded-full bg-accent/10 text-accent flex items-center justify-center text-[10px] font-bold cursor-pointer"
-            style={nunito}
-          >?</span>
+          <span onClick={(e) => { e.stopPropagation(); e.preventDefault(); onAsk(); }} onPointerDown={(e) => e.stopPropagation()}
+            className="w-6 h-6 rounded-full bg-accent/10 text-accent flex items-center justify-center text-[10px] font-bold cursor-pointer" style={nunito}>?</span>
         )}
-        {!overlay && <span className="text-sm font-bold" style={{ color: CELESTE }}>+</span>}
+        {!overlay && !isMobile && <span className="text-sm font-bold" style={{ color }}>+</span>}
       </div>
     </div>
   );
@@ -327,80 +255,52 @@ function DropZone({ id, children, isOver }: { id: string; children: React.ReactN
   const active = isOver ?? over;
 
   return (
-    <div
-      ref={setNodeRef}
-      className="flex-1 min-w-0 rounded-3xl transition-all duration-200 p-1 -m-1 flex flex-col"
-      style={active ? { backgroundColor: `${CELESTE}08`, outline: `2px dashed ${CELESTE}40` } : {}}
-    >
+    <div ref={setNodeRef} className="flex-1 min-w-0 rounded-3xl transition-all duration-200 p-1 -m-1 flex flex-col"
+      style={active ? { backgroundColor: `${CELESTE}08`, outline: `2px dashed ${CELESTE}40` } : {}}>
       {children}
     </div>
   );
 }
+
 /* ---- Buy confirmation dialog ---- */
-function BuyConfirmDialog({ inv, onConfirm, onCancel }: { inv: Investment; onConfirm: (dontShowAgain: boolean) => void; onCancel: () => void }) {
+function BuyConfirmDialog({ inv, onConfirm, onCancel, t }: { inv: Investment; onConfirm: (dontShowAgain: boolean) => void; onCancel: () => void; t: any }) {
+  const displayName = t(`allocation.classes.${inv.id}`, { defaultValue: inv.name });
+  const color = CLASS_COLORS[inv.id as AssetClass] || CELESTE;
+
   return (
-    <motion.div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 px-4 pb-6"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      onClick={onCancel}
-    >
-      <motion.div
-        className="w-full max-w-sm bg-card rounded-3xl p-5 shadow-xl"
-        initial={{ y: 100, scale: 0.95 }}
-        animate={{ y: 0, scale: 1 }}
-        exit={{ y: 100, scale: 0.95 }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Owl mascot */}
+    <motion.div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 px-4 pb-6"
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onCancel}>
+      <motion.div className="w-full max-w-sm bg-card rounded-3xl p-5 shadow-xl"
+        initial={{ y: 100, scale: 0.95 }} animate={{ y: 0, scale: 1 }} exit={{ y: 100, scale: 0.95 }}
+        onClick={(e) => e.stopPropagation()}>
         <div className="flex items-start gap-3 mb-4">
-          <motion.img
-            src="/perspectiva1.png"
-            alt="Búho"
-            className="w-14 h-14 rounded-full shadow-md flex-shrink-0 object-cover"
-            animate={{ rotate: [0, -8, 8, -4, 0] }}
-            transition={{ duration: 0.8 }}
-          />
+          <motion.img src="/perspectiva1.png" alt="Búho" className="w-14 h-14 rounded-full shadow-md flex-shrink-0 object-cover"
+            animate={{ rotate: [0, -8, 8, -4, 0] }} transition={{ duration: 0.8 }} />
           <div>
-            <p className="text-base font-bold text-foreground" style={nunito}>¡Estás comprando!</p>
-            <p className="text-xs text-muted-foreground mt-0.5" style={nunito}>
-              Vas a agregar este huevito a tu nido. Recuerda: comprar = invertir en este activo.
-            </p>
+            <p className="text-base font-bold text-foreground" style={nunito}>{t("panel.buyDialogTitle")}</p>
+            <p className="text-xs text-muted-foreground mt-0.5" style={nunito}>{t("panel.buyDialogDesc")}</p>
           </div>
         </div>
-
-        {/* Investment preview */}
         <div className="bg-muted/50 rounded-2xl p-3 mb-4 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${CELESTE}18`, color: CELESTE }}>
-            {getInvestmentIcon(inv)}
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${color}18`, color }}>
+            {getCategoryIcon(inv.id)}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold text-foreground" style={nunito}>{inv.name} {inv.flag || ""}</p>
+            <p className="text-sm font-bold text-foreground" style={nunito}>{displayName}</p>
             <div className="flex items-center gap-2 mt-0.5">
-              <span className="text-xs" style={{ ...nunito, color: getRiskBarColor(inv.riskLevel), fontWeight: 700 }}>Riesgo {inv.riskLevel}/10</span>
-              <span className="text-xs" style={{ ...nunito, color: CELESTE, fontWeight: 700 }}>{inv.annualReturn}%/año</span>
+              <span className="text-xs" style={{ ...nunito, color: getRiskBarColor(inv.riskLevel), fontWeight: 700 }}>{t("panel.riskLabel")} {inv.riskLevel}/10</span>
+              <span className="text-xs" style={{ ...nunito, color, fontWeight: 700 }}>{inv.annualReturn}%{t("common.perYear")}</span>
             </div>
           </div>
         </div>
-
-        {/* Buttons */}
         <div className="space-y-2">
-          <motion.button
-            onClick={() => onConfirm(false)}
-            className="w-full py-3 rounded-2xl text-sm font-bold text-white"
-            style={{ ...nunito, backgroundColor: CELESTE }}
-            whileTap={{ scale: 0.97 }}
-          >
-            Entendido, ¡comprar!
+          <motion.button onClick={() => onConfirm(false)} className="w-full py-3 rounded-2xl text-sm font-bold text-white"
+            style={{ ...nunito, backgroundColor: color }} whileTap={{ scale: 0.97 }}>
+            {t("panel.buyDialogConfirm")}
           </motion.button>
-          <motion.button
-            onClick={() => onConfirm(true)}
-            className="w-full py-2.5 rounded-2xl text-xs font-bold text-muted-foreground bg-muted/60"
-            style={nunito}
-            whileTap={{ scale: 0.97 }}
-          >
-            Entendido, no volver a recordarme
+          <motion.button onClick={() => onConfirm(true)} className="w-full py-2.5 rounded-2xl text-xs font-bold text-muted-foreground bg-muted/60"
+            style={nunito} whileTap={{ scale: 0.97 }}>
+            {t("panel.buyDialogDontRemind")}
           </motion.button>
         </div>
       </motion.div>
@@ -413,7 +313,9 @@ const Panel = () => {
   const navigate = useNavigate();
   const { signOut } = useAuth();
   const { loadProgress, saveProgress } = useUserProgress();
+  const { t } = useTranslation();
   const [activePortfolio, setActivePortfolio] = useState<Investment[]>([]);
+  const [allocations, setAllocations] = useState<Record<string, number>>({});
   const [profile, setProfile] = useState("balanced");
   const [balance, setBalance] = useState(1000);
   const [lastSimGain, setLastSimGain] = useState<number | null>(null);
@@ -426,113 +328,157 @@ const Panel = () => {
   const [simMonths, setSimMonths] = useState(12);
   const isMobile = useIsMobile();
 
-  // Fetch real stats from DB for all instruments
   const { stats, loading: statsLoading } = useInstrumentStats(allDbIds);
 
-  // Enrich investments with real DB data
+  // Enrich category investments with averaged stats from their DB instruments
   const enrichInvestment = useCallback((inv: Investment): Investment => {
-    const dbId = investmentToDbId[inv.id];
-    const real = dbId ? stats[dbId] : null;
-    if (real) {
-      return { ...inv, annualReturn: real.avgAnnualReturn, riskLevel: real.riskLevel };
-    }
-    return inv;
+    const cls = ASSET_CLASSES.find(c => c.key === inv.id);
+    if (!cls || cls.dbIds.length === 0) return inv;
+    const dbStats = cls.dbIds.map(id => stats[id]).filter(Boolean);
+    if (dbStats.length === 0) return inv;
+    const avgReturn = dbStats.reduce((s, st) => s + st.avgAnnualReturn, 0) / dbStats.length;
+    const avgRisk = Math.round(dbStats.reduce((s, st) => s + st.riskLevel, 0) / dbStats.length);
+    return { ...inv, annualReturn: Math.round(avgReturn * 10) / 10, riskLevel: avgRisk || inv.riskLevel };
   }, [stats]);
 
-  const enrichedPortfolio = useMemo(
-    () => activePortfolio.map(enrichInvestment),
-    [activePortfolio, enrichInvestment]
-  );
-
-  const enrichedAvailable = useMemo(
-    () => availableInvestments.map(enrichInvestment),
-    [enrichInvestment]
-  );
+  const enrichedPortfolio = useMemo(() => activePortfolio.map(enrichInvestment), [activePortfolio, enrichInvestment]);
+  const enrichedAvailable = useMemo(() => availableInvestments.map(enrichInvestment), [enrichInvestment]);
 
   useEffect(() => {
     loadProgress().then((p) => {
       if (p) {
         setProfile(p.risk_profile);
-        if (p.portfolio && p.portfolio.length > 0) setActivePortfolio(p.portfolio);
+        if (p.portfolio && p.portfolio.length > 0) {
+          setActivePortfolio(p.portfolio);
+          if (p.allocations && Object.keys(p.allocations).length > 0) {
+            setAllocations(p.allocations);
+          } else {
+            const evenPct = Math.floor(100 / p.portfolio.length);
+            const allocs: Record<string, number> = {};
+            p.portfolio.forEach(inv => { allocs[inv.id] = evenPct; });
+            setAllocations(allocs);
+            saveProgress({ allocations: allocs });
+          }
+        } else {
+          // Default: pick 3 suggested categories
+          const defaults = getSuggestions(p.risk_profile, []).slice(0, 3);
+          if (defaults.length > 0) {
+            setActivePortfolio(defaults);
+            const evenPct = Math.floor(100 / defaults.length);
+            const allocs: Record<string, number> = {};
+            defaults.forEach(inv => { allocs[inv.id] = evenPct; });
+            setAllocations(allocs);
+            saveProgress({ portfolio: defaults, allocations: allocs });
+          }
+        }
         if (p.simulation_result && p.simulation_result > 0) setBalance(p.simulation_result);
       }
     });
-  }, [loadProgress]);
+  }, [loadProgress, saveProgress]);
 
   const handleSimulationComplete = useCallback((finalBalance: number, gainPct: number) => {
     setBalance(finalBalance);
     setLastSimGain(gainPct);
     saveProgress({ simulation_result: finalBalance });
-    if (gainPct > 0) {
-      mascotToast(`¡Genial! Tu nido creció ${gainPct.toFixed(1)}% 🎉`);
-    } else {
-      mascotToast(`Tu nido bajó ${Math.abs(gainPct).toFixed(1)}%, pero aprendiste 💪`);
-    }
-  }, [saveProgress]);
+    if (gainPct > 0) mascotToast(t("panel.nestGrew", { pct: gainPct.toFixed(1) }));
+    else mascotToast(t("panel.nestDropped", { pct: Math.abs(gainPct).toFixed(1) }));
+  }, [saveProgress, t]);
 
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
+  );
   const suggestions = useMemo(() => getSuggestions(profile, enrichedPortfolio), [profile, enrichedPortfolio]);
 
+  const totalAllocated = useMemo(() => {
+    return enrichedPortfolio.reduce((s, i) => s + (allocations[i.id] ?? 0), 0);
+  }, [enrichedPortfolio, allocations]);
+
   const totalRisk = enrichedPortfolio.length
-    ? Math.round(enrichedPortfolio.reduce((s, i) => s + i.riskLevel, 0) / enrichedPortfolio.length * 10)
+    ? Math.round(
+        totalAllocated > 0
+          ? enrichedPortfolio.reduce((s, i) => s + i.riskLevel * (allocations[i.id] ?? 0), 0) / totalAllocated * 10
+          : enrichedPortfolio.reduce((s, i) => s + i.riskLevel, 0) / enrichedPortfolio.length * 10
+      )
     : 0;
 
-  
-  const monthlyIncome = enrichedPortfolio.reduce((s, i) => s + Math.round((balance * i.annualReturn) / 100 / 12), 0);
-  const avgReturn = enrichedPortfolio.length
-    ? (enrichedPortfolio.reduce((s, i) => s + i.annualReturn, 0) / enrichedPortfolio.length).toFixed(1)
-    : "0.0";
+  const monthlyIncome = enrichedPortfolio.reduce((s, i) => {
+    const pct = allocations[i.id] ?? 0;
+    return s + Math.round((balance * pct / 100 * i.annualReturn) / 100 / 12);
+  }, 0);
+  const avgReturn = enrichedPortfolio.length && totalAllocated > 0
+    ? (enrichedPortfolio.reduce((s, i) => s + i.annualReturn * (allocations[i.id] ?? 0), 0) / totalAllocated).toFixed(1)
+    : enrichedPortfolio.length
+      ? (enrichedPortfolio.reduce((s, i) => s + i.annualReturn, 0) / enrichedPortfolio.length).toFixed(1)
+      : "0.0";
 
   const executeBuy = useCallback((inv: Investment) => {
-    if (activePortfolio.length >= 4) {
-      mascotToast("¡Tu nido está lleno! Vende un huevo para hacer espacio.");
-      return;
-    }
+    if (activePortfolio.length >= 4) { mascotToast(t("panel.nestFull")); return; }
     if (activePortfolio.find((i) => i.id === inv.id)) return;
     const next = [...activePortfolio, inv];
+    const currentTotal = Object.values(allocations).reduce((s, v) => s + v, 0);
+    const remaining = 100 - currentTotal;
+    const newAlloc = Math.min(25, remaining);
+    const newAllocations = { ...allocations, [inv.id]: newAlloc };
     setActivePortfolio(next);
-    saveProgress({ portfolio: next });
+    setAllocations(newAllocations);
+    saveProgress({ portfolio: next, allocations: newAllocations });
     const newRisk = Math.round(next.reduce((s, i) => s + i.riskLevel, 0) / next.length * 10);
-    if (newRisk > 70) mascotToast("¡Cuidado! Compraste algo arriesgado. Tu nido tiembla un poco...");
-    else if (newRisk < 20) mascotToast("¡Buena compra! Un huevito muy seguro para tu nido.");
-    else mascotToast("¡Comprado! Buen ojo, ese huevo se ve prometedor.");
-  }, [activePortfolio, saveProgress]);
+    if (newRisk > 70) mascotToast(t("panel.riskyBuy"));
+    else if (newRisk < 20) mascotToast(t("panel.safeBuy"));
+    else mascotToast(t("panel.normalBuy"));
+  }, [activePortfolio, allocations, saveProgress, t]);
 
   const tryBuyInvestment = useCallback((inv: Investment) => {
-    if (activePortfolio.length >= 4) {
-      mascotToast("¡Tu nido está lleno! Vende un huevo para hacer espacio.");
-      return;
-    }
+    if (activePortfolio.length >= 4) { mascotToast(t("panel.nestFull")); return; }
     if (activePortfolio.find((i) => i.id === inv.id)) return;
-    if (skipBuyDialog) {
-      executeBuy(inv);
-    } else {
-      setBuyDialogInv(inv);
-    }
-  }, [activePortfolio, skipBuyDialog, executeBuy]);
+    if (skipBuyDialog) executeBuy(inv);
+    else setBuyDialogInv(inv);
+  }, [activePortfolio, skipBuyDialog, executeBuy, t]);
 
   const handleBuyConfirm = useCallback((dontShowAgain: boolean) => {
-    if (dontShowAgain) {
-      setSkipBuyDialog(true);
-      localStorage.setItem("helve_skip_buy_dialog", "1");
-    }
+    if (dontShowAgain) { setSkipBuyDialog(true); localStorage.setItem("helve_skip_buy_dialog", "1"); }
     if (buyDialogInv) executeBuy(buyDialogInv);
     setBuyDialogInv(null);
   }, [buyDialogInv, executeBuy]);
 
   const removeInvestment = (id: string) => {
-    const sold = activePortfolio.find(i => i.id === id);
+    const removed = activePortfolio.find(i => i.id === id);
     setActivePortfolio((prev) => {
       const next = prev.filter((i) => i.id !== id);
-      saveProgress({ portfolio: next });
+      const newAllocations = { ...allocations };
+      delete newAllocations[id];
+      setAllocations(newAllocations);
+      saveProgress({ portfolio: next, allocations: newAllocations });
       return next;
     });
-    if (sold) {
-      mascotToast(`¡Vendiste ${sold.name}! A veces soltar un huevo es la mejor decisión.`);
+    if (removed) {
+      const displayName = t(`allocation.classes.${removed.id}`, { defaultValue: removed.name });
+      mascotToast(t("panel.soldMsg", { name: displayName }));
     } else {
-      mascotToast("Huevo vendido. Tu nido se siente más ligero.");
+      mascotToast(t("panel.soldGeneric"));
     }
   };
+
+  const handleSwapFromCoach = useCallback((removeId: string, addId: string) => {
+    const toRemove = activePortfolio.find(i => i.id === removeId);
+    const toAdd = enrichedAvailable.find(i => i.id === addId);
+    if (!toAdd) return;
+    const removedAlloc = allocations[removeId] ?? 25;
+    setActivePortfolio((prev) => {
+      const next = prev.filter((i) => i.id !== removeId);
+      if (!next.find(i => i.id === addId) && next.length < 4) next.push(toAdd);
+      const newAllocations = { ...allocations };
+      delete newAllocations[removeId];
+      newAllocations[addId] = removedAlloc;
+      setAllocations(newAllocations);
+      saveProgress({ portfolio: next, allocations: newAllocations });
+      return next;
+    });
+    const removeName = t(`allocation.classes.${removeId}`, { defaultValue: toRemove?.name || removeId });
+    const addName = t(`allocation.classes.${addId}`, { defaultValue: toAdd.name });
+    mascotToast(t("panel.swapMsg", { removed: removeName, added: addName }));
+  }, [activePortfolio, enrichedAvailable, allocations, saveProgress, t]);
 
   const handleDragStart = (event: DragStartEvent) => {
     setDraggedItem(event.active.data.current as { inv: Investment; zone: string });
@@ -553,58 +499,55 @@ const Panel = () => {
     setSimulationOpen(true);
   };
 
-  const handleSignOut = async () => {
-    await signOut();
-    navigate("/auth");
+  const handleSignOut = async () => { await signOut(); navigate("/auth"); };
+
+  const getRiskLabelLocal = (risk: number): string => {
+    if (risk <= 30) return t("portfolio.low");
+    if (risk <= 60) return t("portfolio.medium");
+    return t("portfolio.high");
   };
 
+  const simPeriods = [
+    { label: t("simulation.periods.3m"), months: 3 },
+    { label: t("simulation.periods.6m"), months: 6 },
+    { label: t("simulation.periods.1y"), months: 12 },
+    { label: t("simulation.periods.5y"), months: 60 },
+  ];
+
   return (
-    <motion.div
-      className="min-h-screen bg-background flex flex-col"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-    >
+    <motion.div className="min-h-screen bg-background flex flex-col overflow-y-auto" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
       {/* Header */}
       <div className="px-5 pt-6 pb-3">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs text-muted-foreground font-medium tracking-wide uppercase" style={nunito}>Mi Nido</p>
-            <h1 className="text-2xl text-foreground mt-0.5" style={{ ...nunito, fontWeight: 900 }}>Panel</h1>
+            <p className="text-xs text-muted-foreground font-medium tracking-wide uppercase" style={nunito}>{t("panel.myNest")}</p>
+            <h1 className="text-2xl text-foreground mt-0.5" style={{ ...nunito, fontWeight: 900 }}>{t("panel.panelTitle")}</h1>
           </div>
           <div className="flex items-center gap-2">
-            <motion.button
-              onClick={handleSignOut}
-              className="w-10 h-10 rounded-full bg-card shadow-sm flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors"
-              whileTap={{ scale: 0.9 }}
-            >
+            <LanguageSwitcher />
+            <motion.button onClick={handleSignOut} className="w-10 h-10 rounded-full bg-card shadow-sm flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors" whileTap={{ scale: 0.9 }}>
               <LogOut className="w-4 h-4" />
             </motion.button>
             {isMobile ? (
               <Drawer open={coachOpen} onOpenChange={setCoachOpen}>
                 <DrawerTrigger asChild>
-                  <motion.button
-                    className="w-12 h-12 rounded-full bg-card shadow-md overflow-hidden border-2" style={{ borderColor: `${CELESTE}40` }}
-                    whileTap={{ scale: 0.9 }}
-                  >
+                  <motion.button className="w-12 h-12 rounded-full bg-card shadow-md overflow-hidden border-2" style={{ borderColor: `${CELESTE}40` }} whileTap={{ scale: 0.9 }}>
                     <img src="/perspectiva1.png" alt="Coach" className="w-full h-full object-cover" />
                   </motion.button>
                 </DrawerTrigger>
                 <DrawerContent className="h-[80vh] p-0">
-                  <CoachChat onClose={() => { setCoachOpen(false); setCoachInitQ(undefined); }} portfolio={enrichedPortfolio} onAddInvestment={(id) => { const inv = enrichedAvailable.find(i => i.id === id); if (inv) tryBuyInvestment(inv); }} onRemoveInvestment={(id) => removeInvestment(id)} initialQuestion={coachInitQ} />
+                  <CoachChat onClose={() => { setCoachOpen(false); setCoachInitQ(undefined); }} portfolio={enrichedPortfolio} onAddInvestment={(id) => { const inv = enrichedAvailable.find(i => i.id === id); if (inv) tryBuyInvestment(inv); }} onRemoveInvestment={(id) => removeInvestment(id)} initialQuestion={coachInitQ} onSwapAccepted={handleSwapFromCoach} />
                 </DrawerContent>
               </Drawer>
             ) : (
               <Popover open={coachOpen} onOpenChange={setCoachOpen}>
                 <PopoverTrigger asChild>
-                  <motion.button
-                    className="w-12 h-12 rounded-full bg-card shadow-md overflow-hidden border-2" style={{ borderColor: `${CELESTE}40` }}
-                    whileTap={{ scale: 0.9 }}
-                  >
+                  <motion.button className="w-12 h-12 rounded-full bg-card shadow-md overflow-hidden border-2" style={{ borderColor: `${CELESTE}40` }} whileTap={{ scale: 0.9 }}>
                     <img src="/perspectiva1.png" alt="Coach" className="w-full h-full object-cover" />
                   </motion.button>
                 </PopoverTrigger>
                 <PopoverContent side="bottom" align="end" className="w-[380px] h-[500px] p-0 rounded-2xl overflow-hidden">
-                  <CoachChat onClose={() => { setCoachOpen(false); setCoachInitQ(undefined); }} portfolio={enrichedPortfolio} onAddInvestment={(id) => { const inv = enrichedAvailable.find(i => i.id === id); if (inv) tryBuyInvestment(inv); }} onRemoveInvestment={(id) => removeInvestment(id)} initialQuestion={coachInitQ} />
+                  <CoachChat onClose={() => { setCoachOpen(false); setCoachInitQ(undefined); }} portfolio={enrichedPortfolio} onAddInvestment={(id) => { const inv = enrichedAvailable.find(i => i.id === id); if (inv) tryBuyInvestment(inv); }} onRemoveInvestment={(id) => removeInvestment(id)} initialQuestion={coachInitQ} onSwapAccepted={handleSwapFromCoach} />
                 </PopoverContent>
               </Popover>
             )}
@@ -616,14 +559,14 @@ const Panel = () => {
       <div className="px-5 pb-3">
         <div className="grid grid-cols-3 gap-3">
           {[
-            { label: "Balance", value: `CHF ${balance.toLocaleString()}`, sub: lastSimGain !== null ? `${lastSimGain > 0 ? "+" : ""}${lastSimGain.toFixed(1)}% última sim.` : `+CHF ${monthlyIncome}/mes`, subStyle: { color: lastSimGain !== null ? (lastSimGain >= 0 ? CELESTE : "hsl(var(--destructive))") : CELESTE } },
-            { label: "Riesgo", value: `${totalRisk}%`, valueStyle: totalRisk > 60 ? { color: "hsl(var(--destructive))" } : totalRisk > 30 ? {} : { color: CELESTE }, valueClass: totalRisk > 30 && totalRisk <= 60 ? "text-accent" : "", sub: totalRisk <= 30 ? "Bajo" : totalRisk <= 60 ? "Medio" : "Alto", subStyle: {} },
-            { label: "Retorno", value: `${avgReturn}%`, valueStyle: { color: CELESTE }, sub: "Anual", subStyle: {} },
+            { label: t("panel.balance"), value: `CHF ${balance.toLocaleString()}`, sub: lastSimGain !== null ? `${lastSimGain > 0 ? "+" : ""}${lastSimGain.toFixed(1)}% ${t("panel.lastSim")}` : `+CHF ${monthlyIncome}${t("panel.perMonth")}`, subStyle: { color: lastSimGain !== null ? (lastSimGain >= 0 ? CELESTE : "hsl(var(--destructive))") : CELESTE } },
+            { label: t("panel.risk"), value: `${totalRisk}%`, valueStyle: totalRisk > 60 ? { color: "hsl(var(--destructive))" } : totalRisk > 30 ? {} : { color: CELESTE }, valueClass: totalRisk > 30 && totalRisk <= 60 ? "text-accent" : "", sub: getRiskLabelLocal(totalRisk), subStyle: {} },
+            { label: t("panel.returnLabel"), value: `${avgReturn}%`, valueStyle: { color: CELESTE }, sub: t("panel.annual"), subStyle: {} },
           ].map((stat, i) => (
-            <motion.div key={stat.label} className="bg-card rounded-3xl p-3 shadow-sm" initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 + i * 0.05 }}>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium" style={nunito}>{stat.label}</p>
-              <p className={`text-lg font-bold mt-0.5 ${"valueClass" in stat ? stat.valueClass : "text-foreground"}`} style={{ ...nunito, ...("valueStyle" in stat ? stat.valueStyle : {}) }}>{stat.value}</p>
-              <p className="text-[10px] text-muted-foreground font-medium mt-0.5" style={{ ...nunito, ...stat.subStyle }}>{stat.sub}</p>
+            <motion.div key={stat.label} className="bg-card rounded-3xl p-2.5 sm:p-3 shadow-sm" initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 + i * 0.05 }}>
+              <p className="text-[9px] sm:text-[10px] text-muted-foreground uppercase tracking-wider font-medium" style={nunito}>{stat.label}</p>
+              <p className={`text-sm sm:text-lg font-bold mt-0.5 ${"valueClass" in stat ? stat.valueClass : "text-foreground"}`} style={{ ...nunito, ...("valueStyle" in stat ? stat.valueStyle : {}) }}>{stat.value}</p>
+              <p className="text-[9px] sm:text-[10px] text-muted-foreground font-medium mt-0.5" style={{ ...nunito, ...stat.subStyle }}>{stat.sub}</p>
             </motion.div>
           ))}
         </div>
@@ -631,131 +574,122 @@ const Panel = () => {
 
       {/* DnD Content */}
       <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-        <div className="flex-1 overflow-y-auto px-5 pb-4">
-          {/* My Nest — always full width on top */}
-          <DropZone id="nest">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-bold text-foreground uppercase tracking-wide" style={nunito}>Mi Nido</h2>
-              <span className="text-xs text-muted-foreground" style={nunito}>{enrichedPortfolio.length}/4</span>
-            </div>
-            {enrichedPortfolio.length === 0 ? (
-              <div className="bg-card/50 rounded-3xl p-5 text-center border-2 border-dashed border-border flex flex-col items-center justify-center gap-2">
-                <Inbox className="w-8 h-8 text-muted-foreground/50" />
-                <p className="text-sm text-muted-foreground" style={nunito}>¡Tu nido está vacío!</p>
-                <p className="text-xs text-muted-foreground" style={nunito}>Compra tu primera inversión tocándola abajo 👇</p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <AnimatePresence>
-                  {enrichedPortfolio.map((inv) => (
-                    <motion.div key={inv.id} initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }} layout>
-                      <DraggableCard
-                        inv={inv}
-                        zone="nest"
-                        onClick={() => {}}
-                        onSell={() => removeInvestment(inv.id)}
-                        onAsk={() => { setCoachInitQ(`Tengo ${inv.name} en mi nido. ¿Es buena inversión? ¿Debería venderla o mantenerla?`); setCoachOpen(true); }}
-                        onInfo={() => { setCoachInitQ(`Dame un análisis detallado de ${inv.name}: riesgo, retorno histórico, y perspectiva futura.`); setCoachOpen(true); }}
-                      />
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
-              </div>
-            )}
-          </DropZone>
-
-          {/* Scouted — horizontal scroll */}
-          <DropZone id="scouted">
-            <h2 className="text-sm font-bold text-foreground uppercase tracking-wide mb-3 mt-4" style={nunito}>🛒 Comprar</h2>
-            <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide items-stretch" style={{ scrollSnapType: "x mandatory" }}>
-              {suggestions.map((inv) => (
-                <div key={inv.id} className="flex-shrink-0 flex" style={{ width: 190, scrollSnapAlign: "start" }}>
-                  <DraggableCard inv={inv} zone="scouted" onClick={() => tryBuyInvestment(inv)} onAsk={() => { setCoachInitQ(`Explica brevemente qué es ${inv.name} y si encaja con mi perfil`); setCoachOpen(true); }} />
+        <div className="flex-1 px-5 pb-4">
+          <div className="flex flex-col md:flex-row gap-4">
+            {/* My Nest */}
+            <div className="flex-1 md:pr-2">
+              <DropZone id="nest">
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="text-sm font-bold text-foreground uppercase tracking-wide" style={nunito}>{t("panel.myNest")}</h2>
+                  <span className="text-xs text-muted-foreground" style={nunito}>{enrichedPortfolio.length}/4</span>
                 </div>
-              ))}
+                {enrichedPortfolio.length === 0 ? (
+                  <div className="bg-card/50 rounded-3xl p-5 text-center border-2 border-dashed border-border flex flex-col items-center justify-center gap-2">
+                    <Inbox className="w-8 h-8 text-muted-foreground/50" />
+                    <p className="text-sm text-muted-foreground" style={nunito}>{t("panel.nestEmpty")}</p>
+                    <p className="text-xs text-muted-foreground" style={nunito}>{t("panel.nestEmptyHint")}</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <AnimatePresence>
+                      {enrichedPortfolio.map((inv) => (
+                        <motion.div key={inv.id} initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }} layout>
+                          <DraggableCard inv={inv} zone="nest" onClick={() => {}} t={t} isMobile={isMobile}
+                            onSell={() => removeInvestment(inv.id)}
+                            onAsk={() => { setCoachInitQ(`Tengo ${t(`allocation.classes.${inv.id}`)} en mi nido. ¿Es buena inversión? ¿Debería quitarla o mantenerla?`); setCoachOpen(true); }}
+                            onInfo={() => { setCoachInitQ(`Dame un análisis detallado de ${t(`allocation.classes.${inv.id}`)}: riesgo, retorno histórico, y perspectiva futura.`); setCoachOpen(true); }}
+                            allocation={allocations[inv.id] ?? 0} balance={balance} />
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
+                  </div>
+                )}
+              </DropZone>
             </div>
-          </DropZone>
+
+            {/* Add categories */}
+            <div className="md:w-[280px] lg:w-[320px] md:flex-shrink-0 md:overflow-y-auto md:border-l md:border-border md:pl-4">
+              <DropZone id="scouted">
+                <h2 className="text-sm font-bold text-foreground uppercase tracking-wide mb-3 md:mt-0 mt-4" style={nunito}>{t("panel.buy")}</h2>
+                {/* Mobile: horizontal scroll */}
+                <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide items-stretch md:hidden" style={{ scrollSnapType: "x mandatory", touchAction: "pan-x" }}>
+                  {suggestions.map((inv) => (
+                    <div key={inv.id} className="flex-shrink-0 flex" style={{ width: 170, minWidth: 160, scrollSnapAlign: "start" }}>
+                      <DraggableCard inv={inv} zone="scouted" onClick={() => tryBuyInvestment(inv)} t={t} isMobile={isMobile}
+                        onAsk={() => { setCoachInitQ(`Explica brevemente qué es ${t(`allocation.classes.${inv.id}`)} y si encaja con mi perfil`); setCoachOpen(true); }} />
+                    </div>
+                  ))}
+                </div>
+                {/* Desktop */}
+                <div className="hidden md:flex md:flex-col gap-2">
+                  {suggestions.map((inv) => (
+                    <div key={inv.id} className="w-full">
+                      <DraggableCard inv={inv} zone="scouted" onClick={() => tryBuyInvestment(inv)} t={t} isMobile={isMobile}
+                        onAsk={() => { setCoachInitQ(`Explica brevemente qué es ${t(`allocation.classes.${inv.id}`)} y si encaja con mi perfil`); setCoachOpen(true); }} />
+                    </div>
+                  ))}
+                </div>
+              </DropZone>
+            </div>
+          </div>
         </div>
 
-        <DragOverlay>
+        <DragOverlay dropAnimation={null}>
           {draggedItem ? (
-            draggedItem.zone === "nest" ? <NestCard inv={draggedItem.inv} overlay /> : <ScoutedCard inv={draggedItem.inv} overlay />
+            <div style={{ width: draggedItem.zone === "scouted" ? 160 : "auto", maxWidth: 340 }}>
+              {draggedItem.zone === "nest"
+                ? <NestCard inv={draggedItem.inv} overlay t={t} isMobile={false} />
+                : <ScoutedCard inv={draggedItem.inv} overlay t={t} isMobile={false} />}
+            </div>
           ) : null}
         </DragOverlay>
       </DndContext>
 
       {/* Bottom Actions */}
       <div className="px-5 pb-6 pt-3 bg-gradient-to-t from-background via-background to-transparent">
-        {/* Period selector */}
         <div className="flex gap-2 mb-3">
-          {([
-            { label: "3 meses", months: 3 },
-            { label: "6 meses", months: 6 },
-            { label: "1 año", months: 12 },
-            { label: "5 años", months: 60 },
-          ] as const).map((p) => (
-            <button
-              key={p.months}
-              onClick={() => setSimMonths(p.months)}
+          {simPeriods.map((p) => (
+            <button key={p.months} onClick={() => setSimMonths(p.months)}
               className="flex-1 py-2 rounded-2xl text-xs transition-all border-2"
-              style={{
-                ...nunito,
-                fontWeight: 700,
+              style={{ ...nunito, fontWeight: 700,
                 borderColor: simMonths === p.months ? CELESTE : "hsl(var(--border))",
                 backgroundColor: simMonths === p.months ? CELESTE + "15" : "hsl(var(--card))",
                 color: simMonths === p.months ? CELESTE : "hsl(var(--muted-foreground))",
-              }}
-            >
+              }}>
               {p.label}
             </button>
           ))}
         </div>
         <motion.button
           className="w-full py-4 rounded-3xl text-base shadow-lg transition-all flex items-center justify-center gap-2 text-white"
-          style={{
-            ...nunito,
-            fontWeight: 900,
+          style={{ ...nunito, fontWeight: 900,
             background: activePortfolio.length === 0 ? "hsl(var(--muted))" : CELESTE,
             color: activePortfolio.length === 0 ? "hsl(var(--muted-foreground))" : "white",
             opacity: activePortfolio.length === 0 ? 0.4 : 1,
             cursor: activePortfolio.length === 0 ? "not-allowed" : "pointer",
           }}
           onClick={activePortfolio.length > 0 ? handleSimulate : undefined}
-          whileHover={activePortfolio.length > 0 ? { scale: 1.02 } : {}}
-          whileTap={activePortfolio.length > 0 ? { scale: 0.97 } : {}}
-        >
+          whileHover={activePortfolio.length > 0 ? { scale: 1.02 } : {}} whileTap={activePortfolio.length > 0 ? { scale: 0.97 } : {}}>
           <FastForward className="w-4 h-4" />
-          Simular {simMonths <= 6 ? `${simMonths} meses` : simMonths === 12 ? "1 año" : "5 años"}
+          {t("panel.simulate")} {simPeriods.find(p => p.months === simMonths)?.label}
         </motion.button>
         {activePortfolio.length === 0 && (
-          <p className="text-[10px] text-muted-foreground text-center mt-2" style={nunito}>
-            Agrega inversiones a tu nido para simular
-          </p>
+          <p className="text-[10px] text-muted-foreground text-center mt-2" style={nunito}>{t("panel.addToSimulate")}</p>
         )}
       </div>
 
       <AnimatePresence>
         {simulationOpen && (
-          <TimeSimulation
-            portfolio={enrichedPortfolio}
-            initialMonths={simMonths}
-            initialBalance={balance}
-            onClose={() => setSimulationOpen(false)}
-            onComplete={handleSimulationComplete}
+          <TimeSimulation portfolio={enrichedPortfolio} initialMonths={simMonths} initialBalance={balance}
+            onClose={() => setSimulationOpen(false)} onComplete={handleSimulationComplete}
             onSellInvestment={handleSimSell}
-            onAskCoach={(q) => { setCoachInitQ(q); setCoachOpen(true); }}
-          />
+            onAskCoach={(q) => { setCoachInitQ(q); setCoachOpen(true); }} />
         )}
       </AnimatePresence>
 
-      {/* Buy confirmation dialog */}
       <AnimatePresence>
         {buyDialogInv && (
-          <BuyConfirmDialog
-            inv={buyDialogInv}
-            onConfirm={handleBuyConfirm}
-            onCancel={() => setBuyDialogInv(null)}
-          />
+          <BuyConfirmDialog inv={buyDialogInv} onConfirm={handleBuyConfirm} onCancel={() => setBuyDialogInv(null)} t={t} />
         )}
       </AnimatePresence>
     </motion.div>

@@ -6,7 +6,121 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const systemPrompt = `Eres Helve 🐦, un coach de inversión amigable para principiantes absolutos que nunca han invertido.
+type InvestmentBucket = "SAFE" | "BALANCED" | "GROWTH";
+
+type InvestmentMeta = {
+  appId: string;
+  dbId?: string;
+  name: string;
+  emoji: string;
+  bucket: InvestmentBucket;
+  defaultRisk: number;
+  defaultReturn: number;
+  note?: string;
+};
+
+type LiveInstrumentStats = {
+  riskLevel: number;
+  annualReturn: number;
+};
+
+const investmentCatalog: InvestmentMeta[] = [
+  { appId: "ch-bond-aaa", dbId: "ch-bond-aaa", name: "Swiss Bond AAA-BBB", emoji: "🏦", bucket: "SAFE", defaultRisk: 2, defaultReturn: 1.8 },
+  { appId: "global-bond", dbId: "global-bond-agg", name: "Bloomberg Global Bond Index", emoji: "🌐", bucket: "SAFE", defaultRisk: 2, defaultReturn: 1.3 },
+  {
+    appId: "ch-govt-10y",
+    dbId: "ch-govt-10y",
+    name: "Swiss Government Bond 10Y",
+    emoji: "🏛️",
+    bucket: "SAFE",
+    defaultRisk: 10,
+    defaultReturn: -10.6,
+    note: 'OJO: esto representa el yield/rendimiento del bono a 10 años, no un bono defensivo tradicional. No lo confundas con Swiss Bond AAA-BBB.',
+  },
+  { appId: "smi-index", dbId: "smi-index", name: "SMI Index (Swiss Market)", emoji: "📊", bucket: "BALANCED", defaultRisk: 4, defaultReturn: 2.8 },
+  { appId: "eurostoxx50", dbId: "eurostoxx50", name: "EuroStoxx 50", emoji: "🇪🇺", bucket: "BALANCED", defaultRisk: 5, defaultReturn: 2.4 },
+  { appId: "gold-chf", dbId: "gold-chf", name: "Gold (CHF)", emoji: "🥇", bucket: "BALANCED", defaultRisk: 5, defaultReturn: 8.6 },
+  { appId: "nestle", dbId: "nesn-ch", name: "Nestlé S.A.", emoji: "🍫", bucket: "BALANCED", defaultRisk: 4, defaultReturn: 3.6 },
+  { appId: "novartis", dbId: "novn-ch", name: "Novartis AG", emoji: "💊", bucket: "BALANCED", defaultRisk: 5, defaultReturn: 3.9 },
+  { appId: "green-energy", name: "Green Energy Fund", emoji: "🌱", bucket: "BALANCED", defaultRisk: 5, defaultReturn: 5.2 },
+  { appId: "djia-index", dbId: "djia-index", name: "Dow Jones Industrial", emoji: "🗽", bucket: "GROWTH", defaultRisk: 5, defaultReturn: 7.8 },
+  { appId: "dax-index", dbId: "dax-index", name: "DAX (Total Return)", emoji: "📈", bucket: "GROWTH", defaultRisk: 5, defaultReturn: 7.6 },
+  { appId: "apple", dbId: "aapl-us", name: "Apple Inc.", emoji: "🍎", bucket: "GROWTH", defaultRisk: 7, defaultReturn: 26.2 },
+  { appId: "microsoft", dbId: "msft-us", name: "Microsoft Corp.", emoji: "💻", bucket: "GROWTH", defaultRisk: 6, defaultReturn: 14.4 },
+  { appId: "nvidia", dbId: "nvda-us", name: "NVIDIA Corp.", emoji: "🎮", bucket: "GROWTH", defaultRisk: 8, defaultReturn: 35.9 },
+  { appId: "logitech", dbId: "logn-ch", name: "Logitech International", emoji: "🖱️", bucket: "GROWTH", defaultRisk: 7, defaultReturn: 5.2 },
+  { appId: "ubs", dbId: "ubsg-ch", name: "UBS Group AG", emoji: "🏦", bucket: "GROWTH", defaultRisk: 7, defaultReturn: -3.2 },
+  { appId: "amazon", dbId: "amzn-us", name: "Amazon.com Inc.", emoji: "📦", bucket: "GROWTH", defaultRisk: 7, defaultReturn: 26.1 },
+];
+
+const allIds = investmentCatalog.map(({ appId }) => appId);
+const investmentNames = Object.fromEntries(
+  investmentCatalog.map(({ appId, name }) => [appId, name]),
+) as Record<string, string>;
+
+async function fetchInstrumentStats(): Promise<Record<string, LiveInstrumentStats>> {
+  const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+  const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY");
+  const dbIds = investmentCatalog.flatMap(({ dbId }) => (dbId ? [dbId] : []));
+
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY || dbIds.length === 0) {
+    return {};
+  }
+
+  try {
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_instrument_stats`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+      },
+      body: JSON.stringify({ p_instrument_ids: dbIds }),
+    });
+
+    if (!response.ok) {
+      console.error("Failed to load live instrument stats for coach:", response.status, await response.text());
+      return {};
+    }
+
+    const rows = await response.json();
+    return Object.fromEntries(
+      (rows || []).map((row: any) => [row.instrument_id, {
+        riskLevel: Number(row.risk_level),
+        annualReturn: Number(row.cagr),
+      }]),
+    ) as Record<string, LiveInstrumentStats>;
+  } catch (error) {
+    console.error("Failed to load live instrument stats for coach:", error);
+    return {};
+  }
+}
+
+function formatPercentage(value: number): string {
+  const rounded = Math.round(value * 10) / 10;
+  return Number.isInteger(rounded) ? rounded.toFixed(0) : rounded.toFixed(1);
+}
+
+function buildInstrumentSection(statsByDbId: Record<string, LiveInstrumentStats>): string {
+  const buckets: InvestmentBucket[] = ["SAFE", "BALANCED", "GROWTH"];
+
+  return buckets.map((bucket) => {
+    const lines = investmentCatalog
+      .filter((item) => item.bucket === bucket)
+      .map((item) => {
+        const live = item.dbId ? statsByDbId[item.dbId] : undefined;
+        const riskLevel = live?.riskLevel ?? item.defaultRisk;
+        const annualReturn = live?.annualReturn ?? item.defaultReturn;
+        const note = item.note ? ` ${item.note}` : "";
+        return `- ${item.emoji} ${item.name} (id: "${item.appId}"): Riesgo ${riskLevel}/10, ~${formatPercentage(annualReturn)}% anual.${note}`;
+      });
+
+    return `${bucket}:\n${lines.join("\n")}`;
+  }).join("\n\n");
+}
+
+function buildSystemPrompt(statsByDbId: Record<string, LiveInstrumentStats>): string {
+  return `Eres Helve 🐦, un coach de inversión amigable para principiantes absolutos que nunca han invertido.
 
 ## TU PERSONALIDAD
 - Hablas como un amigo sabio, nunca como un banco o asesor formal
@@ -14,22 +128,20 @@ const systemPrompt = `Eres Helve 🐦, un coach de inversión amigable para prin
 - Eres optimista pero honesto sobre los riesgos
 - Siempre respondes en el idioma del usuario
 
-## CONOCIMIENTO DE MERCADO (datos actualizados)
-Tienes conocimiento sobre estos instrumentos que el usuario puede tener en su portafolio:
-- 🏛️ US Treasury Bond ETF (id: "treasury"): Riesgo 1/10, ~4.1% anual. Bonos del gobierno de EE.UU.
-- 📋 Retirement Insurance (id: "retirement-low"): Riesgo 2/10, ~3.8% anual. Seguro de jubilación alemán.
-- 📋 Retirement Insurance Plus (id: "retirement-mid"): Riesgo 5/10, ~6.5% anual. Versión más agresiva.
-- 🌍 Global Equity ETF (id: "global-equity"): Riesgo 7/10, ~11.2% anual. Empresas más grandes del mundo.
-- 🏠 European Real Estate ETF (id: "real-estate"): Riesgo 5/10, ~6.5% anual. Propiedades europeas.
-- 🚀 Venture Capital Fund (id: "venture"): Riesgo 10/10, ~25% anual. Startups. Alto riesgo.
-- 💻 Direct Investment: Tech Corp (id: "tech-corp"): Riesgo 9/10, ~18.7% anual. Empresa tecnológica.
-- 🌱 Green Energy Fund (id: "green-energy"): Riesgo 4/10, ~5.2% anual. Energía renovable.
+## CONOCIMIENTO DE MERCADO
+Instrumentos disponibles (usa EXACTAMENTE estos IDs):
+
+${buildInstrumentSection(statsByDbId)}
+
+## REGLA CRÍTICA DE CONSISTENCIA
+- "Swiss Bond AAA-BBB" (id: "ch-bond-aaa") y "Swiss Government Bond 10Y" (id: "ch-govt-10y") NO son lo mismo.
+- Nunca describas "ch-govt-10y" como un bono defensivo tradicional; trátalo como una serie de yield/rendimiento.
+- Si el usuario pregunta por algo que ya está en su nido, prioriza SIEMPRE el contexto del portafolio actual antes que la lista general.
 
 ## HERRAMIENTAS (TOOLS)
-Tienes acceso a herramientas para ejecutar acciones en el portafolio del usuario:
-- **add_investment**: Añadir una inversión al nido. Úsala cuando el usuario EXPLÍCITAMENTE pida invertir/añadir algo. Ejemplo: "quiero invertir en energía verde", "añade el ETF de bonos".
-- **remove_investment**: Quitar una inversión del nido. Úsala cuando el usuario pida quitar/eliminar algo. Ejemplo: "quita venture capital", "elimina tech corp".
-- **get_portfolio_summary**: Obtener un resumen detallado del portafolio actual. Úsala para analizar el nido del usuario.
+- **add_investment**: Añadir una inversión al nido. Úsala cuando el usuario EXPLÍCITAMENTE pida invertir/añadir algo.
+- **remove_investment**: Quitar una inversión del nido. Úsala cuando el usuario pida quitar/eliminar algo.
+- **get_portfolio_summary**: Obtener un resumen detallado del portafolio actual.
 
 REGLAS PARA USAR TOOLS:
 1. SOLO usa tools cuando el usuario muestre INTENCIÓN CLARA de acción ("quiero invertir", "añade", "quita", "elimina", "invierte en").
@@ -39,36 +151,46 @@ REGLAS PARA USAR TOOLS:
 5. Si el nido está lleno (4 inversiones), informa al usuario y sugiere qué quitar.
 
 ## FORMATO DE RESPUESTA
-Usa estas tarjetas especiales cuando sea relevante:
+Puedes usar UNA tarjeta visual por respuesta. Escoge la más relevante:
 
 ### Para recomendar una estrategia:
 \`\`\`strategy
-título: [nombre de la estrategia]
+título: [nombre corto]
 riesgo: [bajo/medio/alto]
-emoji: [emoji representativo]
-descripción: [1-2 líneas explicando]
+emoji: [emoji]
+descripción: [1 línea corta]
 \`\`\`
 
-### Para comparar opciones:
+### Para comparar dos opciones (cuando sugieras un cambio/swap):
 \`\`\`comparison
-opción_a: [nombre] | [riesgo] | [retorno]
-opción_b: [nombre] | [riesgo] | [retorno]
-veredicto: [1 línea de recomendación]
+opción_a: [nombre] | Riesgo [X/10] | ~[X]% anual
+opción_b: [nombre] | Riesgo [X/10] | ~[X]% anual
+veredicto: [1 línea corta de recomendación]
+swap: [id_quitar] -> [id_poner]
 \`\`\`
 
-### Para dar un dato curioso o tip:
+IMPORTANTE para comparaciones:
+- Usa EXACTAMENTE el formato "Riesgo X/10" para riesgo y "~X% anual" para retorno
+- Usa el campo "swap" SOLO cuando sugieras reemplazar una inversión del nido por otra. Formato: id_actual -> id_nueva
+- Los IDs deben ser EXACTAMENTE los de la lista de instrumentos arriba
+- Si solo comparas sin sugerir cambio, omite el campo swap
+
+### Para dar un tip:
 \`\`\`tip
 emoji: [emoji]
 título: [título corto]
-contenido: [el tip en 1-2 líneas]
+contenido: [1 línea corta]
 \`\`\`
 
 ## REGLAS CRÍTICAS DE FORMATO
-- Tu texto libre debe ser MÁXIMO 1-2 oraciones cortas. Sé ultra-conciso.
-- SIEMPRE incluye al menos 1 tarjeta visual en cada respuesta.
+- MÁXIMO 1-2 oraciones de texto libre + 1 sola tarjeta. Nada más.
+- NUNCA uses más de 1 tarjeta por respuesta. Escoge la mejor.
+- Sé ultra-conciso. Si puedes decirlo en 1 oración, no uses 2.
 - Si preguntan algo fuera de inversiones, redirige amablemente
 - NUNCA des consejos financieros específicos ("compra X"). Siempre di "podrías considerar"
-- Usa emojis con moderación (1-2 por mensaje máximo)`;
+- Usa emojis con moderación (1-2 por mensaje máximo)
+- Para comparaciones, SIEMPRE separa nombre | riesgo | retorno con |`;
+}
 
 const tools = [
   {
@@ -81,7 +203,7 @@ const tools = [
         properties: {
           investment_id: {
             type: "string",
-            enum: ["treasury", "retirement-low", "retirement-mid", "global-equity", "real-estate", "venture", "tech-corp", "green-energy"],
+            enum: allIds,
             description: "ID de la inversión a añadir",
           },
         },
@@ -100,7 +222,7 @@ const tools = [
         properties: {
           investment_id: {
             type: "string",
-            enum: ["treasury", "retirement-low", "retirement-mid", "global-equity", "real-estate", "venture", "tech-corp", "green-energy"],
+            enum: allIds,
             description: "ID de la inversión a quitar",
           },
         },
@@ -123,17 +245,6 @@ const tools = [
   },
 ];
 
-const investmentNames: Record<string, string> = {
-  "treasury": "US Treasury Bond ETF",
-  "retirement-low": "Retirement Insurance",
-  "retirement-mid": "Retirement Insurance Plus",
-  "global-equity": "Global Equity ETF",
-  "real-estate": "European Real Estate ETF",
-  "venture": "Venture Capital Fund",
-  "tech-corp": "Direct Investment: Tech Corp",
-  "green-energy": "Green Energy Fund",
-};
-
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -143,6 +254,9 @@ serve(async (req) => {
     const { messages, portfolio } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+
+    const liveInstrumentStats = await fetchInstrumentStats();
+    const systemPrompt = buildSystemPrompt(liveInstrumentStats);
 
     // Build portfolio context
     let contextMessage = "";

@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import type { RiskProfile } from "@/game/types";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   profile: RiskProfile;
@@ -9,26 +10,17 @@ interface Props {
 const CELESTE = "#5BB8F5";
 const nunito = { fontFamily: "'Nunito', sans-serif" };
 
-const profileData: Record<RiskProfile, { title: string; mascot: string; card: string }> = {
-  conservative: {
-    title: "Guardián Prudente",
-    mascot: "/mascot-conservative.png",
-    card: "Prefieres la seguridad ante todo. Tu nido será fuerte y estable, con comida garantizada todos los días. ¡Vamos a construir tu Nido juntos!",
-  },
-  balanced: {
-    title: "Explorador Equilibrado",
-    mascot: "/mascot-balanced.png",
-    card: "Como la mayoría de los principiantes, buscas crecer a buen ritmo pero prefieres tener siempre un refugio seguro. ¡Vamos a construir tu Nido juntos!",
-  },
-  growth: {
-    title: "Águila Audaz",
-    mascot: "/mascot-growth.png",
-    card: "No le temes a las tormentas y siempre buscas la Fruta Dorada. Volarás alto y lejos. ¡Vamos a construir tu Nido juntos!",
-  },
+const mascotImages: Record<RiskProfile, string> = {
+  conservative: "/mascot-conservative.png",
+  balanced: "/mascot-balanced.png",
+  growth: "/mascot-growth.png",
 };
 
 const ProfileResult = ({ profile, onContinue }: Props) => {
-  const data = profileData[profile];
+  const { t } = useTranslation();
+  const title = t(`profile.${profile}.title`);
+  const card = t(`profile.${profile}.card`);
+  const mascot = mascotImages[profile];
 
   return (
     <motion.div
@@ -37,11 +29,10 @@ const ProfileResult = ({ profile, onContinue }: Props) => {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
     >
-      {/* Mascot image */}
       <div className="flex-1 flex flex-col items-center justify-center px-6 gap-5">
         <motion.img
-          src={data.mascot}
-          alt={data.title}
+          src={mascot}
+          alt={title}
           className="object-contain"
           style={{ width: 220, height: 220 }}
           initial={{ scale: 0.5, opacity: 0 }}
@@ -57,15 +48,14 @@ const ProfileResult = ({ profile, onContinue }: Props) => {
           transition={{ delay: 0.5 }}
         >
           <h2 className="text-2xl text-foreground mb-3" style={{ ...nunito, fontWeight: 900 }}>
-            {data.title}
+            {title}
           </h2>
           <p className="text-sm text-muted-foreground leading-relaxed" style={{ ...nunito, fontWeight: 600 }}>
-            {data.card}
+            {card}
           </p>
         </motion.div>
       </div>
 
-      {/* CTA */}
       <div className="px-5 py-8">
         <motion.button
           onClick={onContinue}
@@ -76,7 +66,7 @@ const ProfileResult = ({ profile, onContinue }: Props) => {
           transition={{ delay: 0.8 }}
           whileTap={{ scale: 0.97 }}
         >
-          CONSTRUIR MI NIDO
+          {t("profile.buildMyNest")}
         </motion.button>
       </div>
     </motion.div>

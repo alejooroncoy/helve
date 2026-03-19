@@ -2,8 +2,9 @@ import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRightLeft, TrendingUp, Shield, Zap } from "lucide-react";
 import type { Investment, PortfolioSlot, RiskProfile } from "@/game/types";
-import { availableInvestments } from "@/game/types";
+import { availableInvestments, ASSET_CLASSES } from "@/game/types";
 import { useInstrumentStats } from "@/hooks/useMarketData";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   profile: RiskProfile;
@@ -13,61 +14,30 @@ interface Props {
 const CELESTE = "#5BB8F5";
 const nunito = { fontFamily: "'Nunito', sans-serif" };
 
-// Map our Investment IDs to DB instrument IDs
-const investmentToDbId: Record<string, string> = {
-  "ch-bond-aaa": "ch-bond-aaa",
-  "global-bond": "global-bond-agg",
-  "ch-govt-10y": "ch-govt-10y",
-  "smi-index": "smi-index",
-  "eurostoxx50": "eurostoxx50",
-  "gold-chf": "gold-chf",
-  "nestle": "nesn-ch",
-  "novartis": "novn-ch",
-  "djia-index": "djia-index",
-  "dax-index": "dax-index",
-  "apple": "aapl-us",
-  "microsoft": "msft-us",
-  "nvidia": "nvda-us",
-  "logitech": "logn-ch",
-  "ubs": "ubsg-ch",
-  "amazon": "amzn-us",
-};
-
-const allDbIds = Object.values(investmentToDbId);
+// Map category keys to their representative DB IDs for stats enrichment
+const categoryToDbIds: Record<string, string[]> = {};
+for (const c of ASSET_CLASSES) {
+  if (c.dbIds.length > 0) categoryToDbIds[c.key] = c.dbIds;
+}
+const allDbIds = ASSET_CLASSES.flatMap(c => c.dbIds);
 
 function getRecommended(profile: RiskProfile): Investment[] {
   const all = availableInvestments;
   if (profile === "conservative") {
-    return [
-      all.find(i => i.id === "ch-bond-aaa")!,
-      all.find(i => i.id === "global-bond")!,
-      all.find(i => i.id === "gold-chf")!,
-    ];
+    return [all.find(i => i.id === "bonds")!, all.find(i => i.id === "gold")!, all.find(i => i.id === "fx")!];
   }
   if (profile === "growth") {
-    return [
-      all.find(i => i.id === "smi-index")!,
-      all.find(i => i.id === "apple")!,
-      all.find(i => i.id === "nvidia")!,
-    ];
+    return [all.find(i => i.id === "usStocks")!, all.find(i => i.id === "crypto")!, all.find(i => i.id === "equity")!];
   }
-  return [
-    all.find(i => i.id === "ch-bond-aaa")!,
-    all.find(i => i.id === "smi-index")!,
-    all.find(i => i.id === "djia-index")!,
-  ];
+  return [all.find(i => i.id === "bonds")!, all.find(i => i.id === "equity")!, all.find(i => i.id === "swissStocks")!];
 }
+
+
 
 function getRiskColor(risk: number): string {
   if (risk <= 3) return "#22c55e";
   if (risk <= 6) return "#f59e0b";
   return "#ef4444";
-}
-
-function getRiskLabel(risk: number): string {
-  if (risk <= 3) return "Bajo";
-  if (risk <= 6) return "Medio";
-  return "Alto";
 }
 
 function getTypeIcon(type: PortfolioSlot) {
@@ -76,38 +46,32 @@ function getTypeIcon(type: PortfolioSlot) {
   return <Zap size={14} />;
 }
 
-function getTypeLabel(type: PortfolioSlot): string {
-  if (type === "safe") return "Seguro";
-  if (type === "balanced") return "Equilibrado";
-  return "Crecimiento";
-}
-
-const profileLabels: Record<RiskProfile, { name: string; emoji: string; desc: string }> = {
-  conservative: { name: "Guardián Prudente", emoji: "🛡️", desc: "Tu portafolio prioriza la seguridad" },
-  balanced: { name: "Explorador Equilibrado", emoji: "🌿", desc: "Balance entre seguridad y crecimiento" },
-  growth: { name: "Águila Audaz", emoji: "🦅", desc: "Máximo crecimiento, mayor riesgo" },
-};
-
 const PortfolioBuilder = ({ profile, onComplete }: Props) => {
+  const { t } = useTranslation();
   const recommended = useMemo(() => getRecommended(profile), [profile]);
   const [portfolio, setPortfolio] = useState<Investment[]>(recommended);
   const [swapSlot, setSwapSlot] = useState<number | null>(null);
 
-  // Fetch real stats from DB
   const { stats, loading } = useInstrumentStats(allDbIds);
 
-  // Enrich investments with real data when stats load
+  const getRiskLabel = (risk: number): string => {
+    if (risk <= 3) return t("portfolio.low");
+    if (risk <= 6) return t("portfolio.medium");
+    return t("portfolio.high");
+  };
+
+  const getTypeLabel = (type: PortfolioSlot): string => {
+    if (type === "safe") return t("portfolio.safe");
+    if (type === "balanced") return t("portfolio.balanced");
+    return t("portfolio.growth");
+  };
+
   const enriched = useMemo(() => {
     return portfolio.map(inv => {
-      const dbId = investmentToDbId[inv.id];
+      const dbIds = categoryToDbIds[inv.id];
+      const dbId = dbIds?.[0];
       const real = dbId ? stats[dbId] : null;
-      if (real) {
-        return {
-          ...inv,
-          annualReturn: real.avgAnnualReturn,
-          riskLevel: real.riskLevel,
-        };
-      }
+      if (real) return { ...inv, annualReturn: real.avgAnnualReturn, riskLevel: real.riskLevel };
       return inv;
     });
   }, [portfolio, stats]);
@@ -117,22 +81,16 @@ const PortfolioBuilder = ({ profile, onComplete }: Props) => {
     return availableInvestments
       .filter(i => !ids.has(i.id))
       .map(inv => {
-        const dbId = investmentToDbId[inv.id];
+        const dbIds = categoryToDbIds[inv.id];
+        const dbId = dbIds?.[0];
         const real = dbId ? stats[dbId] : null;
-        if (real) {
-          return { ...inv, annualReturn: real.avgAnnualReturn, riskLevel: real.riskLevel };
-        }
+        if (real) return { ...inv, annualReturn: real.avgAnnualReturn, riskLevel: real.riskLevel };
         return inv;
       });
   }, [portfolio, stats]);
 
-  const avgRisk = enriched.length
-    ? Math.round(enriched.reduce((s, i) => s + i.riskLevel, 0) / enriched.length * 10) / 10
-    : 0;
-
-  const avgReturn = enriched.length
-    ? Math.round(enriched.reduce((s, i) => s + i.annualReturn, 0) / enriched.length * 10) / 10
-    : 0;
+  const avgRisk = enriched.length ? Math.round(enriched.reduce((s, i) => s + i.riskLevel, 0) / enriched.length * 10) / 10 : 0;
+  const avgReturn = enriched.length ? Math.round(enriched.reduce((s, i) => s + i.annualReturn, 0) / enriched.length * 10) / 10 : 0;
 
   const handleSwap = (newInv: Investment) => {
     if (swapSlot === null) return;
@@ -145,7 +103,7 @@ const PortfolioBuilder = ({ profile, onComplete }: Props) => {
     onComplete(slots, enriched);
   };
 
-  const p = profileLabels[profile];
+  const pLabel = t(`portfolio.profileLabels.${profile}`, { returnObjects: true }) as { name: string; emoji: string; desc: string };
 
   return (
     <motion.div
@@ -154,47 +112,43 @@ const PortfolioBuilder = ({ profile, onComplete }: Props) => {
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -40 }}
     >
-      {/* Header */}
       <div className="px-5 pt-8 pb-4">
         <div className="flex items-center gap-3 mb-4">
-          <span className="text-3xl">{p.emoji}</span>
           <div>
-            <h2 className="text-xl text-foreground" style={{ ...nunito, fontWeight: 800 }}>{p.name}</h2>
-            <p className="text-sm text-muted-foreground" style={nunito}>{p.desc}</p>
+            <h2 className="text-xl text-foreground" style={{ ...nunito, fontWeight: 800 }}>{pLabel.name}</h2>
+            <p className="text-sm text-muted-foreground" style={nunito}>{pLabel.desc}</p>
           </div>
         </div>
 
-        {/* Risk/Return summary */}
         <div className="flex gap-3">
           <div className="flex-1 rounded-2xl p-3 border-2" style={{ borderColor: getRiskColor(avgRisk) }}>
-            <p className="text-xs text-muted-foreground" style={nunito}>Riesgo real</p>
+            <p className="text-xs text-muted-foreground" style={nunito}>{t("portfolio.realRisk")}</p>
             <p className="text-2xl" style={{ ...nunito, fontWeight: 800, color: getRiskColor(avgRisk) }}>
               {loading ? "..." : avgRisk}<span className="text-sm">/10</span>
             </p>
             <p className="text-xs" style={{ ...nunito, color: getRiskColor(avgRisk) }}>{getRiskLabel(avgRisk)}</p>
           </div>
           <div className="flex-1 rounded-2xl p-3 border-2" style={{ borderColor: CELESTE }}>
-            <p className="text-xs text-muted-foreground" style={nunito}>Retorno real anual</p>
+            <p className="text-xs text-muted-foreground" style={nunito}>{t("portfolio.realReturn")}</p>
             <p className="text-2xl" style={{ ...nunito, fontWeight: 800, color: CELESTE }}>
               {loading ? "..." : avgReturn}<span className="text-sm">%</span>
             </p>
-            <p className="text-xs text-muted-foreground" style={nunito}>CAGR 2006–2026</p>
+            <p className="text-xs text-muted-foreground" style={nunito}>{t("portfolio.cagr")}</p>
           </div>
         </div>
       </div>
 
-      {/* Portfolio label */}
       <div className="px-5 pt-2 pb-2">
         <p className="text-sm tracking-widest text-muted-foreground" style={{ ...nunito, fontWeight: 700 }}>
-          TU PORTAFOLIO RECOMENDADO
+          {t("portfolio.yourRecommended")}
         </p>
       </div>
 
-      {/* Portfolio cards */}
       <div className="px-5 space-y-3 flex-1">
         <AnimatePresence mode="popLayout">
           {enriched.map((inv, idx) => {
-            const dbId = investmentToDbId[inv.id];
+            const dbIds = categoryToDbIds[inv.id];
+            const dbId = dbIds?.[0];
             const real = dbId ? stats[dbId] : null;
             return (
               <motion.div
@@ -208,12 +162,9 @@ const PortfolioBuilder = ({ profile, onComplete }: Props) => {
                 layout
               >
                 <div className="flex items-start gap-3">
-                  <span className="text-2xl mt-0.5">{inv.emoji}</span>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <p className="text-foreground truncate" style={{ ...nunito, fontWeight: 700 }}>
-                        {inv.name}
-                      </p>
+                      <p className="text-foreground truncate" style={{ ...nunito, fontWeight: 700 }}>{inv.name}</p>
                       {inv.flag && <span className="text-sm">{inv.flag}</span>}
                     </div>
                     <div className="flex items-center gap-3 mt-1">
@@ -222,13 +173,11 @@ const PortfolioBuilder = ({ profile, onComplete }: Props) => {
                         {getTypeIcon(inv.type)} {getTypeLabel(inv.type)}
                       </span>
                       {inv.tag && (
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground" title={
-                          inv.tag === "AAA" ? "Máxima calidad crediticia" : inv.tag === "GOV" ? "Bono gubernamental" : ""
-                        }>
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
                           {inv.tag}
                           {(inv.tag === "AAA" || inv.tag === "GOV") && (
                             <span className="ml-1 text-[10px] opacity-70">
-                              {inv.tag === "AAA" ? "· Máx. calidad" : "· Gobierno"}
+                              {inv.tag === "AAA" ? t("tags.maxQuality") : t("tags.government")}
                             </span>
                           )}
                         </span>
@@ -236,20 +185,20 @@ const PortfolioBuilder = ({ profile, onComplete }: Props) => {
                     </div>
                     <div className="flex items-center gap-4 mt-2">
                       <div>
-                        <span className="text-xs text-muted-foreground">Riesgo </span>
+                        <span className="text-xs text-muted-foreground">{t("portfolio.risk")} </span>
                         <span className="text-sm" style={{ ...nunito, fontWeight: 700, color: getRiskColor(inv.riskLevel) }}>
                           {inv.riskLevel}/10
                         </span>
                       </div>
                       <div>
-                        <span className="text-xs text-muted-foreground">Retorno </span>
+                        <span className="text-xs text-muted-foreground">{t("portfolio.return")} </span>
                         <span className="text-sm" style={{ ...nunito, fontWeight: 700, color: CELESTE }}>
                           {inv.annualReturn}%
                         </span>
                       </div>
                       {real && (
                         <div>
-                          <span className="text-xs text-muted-foreground">Vol. </span>
+                          <span className="text-xs text-muted-foreground">{t("portfolio.vol")} </span>
                           <span className="text-sm" style={{ ...nunito, fontWeight: 700, color: "hsl(var(--muted-foreground))" }}>
                             {real.volatility}%
                           </span>
@@ -258,7 +207,7 @@ const PortfolioBuilder = ({ profile, onComplete }: Props) => {
                     </div>
                     {real && (
                       <p className="text-[10px] text-muted-foreground mt-1" style={nunito}>
-                        Total 2006–2026: {real.totalReturn > 0 ? "+" : ""}{real.totalReturn}%
+                        {t("portfolio.total")}: {real.totalReturn > 0 ? "+" : ""}{real.totalReturn}%
                       </p>
                     )}
                   </div>
@@ -279,7 +228,6 @@ const PortfolioBuilder = ({ profile, onComplete }: Props) => {
         </AnimatePresence>
       </div>
 
-      {/* Swap drawer */}
       <AnimatePresence>
         {swapSlot !== null && (
           <motion.div
@@ -289,7 +237,7 @@ const PortfolioBuilder = ({ profile, onComplete }: Props) => {
             exit={{ height: 0, opacity: 0 }}
           >
             <p className="text-sm tracking-widest text-muted-foreground mb-2" style={{ ...nunito, fontWeight: 700 }}>
-              CAMBIAR POR...
+              {t("portfolio.swapFor")}
             </p>
             <div className="space-y-2 max-h-[200px] overflow-y-auto">
               {alternatives.map((inv) => (
@@ -300,14 +248,13 @@ const PortfolioBuilder = ({ profile, onComplete }: Props) => {
                   style={{ borderColor: "hsl(var(--border))" }}
                   whileTap={{ scale: 0.97 }}
                 >
-                  <span className="text-xl">{inv.emoji}</span>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-foreground truncate" style={{ ...nunito, fontWeight: 600 }}>
                       {inv.name} {inv.flag || ""}
                     </p>
                     <div className="flex gap-3 text-xs">
-                      <span style={{ color: getRiskColor(inv.riskLevel) }}>Riesgo {inv.riskLevel}/10</span>
-                      <span style={{ color: CELESTE }}>Retorno {inv.annualReturn}%</span>
+                      <span style={{ color: getRiskColor(inv.riskLevel) }}>{t("portfolio.risk")} {inv.riskLevel}/10</span>
+                      <span style={{ color: CELESTE }}>{t("portfolio.return")} {inv.annualReturn}%</span>
                     </div>
                   </div>
                   <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full"
@@ -321,7 +268,6 @@ const PortfolioBuilder = ({ profile, onComplete }: Props) => {
         )}
       </AnimatePresence>
 
-      {/* Bottom CTA */}
       <div className="px-5 py-6">
         <motion.button
           onClick={handleSimulate}
@@ -330,7 +276,7 @@ const PortfolioBuilder = ({ profile, onComplete }: Props) => {
           whileTap={{ scale: 0.97 }}
           disabled={loading}
         >
-          {loading ? "CARGANDO DATA REAL..." : "SIMULAR MI PORTAFOLIO"}
+          {loading ? t("portfolio.loadingRealData") : t("portfolio.simulate")}
         </motion.button>
       </div>
     </motion.div>
