@@ -72,6 +72,8 @@ interface ScheduledAIEvent {
   investmentName: string;
   riskLevel: number;
   direction: EventDirection;
+  /** The exact % impact to show and tell the AI about */
+  impactPct: number;
 }
 
 const categoryToDbIds: Record<string, string[]> = {};
@@ -289,13 +291,20 @@ function buildAIEventPlan(portfolio: Investment[], initialMonths: number, totalS
   return steps.map((step, index) => {
     const investment = pickWeightedInvestment(portfolio, usedIds, index + step);
     usedIds.add(investment.id);
+    const direction = pickEventDirection(investment.id, investment.riskLevel, step);
+    // Compute a consistent impact % based on risk
+    const base = 3 + investment.riskLevel * 1.5;
+    const jitter = (seededUnit(`${investment.id}-impact-${step}`) - 0.5) * 4;
+    const raw = Math.round((base + jitter) * 10) / 10;
+    const impactPct = direction === "drop" ? -Math.abs(raw) : direction === "surge" ? Math.abs(raw) : (raw > 0 ? raw : -raw) * 0.5;
 
     return {
       step,
       investmentId: investment.id,
       investmentName: translateName(investment.id),
       riskLevel: investment.riskLevel,
-      direction: pickEventDirection(investment.id, investment.riskLevel, step),
+      direction,
+      impactPct: Math.round(impactPct * 10) / 10,
     } satisfies ScheduledAIEvent;
   });
 }
@@ -303,12 +312,13 @@ function buildAIEventPlan(portfolio: Investment[], initialMonths: number, totalS
 function buildFallbackScenario(event: ScheduledAIEvent, language: string): AIScenario {
   const isSpanish = language === "es";
   const categoryName = event.investmentName;
+  const pctLabel = `${event.impactPct > 0 ? "+" : ""}${event.impactPct}%`;
 
   if (event.direction === "drop") {
     return {
-      title: isSpanish ? `${categoryName} cae hoy` : `${categoryName} drops today`,
+      title: isSpanish ? `${categoryName} cae un ${Math.abs(event.impactPct)}%` : `${categoryName} drops ${Math.abs(event.impactPct)}%`,
       description: isSpanish
-        ? `${categoryName} recibe presión fuerte y ahora vale menos. Tu nido está expuesto aquí, así que toca decidir.`
+        ? `${categoryName} sufre una caída del ${Math.abs(event.impactPct)}%. Tu nido está expuesto aquí, así que toca decidir.`
         : `${categoryName} is under pressure and suddenly trades lower. Your nest is exposed here, so you need to decide.`,
       options: [
         {
@@ -447,6 +457,7 @@ async function fetchAIScenario(
         focusCategoryLabel: event.investmentName,
         focusDirection: event.direction,
         focusRiskLevel: event.riskLevel,
+        focusImpactPct: event.impactPct,
       },
     });
 
@@ -935,18 +946,11 @@ export default function TimeSimulation({
                     : (i18n.language === "es" ? "Tensión" : "Volatile");
                 const stepIdx = activeAIEvent.step;
                 const tLabel = filteredLabels[stepIdx] || "";
-                // Compute a direction-consistent change %
-                const riskFactor = 2 + activeAIEvent.riskLevel * 1.2;
-                const eventChangePct = activeAIEvent.direction === "drop"
-                  ? -riskFactor
-                  : activeAIEvent.direction === "surge"
-                    ? riskFactor
-                    : (Math.random() > 0.5 ? 1 : -1) * riskFactor * 0.5;
                 const marker: EventMarker = {
                   pointIndex: Math.max(0, snap.points.length - 1),
                   label: dirLabel,
                   timeLabel: tLabel,
-                  changePct: Math.round(eventChangePct * 10) / 10,
+                  changePct: activeAIEvent.impactPct,
                   direction: activeAIEvent.direction,
                 };
                 return (
