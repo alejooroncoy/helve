@@ -918,29 +918,19 @@ const Panel = () => {
 
         {/* Stat Cards — Capital & Invested (global), Risk & Return (per nest) */}
         <div className="grid grid-cols-3 gap-2.5">
-          <div className="bg-card rounded-2xl p-3 shadow-sm">
-            <div className="flex items-center gap-1.5">
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium" style={nunito}>
-                {t("panel.capital")}
-              </p>
-              <div className="h-3 w-px bg-border" />
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium" style={nunito}>
-                {t("panel.invested")}
-              </p>
-            </div>
-            <div className="flex items-baseline gap-1.5 mt-0.5">
-              <p className="text-lg font-bold text-foreground" style={nunito}>
-                CHF {Math.round(balance * (100 - totalAllocated) / 100).toLocaleString()}
-              </p>
-              <div className="h-4 w-px bg-border" />
-              <p className="text-sm font-bold" style={{ ...nunito, color: CELESTE }}>
-                {Math.round(balance * totalAllocated / 100).toLocaleString()}
-              </p>
-            </div>
-            <p className="text-[10px] mt-0.5" style={{ ...nunito, color: lastSimGain !== null ? (lastSimGain >= 0 ? CELESTE : "hsl(var(--destructive))") : CELESTE }}>
-              {lastSimGain !== null
-                ? `${lastSimGain > 0 ? "+" : ""}${lastSimGain.toFixed(1)}% ${t("panel.lastSim")}`
-                : `+CHF ${monthlyIncome}${t("panel.perMonth")}`}
+          <div className="bg-card rounded-2xl p-3 shadow-sm flex flex-col">
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium" style={nunito}>
+              {t("panel.capital")}
+            </p>
+            <p className="text-lg font-bold text-foreground mt-0.5" style={nunito}>
+              CHF {Math.round(balance * (100 - totalAllocated) / 100).toLocaleString()}
+            </p>
+            <Separator className="my-1.5" />
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium" style={nunito}>
+              {t("panel.invested")}
+            </p>
+            <p className="text-sm font-bold mt-0.5" style={{ ...nunito, color: CELESTE }}>
+              CHF {Math.round(balance * totalAllocated / 100).toLocaleString()}
             </p>
           </div>
           <div className="bg-card rounded-2xl p-3 shadow-sm">
