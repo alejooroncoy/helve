@@ -148,7 +148,8 @@ const PortfolioBuilder = ({ profile, onComplete }: Props) => {
       <div className="px-5 space-y-3 flex-1">
         <AnimatePresence mode="popLayout">
           {enriched.map((inv, idx) => {
-            const dbId = investmentToDbId[inv.id];
+            const dbIds = categoryToDbIds[inv.id];
+            const dbId = dbIds?.[0];
             const real = dbId ? stats[dbId] : null;
             return (
               <motion.div
