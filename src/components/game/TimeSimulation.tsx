@@ -614,6 +614,8 @@ export default function TimeSimulation({
       return aiScenarioPromises.current[event.step];
     },
     [currentPortfolio, filteredLabels, i18n.language],
+  );
+
   useEffect(() => {
     for (const event of aiEventPlan) {
       const prefetchAt = Math.max(0, event.step - 1);
@@ -649,7 +651,6 @@ export default function TimeSimulation({
 
     const scheduledEvent = aiEventMap[nextStep];
     if (scheduledEvent) {
-      // Fetch in background — simulation keeps playing
       void ensureScenario(scheduledEvent, newValue).then((scenario) => {
         if (!scenario) return;
         setPlaying(false);
@@ -658,7 +659,6 @@ export default function TimeSimulation({
         setShowAIEvent(true);
         setBirdMsg(
           t("timeSim.movingSharp", { name: scheduledEvent.investmentName }),
-        );
         );
       });
     }
