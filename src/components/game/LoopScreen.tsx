@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import TreeSVG from "./TreeSVG";
 
 interface Props {
@@ -9,6 +10,7 @@ interface Props {
 
 const LoopScreen = ({ result, onTryAgain, onAdjust }: Props) => {
   const treeStage = result >= 130 ? "large" : result >= 115 ? "medium" : "small";
+  const { t } = useTranslation();
 
   return (
     <motion.div
@@ -25,11 +27,11 @@ const LoopScreen = ({ result, onTryAgain, onAdjust }: Props) => {
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.2 }}
       >
-        <h2 className="text-3xl font-serif text-foreground">Your garden is growing</h2>
+        <h2 className="text-3xl font-serif text-foreground">{t("loop.title")}</h2>
         <p className="text-lg text-muted-foreground mt-2">
-          Final value: <span className="font-medium text-primary">{result}</span>
+          {t("loop.finalValue")}: <span className="font-medium text-primary">{result}</span>
         </p>
-        <p className="text-muted-foreground mt-1">Want to see what happens with different choices?</p>
+        <p className="text-muted-foreground mt-1">{t("loop.tryAgainPrompt")}</p>
       </motion.div>
 
       <motion.div
@@ -44,7 +46,7 @@ const LoopScreen = ({ result, onTryAgain, onAdjust }: Props) => {
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.97 }}
         >
-          🔄 Try Again
+          {t("loop.tryAgain")}
         </motion.button>
         <motion.button
           className="bg-card text-foreground p-5 rounded-3xl text-lg font-medium shadow-sm border border-border"
@@ -52,7 +54,7 @@ const LoopScreen = ({ result, onTryAgain, onAdjust }: Props) => {
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.97 }}
         >
-          🌿 Adjust Your Garden
+          {t("loop.adjust")}
         </motion.button>
       </motion.div>
     </motion.div>

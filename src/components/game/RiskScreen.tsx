@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { ChevronLeft } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface RiskOption {
   label: string;
@@ -14,42 +15,27 @@ interface Props {
   onBack?: () => void;
 }
 
-const questions: { title: string; options: RiskOption[] }[] = [
-  {
-    title: "¡Hola! Imagina que eres un pajarito de mi bandada. ¿Cómo buscarías tu comida hoy?",
-    options: [
-      { label: "Comería semillas de los comederos seguros. Siempre habrá comida, pero creceré muy lento.", score: 0, emoji: "🟢" },
-      { label: "Buscaría bayas en las ramas medias. A veces no encontraré, pero cuando lo haga, creceré más.", score: 1, emoji: "🟡" },
-      { label: "Volaría hasta la cima por la Fruta Dorada. Es arriesgado, pero si la consigo, creceré muchísimo de golpe.", score: 2, emoji: "🔴" },
-    ],
-  },
-  {
-    title: "¡Oh no! Una fuerte tormenta sacude el árbol y el nido donde guardas tus ramas se tambalea. ¿Qué haces?",
-    options: [
-      { label: "Salgo volando y busco una cueva. Pierdo el nido, pero prefiero estar a salvo de la lluvia.", score: 0, emoji: "🟢" },
-      { label: "Me quedo tranquilo en el nido y espero pacientemente a que vuelva a salir el sol.", score: 1, emoji: "🟡" },
-      { label: "¡Aprovecho el viento! Salgo a buscar las ramas que se cayeron para hacer mi nido más grande.", score: 2, emoji: "🔴" },
-    ],
-  },
-  {
-    title: "Última pregunta. ¿Para qué gran aventura te estás entrenando en el bosque?",
-    options: [
-      { label: "Para vuelos cortos de fin de semana. Necesito estar cerca de casa por si hay una emergencia.", score: 0, emoji: "🟢" },
-      { label: "Para explorar el bosque la próxima temporada. Tardaré un poco en volver.", score: 1, emoji: "🟡" },
-      { label: "Para la Gran Migración anual. No volveré por mucho tiempo, pero regresaré mucho más fuerte.", score: 2, emoji: "🔴" },
-    ],
-  },
-];
 const CELESTE = "#5BB8F5";
+const emojis = ["🟢", "🟡", "🔴"];
+const scores = [0, 1, 2];
 
 const RiskScreen = ({ questionIndex, onAnswer, onBack }: Props) => {
   const [selected, setSelected] = useState<number | null>(null);
+  const { t } = useTranslation();
+
+  const questions = t("risk.questions", { returnObjects: true }) as { title: string; options: string[] }[];
   const q = questions[questionIndex];
   const progress = ((questionIndex + 1) / questions.length) * 100;
 
+  const options: RiskOption[] = q.options.map((label, i) => ({
+    label,
+    score: scores[i],
+    emoji: emojis[i],
+  }));
+
   const handleContinue = () => {
     if (selected === null) return;
-    onAnswer(q.options[selected].score);
+    onAnswer(options[selected].score);
     setSelected(null);
   };
 
@@ -62,12 +48,8 @@ const RiskScreen = ({ questionIndex, onAnswer, onBack }: Props) => {
       transition={{ duration: 0.35 }}
       key={`risk-${questionIndex}`}
     >
-      {/* Top bar: back + progress */}
       <div className="flex items-center gap-4 px-6 pt-8 pb-6">
-        <button
-          onClick={onBack}
-          className="text-muted-foreground hover:text-foreground transition-colors"
-        >
+        <button onClick={onBack} className="text-muted-foreground hover:text-foreground transition-colors">
           <ChevronLeft size={28} strokeWidth={2.5} />
         </button>
         <div className="flex-1 h-5 rounded-full bg-secondary overflow-hidden">
@@ -81,7 +63,6 @@ const RiskScreen = ({ questionIndex, onAnswer, onBack }: Props) => {
         </div>
       </div>
 
-      {/* Mascot + speech bubble */}
       <div className="flex items-center gap-2 px-4 pt-2 pb-8">
         <img
           src="/perspectiva2.png"
@@ -89,41 +70,20 @@ const RiskScreen = ({ questionIndex, onAnswer, onBack }: Props) => {
           className="object-contain flex-shrink-0"
           style={{ width: 230, height: 230, marginRight: -48, marginLeft: -50 }}
         />
-
-        {/* Bubble */}
         <div
           className="relative rounded-2xl px-5 py-4 flex-1"
           style={{ backgroundColor: "white", border: "2px solid hsl(var(--border))" }}
         >
-          {/* Tail border (gray, slightly bigger) */}
-          <div
-            className="absolute top-6 w-0 h-0"
-            style={{
-              left: -14,
-              borderTop: "11px solid transparent",
-              borderBottom: "11px solid transparent",
-              borderRight: `13px solid hsl(var(--border))`,
-            }}
-          />
-          {/* Tail fill (white, covers the gray) */}
-          <div
-            className="absolute top-6 w-0 h-0"
-            style={{
-              left: -11,
-              borderTop: "10px solid transparent",
-              borderBottom: "10px solid transparent",
-              borderRight: `12px solid white`,
-            }}
-          />
+          <div className="absolute top-6 w-0 h-0" style={{ left: -14, borderTop: "11px solid transparent", borderBottom: "11px solid transparent", borderRight: `13px solid hsl(var(--border))` }} />
+          <div className="absolute top-6 w-0 h-0" style={{ left: -11, borderTop: "10px solid transparent", borderBottom: "10px solid transparent", borderRight: `12px solid white` }} />
           <p className="text-foreground text-base leading-snug" style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 600 }}>
             {q.title}
           </p>
         </div>
       </div>
 
-      {/* Options */}
       <div className="flex flex-col gap-3 px-5 flex-1">
-        {q.options.map((opt, i) => {
+        {options.map((opt, i) => {
           const isSelected = selected === i;
           return (
             <motion.button
@@ -151,7 +111,6 @@ const RiskScreen = ({ questionIndex, onAnswer, onBack }: Props) => {
         })}
       </div>
 
-      {/* CONTINUE button */}
       <div className="px-5 py-8">
         <button
           onClick={handleContinue}
@@ -164,7 +123,7 @@ const RiskScreen = ({ questionIndex, onAnswer, onBack }: Props) => {
             opacity: selected === null ? 0.4 : 1,
           }}
         >
-          CONTINUE
+          {t("risk.continue")}
         </button>
       </div>
     </motion.div>
