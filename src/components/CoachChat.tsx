@@ -248,6 +248,7 @@ interface CoachChatProps {
 
 export default function CoachChat({ onClose, portfolio, onAddInvestment, onRemoveInvestment, initialQuestion, onSwapAccepted }: CoachChatProps) {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
