@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Send, Volume2, VolumeX, TrendingUp, TrendingDown, Lightbulb, ArrowRightLeft } from "lucide-react";
+import { X, Send, Volume2, VolumeX, TrendingUp, TrendingDown, Lightbulb, ArrowRightLeft, Mic, MicOff } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import type { Investment } from "@/game/types";
 
