@@ -204,6 +204,14 @@ const en = {
     allSafeInsight: "Playing it safe preserved your money, but growth was limited. A little risk can go a long way.",
     stayInsight: "Staying invested during the storm helped your garden recover and grow stronger.",
     balancedInsight: "A balanced approach gave you steady growth without too many surprises.",
+    tooAggressiveInsight: "Your portfolio was riskier than your profile suggested. The extra volatility can pay off, but make sure you can handle the dips!",
+    tooConservativeInsight: "Your portfolio was safer than needed for your profile. You avoided losses, but also missed potential growth. Finding the right balance is key.",
+    highEquityInsight: "Heavy equity exposure means big upside potential — but also sharper drops during market downturns. Diversification smooths the ride.",
+    highBondsInsight: "Bonds provide stability and predictable income. Great for short-term goals, but long-term growth may require some equity exposure.",
+    yourAllocation: "YOUR ALLOCATION",
+    riskScore: "Risk score: {{score}}/10",
+    aligned: "Aligned with your profile ✅",
+    misaligned: "Differs from your profile ⚠️",
   },
 
   // Loop screen
