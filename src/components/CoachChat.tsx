@@ -242,6 +242,7 @@ interface CoachChatProps {
   onAddInvestment?: (investmentId: string) => void;
   onRemoveInvestment?: (investmentId: string) => void;
   initialQuestion?: string;
+  onSwapAccepted?: (removeId: string, addId: string) => void;
 }
 
 export default function CoachChat({ onClose, portfolio, onAddInvestment, onRemoveInvestment, initialQuestion }: CoachChatProps) {
