@@ -35,7 +35,7 @@ const MascotIcon = () => (
   <img src="/mascot-owl.png" alt="mascot" className="w-6 h-6 rounded-full object-cover" />
 );
 
-const mascotToast = (msg: string) => mascotToast(msg);
+const mascotToast = (msg: string) => toast(msg, { icon: <MascotIcon />, duration: 3000 });
 
 // Map game IDs to DB instrument IDs
 const investmentToDbId: Record<string, string> = {
