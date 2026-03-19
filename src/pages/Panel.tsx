@@ -450,7 +450,7 @@ const Panel = () => {
       : "0.0";
 
   const executeBuy = useCallback((inv: Investment) => {
-    if (activePortfolio.length >= 4) { mascotToast(t("panel.nestFull")); return; }
+    if (activePortfolio.find((i) => i.id === inv.id)) return;
     if (activePortfolio.find((i) => i.id === inv.id)) return;
     const next = [...activePortfolio, inv];
     const currentTotal = Object.values(allocations).reduce((s, v) => s + v, 0);
@@ -467,7 +467,7 @@ const Panel = () => {
   }, [activePortfolio, allocations, saveNestData, t]);
 
   const tryBuyInvestment = useCallback((inv: Investment) => {
-    if (activePortfolio.length >= 4) { mascotToast(t("panel.nestFull")); return; }
+    if (activePortfolio.find((i) => i.id === inv.id)) return;
     if (activePortfolio.find((i) => i.id === inv.id)) return;
     if (skipBuyDialog) executeBuy(inv);
     else setBuyDialogInv(inv);
@@ -504,7 +504,7 @@ const Panel = () => {
     const removedAlloc = allocations[removeId] ?? 25;
     setActivePortfolio((prev) => {
       const next = prev.filter((i) => i.id !== removeId);
-      if (!next.find(i => i.id === addId) && next.length < 4) next.push(toAdd);
+      if (!next.find(i => i.id === addId)) next.push(toAdd);
       const newAllocations = { ...allocations };
       delete newAllocations[removeId];
       newAllocations[addId] = removedAlloc;
@@ -684,7 +684,7 @@ const Panel = () => {
               <DropZone id="nest">
                 <div className="flex items-center justify-between mb-3">
                   <h2 className="text-sm font-bold text-foreground uppercase tracking-wide" style={nunito}>{nests.find(n => n.id === activeNestId)?.name || t("panel.myNest")}</h2>
-                  <span className="text-xs text-muted-foreground" style={nunito}>{enrichedPortfolio.length}/4</span>
+                  <span className="text-xs text-muted-foreground" style={nunito}>{enrichedPortfolio.length}</span>
                 </div>
                 {enrichedPortfolio.length === 0 ? (
                   <div className="bg-card/50 rounded-3xl p-5 text-center border-2 border-dashed border-border flex flex-col items-center justify-center gap-2">
