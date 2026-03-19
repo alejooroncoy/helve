@@ -281,10 +281,13 @@ const Panel = () => {
   };
 
   const handleSimulate = () => {
-    const slots = activePortfolio.map((i) => i.type);
-    sessionStorage.setItem("helve-portfolio-slots", JSON.stringify(slots));
-    sessionStorage.setItem("helve-portfolio", JSON.stringify(activePortfolio));
+    saveProgress({ portfolio: activePortfolio });
     navigate("/");
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/auth");
   };
 
   return (
