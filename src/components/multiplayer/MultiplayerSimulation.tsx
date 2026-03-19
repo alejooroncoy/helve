@@ -269,7 +269,7 @@ const MultiplayerSimulation = ({ mp }: Props) => {
                 initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
               >
                 <div className="flex items-center gap-1 mb-0.5">
-                  <span className="text-sm">{h.event.emoji}</span>
+                  <span className="w-2 h-2 rounded-full bg-primary flex-shrink-0" />
                   <span className="text-[9px] font-bold text-foreground truncate" style={nunito}>{t(h.event.title)}</span>
                 </div>
                 <span className={`text-[9px] font-bold ${h.decision === "hold" ? "text-primary" : "text-destructive"}`} style={nunito}>
