@@ -313,11 +313,11 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, initialB
         <div className="bg-card rounded-3xl p-4 shadow-sm h-full flex flex-col">
           <div className="flex items-center justify-between mb-2">
             <p className="text-xs font-bold text-foreground" style={nunito}>
-              📈 {data.length > 1 ? filteredLabels[currentStep] : t("timeSim.today")}
+              {data.length > 1 ? filteredLabels[currentStep] : t("timeSim.today")}
             </p>
             <div className="flex items-center gap-1">
               {currentPortfolio.map((inv) => (
-                <span key={inv.id} className="text-sm" title={inv.name}>{inv.emoji}</span>
+                <span key={inv.id} className="text-xs font-medium text-muted-foreground">{inv.name.slice(0, 3)}</span>
               ))}
             </div>
           </div>
