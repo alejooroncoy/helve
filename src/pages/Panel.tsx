@@ -765,6 +765,17 @@ const Panel = () => {
           />
         )}
       </AnimatePresence>
+
+      {/* Buy confirmation dialog */}
+      <AnimatePresence>
+        {buyDialogInv && (
+          <BuyConfirmDialog
+            inv={buyDialogInv}
+            onConfirm={handleBuyConfirm}
+            onCancel={() => setBuyDialogInv(null)}
+          />
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 
