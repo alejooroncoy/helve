@@ -111,7 +111,7 @@ const MultiplayerPicking = ({ mp }: Props) => {
           cursor: selected.length > 0 ? "pointer" : "not-allowed",
         }} onClick={selected.length > 0 ? handleReady : undefined}
           whileTap={selected.length > 0 ? { scale: 0.97 } : {}}>
-          ✅ {t("multiplayer.ready")} ({selected.length}/{MAX_PICKS})
+          {t("multiplayer.ready")} ({selected.length}/{MAX_PICKS})
         </motion.button>
       ) : (
         <div className="w-full py-4 rounded-3xl bg-primary/10 text-center">
