@@ -317,25 +317,25 @@ const es = {
   // Bird messages
   birdMessages: {
     positive: [
-      "¡Tu nido brilla! 🌟",
-      "¡Los huevos están calentitos! 🥚✨",
-      "¡Buen vuelo! Vas por buen camino 🐦",
+      "Tu nido brilla!",
+      "Los huevos estan calentitos!",
+      "Buen vuelo! Vas por buen camino.",
     ],
     negative: [
-      "¡Aguanta! Las tormentas pasan 🌧️",
-      "Los pájaros fuertes resisten el viento 💪",
-      "No todo vuelo es suave, ¡pero sigues volando! 🦅",
+      "Aguanta! Las tormentas pasan.",
+      "Los pajaros fuertes resisten el viento.",
+      "No todo vuelo es suave, pero sigues volando!",
     ],
     neutral: [
-      "Tranquilo, tu nido crece despacio pero seguro 🪺",
-      "Paciencia, pajarito. El tiempo es tu amigo ⏳",
-      "Paso a paso se construye el mejor nido 🐣",
+      "Tranquilo, tu nido crece despacio pero seguro.",
+      "Paciencia, pajarito. El tiempo es tu amigo.",
+      "Paso a paso se construye el mejor nido.",
     ],
     sell: [
-      "¡Vendiste! A veces es bueno aligerar el nido 🍃",
-      "Huevo fuera. ¿Fue buena decisión? Lo veremos... 🤔",
+      "Vendiste! A veces es bueno aligerar el nido.",
+      "Fuera. Fue buena decision? Lo veremos...",
     ],
-    held: "¡Mantuviste! Los pájaros valientes aguantan la tormenta 💪",
+    held: "Mantuviste! Los pajaros valientes aguantan la tormenta.",
   },
 
   // Coach chat

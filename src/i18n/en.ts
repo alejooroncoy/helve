@@ -317,25 +317,25 @@ const en = {
   // Bird messages
   birdMessages: {
     positive: [
-      "Your nest shines! 🌟",
-      "The eggs are warm! 🥚✨",
-      "Great flight! You're on the right path 🐦",
+      "Your nest shines!",
+      "The eggs are warm!",
+      "Great flight! You're on the right path.",
     ],
     negative: [
-      "Hold on! Storms pass 🌧️",
-      "Strong birds resist the wind 💪",
-      "Not every flight is smooth, but you're still flying! 🦅",
+      "Hold on! Storms pass.",
+      "Strong birds resist the wind.",
+      "Not every flight is smooth, but you're still flying!",
     ],
     neutral: [
-      "Easy does it, your nest grows slowly but surely 🪺",
-      "Patience, little bird. Time is your friend ⏳",
-      "Step by step you build the best nest 🐣",
+      "Easy does it, your nest grows slowly but surely.",
+      "Patience, little bird. Time is your friend.",
+      "Step by step you build the best nest.",
     ],
     sell: [
-      "Sold! Sometimes it's good to lighten the nest 🍃",
-      "Egg out. Was it a good decision? We'll see... 🤔",
+      "Sold! Sometimes it's good to lighten the nest.",
+      "Egg out. Was it a good decision? We'll see...",
     ],
-    held: "You held! Brave birds weather the storm 💪",
+    held: "You held! Brave birds weather the storm.",
   },
 
   // Coach chat
