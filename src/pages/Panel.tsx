@@ -414,6 +414,8 @@ const Panel = () => {
     "¡Arrastra una inversión a tu nido o tócala!"
   );
   const [draggedItem, setDraggedItem] = useState<{ inv: Investment; zone: string } | null>(null);
+  const [buyDialogInv, setBuyDialogInv] = useState<Investment | null>(null);
+  const [skipBuyDialog, setSkipBuyDialog] = useState(() => localStorage.getItem("helve_skip_buy_dialog") === "1");
   const [coachOpen, setCoachOpen] = useState(false);
   const [coachInitQ, setCoachInitQ] = useState<string | undefined>(undefined);
   const [simulationOpen, setSimulationOpen] = useState(false);
