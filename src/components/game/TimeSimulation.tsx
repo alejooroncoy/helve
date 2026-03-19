@@ -823,78 +823,17 @@ export default function TimeSimulation({
         </div>
       </div>
 
-      <div className="px-5 flex-1 min-h-0 space-y-3 overflow-y-auto">
-        {showCategorySnapshots && categorySnapshots.length > 0 && (
+      <div className="px-5 flex-1 min-h-0 overflow-y-auto">
+        {categorySnapshots.length > 0 && (
           <div className="bg-card rounded-3xl p-4 shadow-sm">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-bold text-foreground" style={nunito}>
+                {data.length > 1 ? filteredLabels[currentStep] : t("timeSim.today")}
+              </p>
+            </div>
             <TimeSimulationCategoryCharts items={categorySnapshots} />
           </div>
         )}
-
-        <div className="bg-card rounded-3xl p-4 shadow-sm h-full flex flex-col min-h-0">
-          <div className="flex items-center justify-between mb-2 gap-3">
-            <p className="text-xs font-bold text-foreground" style={nunito}>
-              {data.length > 1 ? filteredLabels[currentStep] : t("timeSim.today")}
-            </p>
-            <div className="flex items-center gap-1.5 flex-wrap justify-end">
-              {currentPortfolio.map((investment) => (
-                <span
-                  key={investment.id}
-                  className="text-[10px] font-semibold rounded-full px-2 py-1"
-                  style={{
-                    color: "hsl(var(--foreground))",
-                    backgroundColor: "hsl(var(--muted))",
-                  }}
-                >
-                  {t(`allocation.classes.${investment.id}`)}
-                </span>
-              ))}
-            </div>
-          </div>
-          <div className="flex-1 min-h-0">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={data} margin={{ top: 10, right: 10, bottom: 5, left: 10 }}>
-                <XAxis
-                  dataKey="label"
-                  tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <YAxis hide domain={["dataMin - 50", "dataMax + 50"]} />
-                <Line
-                  type="monotone"
-                  dataKey="value"
-                  stroke={PRIMARY_COLOR}
-                  strokeWidth={3}
-                  dot={false}
-                  animationDuration={500}
-                />
-                {aiEventPlan.map((event) => {
-                  const point = data[event.step];
-                  if (!point) return null;
-                  const resolvedDecision = decisionsByStep.get(event.step);
-
-                  return (
-                    <ReferenceDot
-                      key={`${event.step}-${event.investmentId}`}
-                      x={point.label}
-                      y={point.value}
-                      r={4.5}
-                      fill={
-                        resolvedDecision
-                          ? resolvedDecision.isGood
-                            ? PRIMARY_COLOR
-                            : DANGER_COLOR
-                          : "hsl(var(--muted-foreground))"
-                      }
-                      stroke="hsl(var(--background))"
-                      strokeWidth={2}
-                    />
-                  );
-                })}
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
       </div>
 
       <div className="px-5 py-3">
