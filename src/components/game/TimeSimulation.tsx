@@ -653,11 +653,10 @@ export default function TimeSimulation({
 
       void ensureScenario(scheduledEvent, newValue).then((scenario) => {
         setLoadingDecisionStep(null);
-        if (scenario) {
-          setActiveAIEvent(scheduledEvent);
-          setAiScenario(scenario);
-          setShowAIEvent(true);
-        }
+        if (!scenario) return;
+        setActiveAIEvent(scheduledEvent);
+        setAiScenario(scenario);
+        setShowAIEvent(true);
       });
       return;
     }
