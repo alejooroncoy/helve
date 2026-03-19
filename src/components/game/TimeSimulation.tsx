@@ -132,7 +132,7 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, initialB
   const intervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const dbIds = useMemo(
-    () => portfolio.map(inv => investmentToDbId[inv.id] || inv.id).filter(Boolean),
+    () => portfolio.flatMap(inv => categoryToDbIds[inv.id] || []).filter(Boolean),
     [portfolio]
   );
   const { prices, loading: pricesLoading } = useMonthlyPrices(dbIds);
