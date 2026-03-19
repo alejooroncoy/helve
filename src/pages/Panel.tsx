@@ -21,10 +21,24 @@ function getRiskColor(risk: number): string {
   return "text-destructive";
 }
 
+function getRiskBg(risk: number): string {
+  if (risk <= 3) return "bg-primary/10";
+  if (risk <= 6) return "bg-accent/10";
+  return "bg-destructive/10";
+}
+
 function getRiskLabel(risk: number): string {
   if (risk <= 30) return "Low";
   if (risk <= 60) return "Medium";
   return "High";
+}
+
+function riskWord(level: number): string {
+  if (level <= 2) return "Very safe";
+  if (level <= 4) return "Safe";
+  if (level <= 6) return "Moderate";
+  if (level <= 8) return "Risky";
+  return "Very risky";
 }
 
 function getSuggestions(profile: string, active: Investment[]): Investment[] {
