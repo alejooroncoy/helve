@@ -234,7 +234,7 @@ const es = {
   panel: {
     myNest: "Mi Nido",
     panelTitle: "Panel",
-    balance: "Balance",
+    balance: "Balance (compartido)",
     risk: "Riesgo",
     returnLabel: "Retorno",
     annual: "Anual",

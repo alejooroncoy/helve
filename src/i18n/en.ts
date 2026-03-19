@@ -234,7 +234,7 @@ const en = {
   panel: {
     myNest: "My Nest",
     panelTitle: "Panel",
-    balance: "Balance",
+    balance: "Balance (shared)",
     risk: "Risk",
     returnLabel: "Return",
     annual: "Annual",
