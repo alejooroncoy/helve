@@ -343,11 +343,15 @@ function VirtualScoutedList({ suggestions, onBuy, onAsk }: { suggestions: Invest
     overscan: 3,
   });
 
+  if (suggestions.length === 0) {
+    return <p className="text-xs text-muted-foreground py-4 text-center" style={nunito}>No hay inversiones disponibles</p>;
+  }
+
   return (
     <div
       ref={parentRef}
       className="overflow-x-auto pb-2 scrollbar-hide"
-      style={{ scrollSnapType: "x mandatory" }}
+      style={{ scrollSnapType: "x mandatory", height: 180 }}
     >
       <div
         style={{
@@ -367,22 +371,24 @@ function VirtualScoutedList({ suggestions, onBuy, onAsk }: { suggestions: Invest
                 top: 0,
                 left: 0,
                 width: `${CARD_WIDTH}px`,
+                height: "100%",
                 transform: `translateX(${virtualItem.start}px)`,
                 scrollSnapAlign: "start",
               }}
             >
-              <ScoutedCard
-                inv={inv}
-                onAsk={() => onAsk(inv)}
-              />
-              <motion.button
-                onClick={() => onBuy(inv)}
-                className="w-full mt-1.5 py-1.5 rounded-xl text-[10px] font-bold flex items-center justify-center gap-1 transition-colors"
-                style={{ ...nunito, backgroundColor: `${CELESTE}15`, color: CELESTE }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <DollarSign className="w-3 h-3" /> Comprar
-              </motion.button>
+              <div className="flex flex-col h-full">
+                <div className="flex-1">
+                  <ScoutedCard inv={inv} onAsk={() => onAsk(inv)} />
+                </div>
+                <motion.button
+                  onClick={() => onBuy(inv)}
+                  className="w-full mt-1.5 py-1.5 rounded-xl text-[10px] font-bold flex items-center justify-center gap-1 transition-colors"
+                  style={{ ...nunito, backgroundColor: `${CELESTE}15`, color: CELESTE }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <DollarSign className="w-3 h-3" /> Comprar
+                </motion.button>
+              </div>
             </div>
           );
         })}
