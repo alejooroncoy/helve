@@ -728,7 +728,7 @@ const Panel = () => {
                 {/* Mobile: horizontal scroll */}
                 <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide items-stretch md:hidden" style={{ scrollSnapType: "x mandatory" }}>
                   {suggestions.map((inv) => (
-                    <div key={inv.id} className="flex-shrink-0 flex" style={{ width: 190, scrollSnapAlign: "start" }}>
+                    <div key={inv.id} className="flex-shrink-0 flex" style={{ width: 180, minWidth: 170, scrollSnapAlign: "start" }}>
                       <DraggableCard inv={inv} zone="scouted" onClick={() => tryBuyInvestment(inv)} onAsk={() => { setCoachInitQ(`Explica brevemente qué es ${inv.name} y si encaja con mi perfil`); setCoachOpen(true); }} />
                     </div>
                   ))}
