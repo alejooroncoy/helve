@@ -175,7 +175,7 @@ function DraggableCard({
       {...listeners}
       {...attributes}
       onClick={zone === "scouted" ? onClick : undefined}
-      className={`touch-none select-none transition-all ${isDragging ? "opacity-30 scale-95" : ""}`}
+      className={`touch-none select-none transition-all h-full ${isDragging ? "opacity-30 scale-95" : ""}`}
     >
       {zone === "nest" ? <NestCard inv={inv} onSell={onSell} onAsk={onAsk} onInfo={onInfo} /> : <ScoutedCard inv={inv} onAsk={onAsk} />}
     </div>
