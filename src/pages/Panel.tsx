@@ -706,10 +706,35 @@ const Panel = () => {
             {/* Left: My Nest */}
             <div className="flex-1 overflow-y-auto lg:pr-2">
               <DropZone id="nest">
-                <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center justify-between mb-2">
                   <h2 className="text-sm font-bold text-foreground uppercase tracking-wide" style={nunito}>{t("panel.myNest")}</h2>
                   <span className="text-xs text-muted-foreground" style={nunito}>{enrichedPortfolio.length}/4</span>
                 </div>
+                {/* Total allocation bar */}
+                {enrichedPortfolio.length > 0 && (
+                  <div className="mb-3">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[10px] font-bold text-muted-foreground" style={nunito}>{t("panel.totalAllocated")}: {totalAllocated}%</span>
+                      <span className="text-[10px] font-bold" style={{ ...nunito, color: cashRemaining > 0 ? "hsl(var(--muted-foreground))" : CELESTE }}>
+                        {t("panel.cash")}: {cashRemaining}% (CHF {Math.round(balance * cashRemaining / 100)})
+                      </span>
+                    </div>
+                    <div className="h-2 bg-muted rounded-full overflow-hidden flex">
+                      {enrichedPortfolio.map((inv, i) => {
+                        const invPct = allocations[inv.id] ?? 0;
+                        if (invPct === 0) return null;
+                        const colors = [CELESTE, "hsl(var(--accent))", "#34D399", "#F59E0B"];
+                        return (
+                          <div
+                            key={inv.id}
+                            className="h-full transition-all duration-300"
+                            style={{ width: `${invPct}%`, backgroundColor: colors[i % colors.length] }}
+                          />
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
                 {enrichedPortfolio.length === 0 ? (
                   <div className="bg-card/50 rounded-3xl p-5 text-center border-2 border-dashed border-border flex flex-col items-center justify-center gap-2">
                     <Inbox className="w-8 h-8 text-muted-foreground/50" />
