@@ -313,7 +313,7 @@ const MultiplayerSimulation = ({ mp }: Props) => {
           const cls = ASSET_CLASSES.find(c => c.key === key);
           return cls ? (
             <span key={key} className="text-[10px] px-2 py-0.5 rounded-full bg-muted flex items-center gap-1" style={nunito}>
-              {cls.emoji} {t(`allocation.classes.${key}`)}
+              {t(`allocation.classes.${key}`)}
             </span>
           ) : null;
         })}
