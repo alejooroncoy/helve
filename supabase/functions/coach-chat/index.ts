@@ -6,6 +6,32 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const allIds = [
+  "ch-bond-aaa","global-bond","ch-govt-10y",
+  "smi-index","eurostoxx50","gold-chf","nestle","novartis","green-energy",
+  "djia-index","dax-index","apple","microsoft","nvidia","logitech","ubs","amazon",
+];
+
+const investmentNames: Record<string, string> = {
+  "ch-bond-aaa": "Swiss Bond AAA-BBB",
+  "global-bond": "Bloomberg Global Bond Index",
+  "ch-govt-10y": "Swiss Government Bond 10Y",
+  "smi-index": "SMI Index (Swiss Market)",
+  "eurostoxx50": "EuroStoxx 50",
+  "gold-chf": "Gold (CHF)",
+  "nestle": "Nestlé S.A.",
+  "novartis": "Novartis AG",
+  "green-energy": "Green Energy Fund",
+  "djia-index": "Dow Jones Industrial",
+  "dax-index": "DAX (Total Return)",
+  "apple": "Apple Inc.",
+  "microsoft": "Microsoft Corp.",
+  "nvidia": "NVIDIA Corp.",
+  "logitech": "Logitech International",
+  "ubs": "UBS Group AG",
+  "amazon": "Amazon.com Inc.",
+};
+
 const systemPrompt = `Eres Helve 🐦, un coach de inversión amigable para principiantes absolutos que nunca han invertido.
 
 ## TU PERSONALIDAD
@@ -14,22 +40,36 @@ const systemPrompt = `Eres Helve 🐦, un coach de inversión amigable para prin
 - Eres optimista pero honesto sobre los riesgos
 - Siempre respondes en el idioma del usuario
 
-## CONOCIMIENTO DE MERCADO (datos actualizados)
-Tienes conocimiento sobre estos instrumentos que el usuario puede tener en su portafolio:
-- 🏛️ US Treasury Bond ETF (id: "treasury"): Riesgo 1/10, ~4.1% anual. Bonos del gobierno de EE.UU.
-- 📋 Retirement Insurance (id: "retirement-low"): Riesgo 2/10, ~3.8% anual. Seguro de jubilación alemán.
-- 📋 Retirement Insurance Plus (id: "retirement-mid"): Riesgo 5/10, ~6.5% anual. Versión más agresiva.
-- 🌍 Global Equity ETF (id: "global-equity"): Riesgo 7/10, ~11.2% anual. Empresas más grandes del mundo.
-- 🏠 European Real Estate ETF (id: "real-estate"): Riesgo 5/10, ~6.5% anual. Propiedades europeas.
-- 🚀 Venture Capital Fund (id: "venture"): Riesgo 10/10, ~25% anual. Startups. Alto riesgo.
-- 💻 Direct Investment: Tech Corp (id: "tech-corp"): Riesgo 9/10, ~18.7% anual. Empresa tecnológica.
-- 🌱 Green Energy Fund (id: "green-energy"): Riesgo 4/10, ~5.2% anual. Energía renovable.
+## CONOCIMIENTO DE MERCADO
+Instrumentos disponibles (usa EXACTAMENTE estos IDs):
+
+SAFE:
+- 🏦 Swiss Bond AAA-BBB (id: "ch-bond-aaa"): Riesgo 1/10, ~2.8% anual
+- 🌐 Bloomberg Global Bond Index (id: "global-bond"): Riesgo 2/10, ~3.1% anual
+- 🏛️ Swiss Government Bond 10Y (id: "ch-govt-10y"): Riesgo 1/10, ~1.5% anual
+
+BALANCED:
+- 📊 SMI Index - Swiss Market (id: "smi-index"): Riesgo 5/10, ~6.2% anual
+- 🇪🇺 EuroStoxx 50 (id: "eurostoxx50"): Riesgo 5/10, ~5.8% anual
+- 🥇 Gold CHF (id: "gold-chf"): Riesgo 4/10, ~7.1% anual
+- 🍫 Nestlé S.A. (id: "nestle"): Riesgo 4/10, ~5.5% anual
+- 💊 Novartis AG (id: "novartis"): Riesgo 5/10, ~6.8% anual
+- 🌱 Green Energy Fund (id: "green-energy"): Riesgo 5/10, ~5.2% anual
+
+GROWTH:
+- 🗽 Dow Jones Industrial (id: "djia-index"): Riesgo 6/10, ~9.4% anual
+- 📈 DAX Total Return (id: "dax-index"): Riesgo 6/10, ~8.7% anual
+- 🍎 Apple Inc. (id: "apple"): Riesgo 7/10, ~28.5% anual
+- 💻 Microsoft Corp. (id: "microsoft"): Riesgo 7/10, ~24.2% anual
+- 🎮 NVIDIA Corp. (id: "nvidia"): Riesgo 9/10, ~45% anual
+- 🖱️ Logitech International (id: "logitech"): Riesgo 7/10, ~14.8% anual
+- 🏦 UBS Group AG (id: "ubs"): Riesgo 7/10, ~8.2% anual
+- 📦 Amazon.com Inc. (id: "amazon"): Riesgo 8/10, ~31% anual
 
 ## HERRAMIENTAS (TOOLS)
-Tienes acceso a herramientas para ejecutar acciones en el portafolio del usuario:
-- **add_investment**: Añadir una inversión al nido. Úsala cuando el usuario EXPLÍCITAMENTE pida invertir/añadir algo. Ejemplo: "quiero invertir en energía verde", "añade el ETF de bonos".
-- **remove_investment**: Quitar una inversión del nido. Úsala cuando el usuario pida quitar/eliminar algo. Ejemplo: "quita venture capital", "elimina tech corp".
-- **get_portfolio_summary**: Obtener un resumen detallado del portafolio actual. Úsala para analizar el nido del usuario.
+- **add_investment**: Añadir una inversión al nido. Úsala cuando el usuario EXPLÍCITAMENTE pida invertir/añadir algo.
+- **remove_investment**: Quitar una inversión del nido. Úsala cuando el usuario pida quitar/eliminar algo.
+- **get_portfolio_summary**: Obtener un resumen detallado del portafolio actual.
 
 REGLAS PARA USAR TOOLS:
 1. SOLO usa tools cuando el usuario muestre INTENCIÓN CLARA de acción ("quiero invertir", "añade", "quita", "elimina", "invierte en").
@@ -51,16 +91,16 @@ descripción: [1 línea corta]
 
 ### Para comparar dos opciones (cuando sugieras un cambio/swap):
 \`\`\`comparison
-opción_a: [nombre] | [riesgo X/10] | [retorno ~X% anual]
-opción_b: [nombre] | [riesgo X/10] | [retorno ~X% anual]
+opción_a: [nombre] | Riesgo [X/10] | ~[X]% anual
+opción_b: [nombre] | Riesgo [X/10] | ~[X]% anual
 veredicto: [1 línea corta de recomendación]
 swap: [id_quitar] -> [id_poner]
 \`\`\`
 
 IMPORTANTE para comparaciones:
-- "riesgo" es el nivel de riesgo (1-10). Etiquétalo SIEMPRE como "Riesgo X/10"
-- "retorno" es el retorno anual esperado. Etiquétalo SIEMPRE como "~X% anual"
+- Usa EXACTAMENTE el formato "Riesgo X/10" para riesgo y "~X% anual" para retorno
 - Usa el campo "swap" SOLO cuando sugieras reemplazar una inversión del nido por otra. Formato: id_actual -> id_nueva
+- Los IDs deben ser EXACTAMENTE los de la lista de instrumentos arriba
 - Si solo comparas sin sugerir cambio, omite el campo swap
 
 ### Para dar un tip:
@@ -78,6 +118,7 @@ contenido: [1 línea corta]
 - NUNCA des consejos financieros específicos ("compra X"). Siempre di "podrías considerar"
 - Usa emojis con moderación (1-2 por mensaje máximo)
 - Para comparaciones, SIEMPRE separa nombre | riesgo | retorno con |`;
+
 const tools = [
   {
     type: "function",
@@ -89,7 +130,7 @@ const tools = [
         properties: {
           investment_id: {
             type: "string",
-            enum: ["treasury", "retirement-low", "retirement-mid", "global-equity", "real-estate", "venture", "tech-corp", "green-energy"],
+            enum: allIds,
             description: "ID de la inversión a añadir",
           },
         },
@@ -108,7 +149,7 @@ const tools = [
         properties: {
           investment_id: {
             type: "string",
-            enum: ["treasury", "retirement-low", "retirement-mid", "global-equity", "real-estate", "venture", "tech-corp", "green-energy"],
+            enum: allIds,
             description: "ID de la inversión a quitar",
           },
         },
@@ -130,17 +171,6 @@ const tools = [
     },
   },
 ];
-
-const investmentNames: Record<string, string> = {
-  "treasury": "US Treasury Bond ETF",
-  "retirement-low": "Retirement Insurance",
-  "retirement-mid": "Retirement Insurance Plus",
-  "global-equity": "Global Equity ETF",
-  "real-estate": "European Real Estate ETF",
-  "venture": "Venture Capital Fund",
-  "tech-corp": "Direct Investment: Tech Corp",
-  "green-energy": "Green Energy Fund",
-};
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
