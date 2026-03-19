@@ -463,14 +463,36 @@ const Panel = () => {
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
   const suggestions = useMemo(() => getSuggestions(profile, enrichedPortfolio), [profile, enrichedPortfolio]);
 
+  const totalAllocated = useMemo(() => {
+    return enrichedPortfolio.reduce((s, i) => s + (allocations[i.id] ?? 0), 0);
+  }, [enrichedPortfolio, allocations]);
+  const cashRemaining = 100 - totalAllocated;
+
   const totalRisk = enrichedPortfolio.length
-    ? Math.round(enrichedPortfolio.reduce((s, i) => s + i.riskLevel, 0) / enrichedPortfolio.length * 10)
+    ? Math.round(
+        totalAllocated > 0
+          ? enrichedPortfolio.reduce((s, i) => s + i.riskLevel * (allocations[i.id] ?? 0), 0) / totalAllocated * 10
+          : enrichedPortfolio.reduce((s, i) => s + i.riskLevel, 0) / enrichedPortfolio.length * 10
+      )
     : 0;
 
-  const monthlyIncome = enrichedPortfolio.reduce((s, i) => s + Math.round((balance * i.annualReturn) / 100 / 12), 0);
-  const avgReturn = enrichedPortfolio.length
-    ? (enrichedPortfolio.reduce((s, i) => s + i.annualReturn, 0) / enrichedPortfolio.length).toFixed(1)
-    : "0.0";
+  const monthlyIncome = enrichedPortfolio.reduce((s, i) => {
+    const pct = allocations[i.id] ?? 0;
+    return s + Math.round((balance * pct / 100 * i.annualReturn) / 100 / 12);
+  }, 0);
+  const avgReturn = enrichedPortfolio.length && totalAllocated > 0
+    ? (enrichedPortfolio.reduce((s, i) => s + i.annualReturn * (allocations[i.id] ?? 0), 0) / totalAllocated).toFixed(1)
+    : enrichedPortfolio.length
+      ? (enrichedPortfolio.reduce((s, i) => s + i.annualReturn, 0) / enrichedPortfolio.length).toFixed(1)
+      : "0.0";
+
+  const handleAllocationChange = useCallback((invId: string, newPct: number) => {
+    setAllocations(prev => {
+      const updated = { ...prev, [invId]: newPct };
+      saveProgress({ allocations: updated });
+      return updated;
+    });
+  }, [saveProgress]);
 
   const getRiskLabelLocal = (risk: number): string => {
     if (risk <= 30) return t("portfolio.low");
@@ -485,13 +507,19 @@ const Panel = () => {
     }
     if (activePortfolio.find((i) => i.id === inv.id)) return;
     const next = [...activePortfolio, inv];
+    // Auto-allocate: give remaining space evenly, or 25% if there's room
+    const currentTotal = Object.values(allocations).reduce((s, v) => s + v, 0);
+    const remaining = 100 - currentTotal;
+    const newAlloc = Math.min(25, remaining);
+    const newAllocations = { ...allocations, [inv.id]: newAlloc };
     setActivePortfolio(next);
-    saveProgress({ portfolio: next });
+    setAllocations(newAllocations);
+    saveProgress({ portfolio: next, allocations: newAllocations });
     const newRisk = Math.round(next.reduce((s, i) => s + i.riskLevel, 0) / next.length * 10);
     if (newRisk > 70) mascotToast(t("panel.riskyBuy"));
     else if (newRisk < 20) mascotToast(t("panel.safeBuy"));
     else mascotToast(t("panel.normalBuy"));
-  }, [activePortfolio, saveProgress, t]);
+  }, [activePortfolio, allocations, saveProgress, t]);
 
   const tryBuyInvestment = useCallback((inv: Investment) => {
     if (activePortfolio.length >= 4) {
