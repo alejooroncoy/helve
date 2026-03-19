@@ -549,7 +549,14 @@ const Panel = () => {
                 <AnimatePresence>
                   {enrichedPortfolio.map((inv) => (
                     <motion.div key={inv.id} initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }} layout>
-                      <DraggableCard inv={inv} zone="nest" onClick={() => removeInvestment(inv.id)} />
+                      <DraggableCard
+                        inv={inv}
+                        zone="nest"
+                        onClick={() => {}}
+                        onSell={() => removeInvestment(inv.id)}
+                        onAsk={() => { setCoachInitQ(`Tengo ${inv.name} en mi nido. ¿Es buena inversión? ¿Debería venderla o mantenerla?`); setCoachOpen(true); }}
+                        onInfo={() => { setCoachInitQ(`Dame un análisis detallado de ${inv.name}: riesgo, retorno histórico, y perspectiva futura.`); setCoachOpen(true); }}
+                      />
                     </motion.div>
                   ))}
                 </AnimatePresence>
