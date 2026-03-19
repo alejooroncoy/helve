@@ -522,7 +522,7 @@ export default function TimeSimulation({
   const categorySnapshots = useMemo<CategoryTrendSnapshot[]>(() => {
     if (!categoryMultipliers) return [];
 
-    return currentPortfolio.map((investment) => {
+    return currentPortfolio.map((investment, idx) => {
       const series = categoryMultipliers[investment.id] || filteredMonths.map(() => 1);
       const first = series[0] || 1;
       const last = series[series.length - 1] || first;
@@ -533,6 +533,7 @@ export default function TimeSimulation({
         label: t(`allocation.classes.${investment.id}`),
         riskLevel: investment.riskLevel,
         changePct,
+        color: getCategoryColor(idx),
         points: series.map((value, index) => ({
           index,
           value: Math.round(value * 1000) / 10,
