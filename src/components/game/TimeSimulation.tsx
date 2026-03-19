@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, FastForward, Pause, Play, TrendingUp, TrendingDown, AlertTriangle, Loader2, ShieldCheck, ShieldAlert, Zap } from "lucide-react";
+import { X, FastForward, Pause, Play, TrendingUp, TrendingDown, Loader2, ShieldCheck, ShieldAlert, Zap, AlertTriangle } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, ReferenceDot } from "recharts";
 import type { Investment } from "@/game/types";
 import { ASSET_CLASSES } from "@/game/types";
@@ -26,16 +26,6 @@ interface TimePoint {
   month: number;
   label: string;
   value: number;
-  event?: MarketEvent;
-}
-
-interface MarketEvent {
-  id: string;
-  emoji: string;
-  title: string;
-  description: string;
-  impact: number;
-  type: "positive" | "negative" | "neutral";
 }
 
 interface AIScenarioOption {
@@ -57,19 +47,6 @@ const categoryToDbIds: Record<string, string[]> = {};
 ASSET_CLASSES.forEach(cls => {
   categoryToDbIds[cls.key] = cls.dbIds;
 });
-
-const marketEvents: MarketEvent[] = [
-  { id: "boom", emoji: "", title: "Primavera financiera", description: "El mercado florece. Tu nido brilla.", impact: 1.12, type: "positive" },
-  { id: "crash", emoji: "", title: "Tormenta en el mercado", description: "Los vientos soplan fuerte.", impact: 0.82, type: "negative" },
-  { id: "steady", emoji: "", title: "Cielo despejado", description: "Todo tranquilo. Tu nido crece poco a poco.", impact: 1.03, type: "neutral" },
-  { id: "tech-boom", emoji: "", title: "Boom tecnologico", description: "Las empresas tech despegan.", impact: 1.18, type: "positive" },
-  { id: "recession", emoji: "", title: "Invierno economico", description: "Todo se enfria.", impact: 0.88, type: "negative" },
-  { id: "green-wave", emoji: "", title: "Ola verde", description: "La energia limpia sube.", impact: 1.08, type: "positive" },
-  { id: "inflation", emoji: "", title: "Inflacion alta", description: "Los precios suben.", impact: 0.93, type: "negative" },
-  { id: "dividend", emoji: "", title: "Temporada de dividendos", description: "Tus inversiones generan extra.", impact: 1.06, type: "positive" },
-  { id: "stable", emoji: "", title: "Nido estable", description: "Sin sorpresas. Tu nido se mantiene firme.", impact: 1.01, type: "neutral" },
-  { id: "war", emoji: "", title: "Tension global", description: "El mundo se sacude. Los mercados tiemblan.", impact: 0.85, type: "negative" },
-];
 
 const ACTION_ICONS = {
   hold: ShieldCheck,
@@ -117,10 +94,6 @@ const birdMessages = {
     "Paciencia. El tiempo es tu amigo.",
     "Paso a paso se construye el mejor nido.",
   ],
-  sell: [
-    "Vendiste! A veces es bueno aligerar el nido.",
-    "Fuera. Fue buena decision? Lo veremos...",
-  ],
 };
 
 function pickRandom<T>(arr: T[]): T {
@@ -132,7 +105,6 @@ function computeRealMultipliers(
   investmentIds: string[],
   months: number[]
 ): number[] {
-  // For each category, get all its DB IDs and average their multipliers
   const allDbIds = investmentIds.flatMap(id => categoryToDbIds[id] || []);
   const available = allDbIds.filter(id => prices[id] && prices[id].length > 1);
 
@@ -162,15 +134,12 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, initialB
   const [currentStep, setCurrentStep] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [data, setData] = useState<TimePoint[]>([]);
-  const [currentEvent, setCurrentEvent] = useState<MarketEvent | null>(null);
   const [birdMsg, setBirdMsg] = useState(t("timeSim.letsStart"));
-  const [showEvent, setShowEvent] = useState(false);
-  const [showSellPrompt, setShowSellPrompt] = useState(false);
   const [totalGain, setTotalGain] = useState(0);
   const [currentPortfolio, setCurrentPortfolio] = useState(portfolio);
   const intervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // AI Battle Royale state
+  // AI decision state
   const [aiScenario, setAiScenario] = useState<AIScenario | null>(null);
   const [showAIEvent, setShowAIEvent] = useState(false);
   const [aiFeedback, setAiFeedback] = useState<{ text: string; isGood: boolean } | null>(null);
@@ -178,13 +147,16 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, initialB
   const aiScenarioCache = useRef<Record<number, AIScenario | null>>({});
   const aiFetchingRef = useRef<Set<number>>(new Set());
 
+  // Cumulative multiplier from AI decisions — decisions affect the rest of the simulation
+  const decisionMultiplier = useRef(1);
+  const aiDecisions = useRef<{ action: string; isGood: boolean }[]>([]);
+
   // Pick 2 random steps for AI events (not first or last)
   const aiEventSteps = useMemo(() => {
     const filteredCount = Math.max(0, initialMonths <= 6 ? 3 : initialMonths <= 12 ? 5 : 9);
     if (filteredCount < 4) return [];
     const candidates = [];
     for (let i = 2; i < filteredCount - 1; i++) candidates.push(i);
-    // Shuffle and pick 2
     const shuffled = [...candidates].sort(() => Math.random() - 0.5);
     return shuffled.slice(0, Math.min(2, shuffled.length)).sort((a, b) => a - b);
   }, [initialMonths]);
@@ -239,69 +211,48 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, initialB
 
     const nextStep = currentStep + 1;
 
-    // Check if this step has an AI event ready
-    if (aiEventSteps.includes(nextStep) && aiScenarioCache.current[nextStep]) {
-      setAiScenario(aiScenarioCache.current[nextStep]!);
-      setShowAIEvent(true);
-      setPlaying(false);
-      // Still advance data
-      const realValue = startBalance * realMultipliers[nextStep];
-      const newValue = Math.round(realValue * 100) / 100;
-      const gain = ((newValue - startBalance) / startBalance) * 100;
-      setTotalGain(Math.round(gain * 10) / 10);
-      const point: TimePoint = {
-        month: filteredMonths[nextStep],
-        label: filteredLabels[nextStep],
-        value: Math.round(newValue),
-      };
-      setData(prev => [...prev, point]);
-      setCurrentStep(nextStep);
-      return;
-    }
-
-    const realValue = startBalance * realMultipliers[nextStep];
+    // Apply decision multiplier to the real value — decisions compound on future steps
+    const realValue = startBalance * realMultipliers[nextStep] * decisionMultiplier.current;
     const newValue = Math.round(realValue * 100) / 100;
     const gain = ((newValue - startBalance) / startBalance) * 100;
     setTotalGain(Math.round(gain * 10) / 10);
-
-    const prevMultiplier = realMultipliers[currentStep] || 1;
-    const stepReturn = (realMultipliers[nextStep] / prevMultiplier) - 1;
-
-    let event: MarketEvent | null = null;
-    if (stepReturn < -0.08) {
-      event = pickRandom(marketEvents.filter(e => e.type === "negative"));
-      event = { ...event, impact: 1 + stepReturn };
-    } else if (stepReturn > 0.10) {
-      event = pickRandom(marketEvents.filter(e => e.type === "positive"));
-      event = { ...event, impact: 1 + stepReturn };
-    }
 
     const point: TimePoint = {
       month: filteredMonths[nextStep],
       label: filteredLabels[nextStep],
       value: Math.round(newValue),
-      event: event || undefined,
     };
-
     setData(prev => [...prev, point]);
 
-    if (event) {
-      setCurrentEvent(event);
-      setShowEvent(true);
+    // Check if this step has an AI event ready — ONLY AI events pause the simulation
+    if (aiEventSteps.includes(nextStep) && aiScenarioCache.current[nextStep]) {
+      setAiScenario(aiScenarioCache.current[nextStep]!);
+      setShowAIEvent(true);
       setPlaying(false);
-      setBirdMsg(pickRandom(birdMessages[event.type]));
-      if (event.type === "negative") {
-        setShowSellPrompt(true);
-      }
-    } else {
-      const msgType = stepReturn > 0.02 ? "positive" : stepReturn < -0.02 ? "negative" : "neutral";
-      setBirdMsg(pickRandom(birdMessages[msgType]));
+      setCurrentStep(nextStep);
+      return;
     }
 
+    // Regular step — NO pause, just update bird message
+    const prevValue = data[data.length - 1]?.value || startBalance;
+    const stepReturn = prevValue > 0 ? (newValue / prevValue) - 1 : 0;
+    const msgType = stepReturn > 0.02 ? "positive" : stepReturn < -0.02 ? "negative" : "neutral";
+    setBirdMsg(pickRandom(birdMessages[msgType]));
+
     setCurrentStep(nextStep);
-  }, [currentStep, totalSteps, realMultipliers, filteredMonths, filteredLabels, aiEventSteps, startBalance]);
+  }, [currentStep, totalSteps, realMultipliers, filteredMonths, filteredLabels, aiEventSteps, startBalance, data]);
 
   const handleAIChoice = (option: AIScenarioOption) => {
+    // Decision impacts the rest of the simulation
+    if (option.is_best) {
+      // Good decision: +5% boost to remaining simulation
+      decisionMultiplier.current *= 1.05;
+    } else {
+      // Bad decision: -8% penalty to remaining simulation
+      decisionMultiplier.current *= 0.92;
+    }
+    aiDecisions.current.push({ action: option.action, isGood: option.is_best });
+
     setShowAIEvent(false);
     setAiFeedback({
       text: option.is_best ? option.feedback_good : option.feedback_bad,
@@ -326,28 +277,6 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, initialB
     };
   }, [playing, currentStep, advanceStep]);
 
-  const handleSell = (invId: string) => {
-    setCurrentPortfolio((prev) => prev.filter((i) => i.id !== invId));
-    onSellInvestment(invId);
-    setBirdMsg(pickRandom(birdMessages.sell));
-    setShowSellPrompt(false);
-    setShowEvent(false);
-    setPlaying(true);
-  };
-
-  const handleHold = () => {
-    setShowSellPrompt(false);
-    setShowEvent(false);
-    setBirdMsg("Aguantas firme!");
-    setPlaying(true);
-  };
-
-  const dismissEvent = () => {
-    setShowEvent(false);
-    setShowSellPrompt(false);
-    setPlaying(true);
-  };
-
   const isFinished = currentStep >= totalSteps;
   const lastValue = data[data.length - 1]?.value || startBalance;
   const isPositive = lastValue >= startBalance;
@@ -370,6 +299,10 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, initialB
     : initialMonths === 12
     ? "1 año"
     : "5 años";
+
+  // Decision summary for end screen
+  const totalDecisions = aiDecisions.current.length;
+  const goodDecisions = aiDecisions.current.filter(d => d.isGood).length;
 
   return (
     <motion.div
@@ -448,17 +381,6 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, initialB
                   dot={false}
                   animationDuration={500}
                 />
-                {data.filter((d) => d.event).map((d, i) => (
-                  <ReferenceDot
-                    key={i}
-                    x={d.label}
-                    y={d.value}
-                    r={6}
-                    fill={d.event?.type === "positive" ? "hsl(var(--primary))" : d.event?.type === "negative" ? "hsl(var(--destructive))" : "hsl(var(--accent))"}
-                    stroke="white"
-                    strokeWidth={2}
-                  />
-                ))}
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -480,101 +402,7 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, initialB
         </motion.div>
       </div>
 
-      {/* Event overlay */}
-      <AnimatePresence>
-        {showEvent && currentEvent && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-background/80 backdrop-blur-sm z-10 flex items-center justify-center px-6"
-          >
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
-              className="bg-card rounded-3xl p-6 shadow-xl max-w-sm w-full text-center"
-            >
-              <h2 className="text-lg font-bold text-foreground mb-1" style={nunito}>{currentEvent.title}</h2>
-              <p className="text-sm text-muted-foreground mb-4" style={nunito}>{currentEvent.description}</p>
-
-              {currentEvent.type === "negative" && (
-                <div className="flex items-center gap-1.5 justify-center text-xs text-destructive font-medium mb-4" style={nunito}>
-                  <AlertTriangle className="w-3.5 h-3.5" />
-                  {t("timeSim.nestDropped", { pct: Math.round((1 - currentEvent.impact) * 100) })}
-                </div>
-              )}
-              {currentEvent.type === "positive" && (
-                <div className="flex items-center gap-1.5 justify-center text-xs font-medium mb-4" style={{ ...nunito, color: "hsl(var(--primary))" }}>
-                  <TrendingUp className="w-3.5 h-3.5" />
-                  {t("timeSim.nestRose", { pct: Math.round((currentEvent.impact - 1) * 100) })}
-                </div>
-              )}
-
-              {showSellPrompt && currentPortfolio.length > 0 ? (
-                <div className="space-y-2">
-                  <p className="text-xs font-bold text-foreground mb-2" style={nunito}>{t("timeSim.whatToDo")}</p>
-                  {onAskCoach && (
-                    <motion.button
-                      onClick={() => onAskCoach(`Hay ${currentEvent.title.toLowerCase()} y mi nido bajó ${Math.round((1 - currentEvent.impact) * 100)}%. ¿Debería vender algo o mantener? Tengo: ${currentPortfolio.map(i => i.name).join(", ")}`)}
-                      className="w-full py-2.5 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 border"
-                      style={{ ...nunito, backgroundColor: `${CELESTE}10`, color: CELESTE, borderColor: `${CELESTE}30` }}
-                      whileTap={{ scale: 0.97 }}
-                    >
-                      {t("timeSim.askCoach")}
-                    </motion.button>
-                  )}
-                  <motion.button
-                    onClick={handleHold}
-                    className="w-full py-3 rounded-2xl text-sm font-bold text-white"
-                    style={{ ...nunito, backgroundColor: CELESTE }}
-                    whileTap={{ scale: 0.97 }}
-                  >
-                    {t("timeSim.holdAll")}
-                  </motion.button>
-                  <p className="text-[10px] text-muted-foreground" style={nunito}>{t("timeSim.orSell")}</p>
-                  <div className="space-y-1.5">
-                    {currentPortfolio.map((inv) => (
-                      <motion.button
-                        key={inv.id}
-                        onClick={() => handleSell(inv.id)}
-                        className="w-full bg-destructive/10 text-destructive py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2"
-                        style={nunito}
-                        whileTap={{ scale: 0.97 }}
-                      >
-                        {t("timeSim.sellInv", { name: inv.name })}
-                      </motion.button>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {onAskCoach && (
-                    <motion.button
-                      onClick={() => onAskCoach(`Pasó "${currentEvent.title}" en el mercado. ¿Qué significa esto para mi nido?`)}
-                      className="w-full py-2.5 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 border"
-                      style={{ ...nunito, backgroundColor: `${CELESTE}10`, color: CELESTE, borderColor: `${CELESTE}30` }}
-                      whileTap={{ scale: 0.97 }}
-                    >
-                      {t("timeSim.whatDoesThisMean")}
-                    </motion.button>
-                  )}
-                  <motion.button
-                    onClick={dismissEvent}
-                    className="w-full py-3 rounded-2xl text-sm font-bold text-white"
-                    style={{ ...nunito, backgroundColor: CELESTE }}
-                    whileTap={{ scale: 0.97 }}
-                  >
-                    {currentEvent.type === "positive" ? t("timeSim.great") : t("timeSim.letsKeepGoing")}
-                  </motion.button>
-                </div>
-              )}
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* AI Battle Royale Event overlay */}
+      {/* AI Decision Event overlay */}
       <AnimatePresence>
         {showAIEvent && aiScenario && (
           <motion.div
@@ -679,6 +507,22 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, initialB
       <div className="px-5 pb-6 pt-2">
         {isFinished ? (
           <div className="space-y-2">
+            {/* Decision summary */}
+            {totalDecisions > 0 && (
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="flex items-center justify-center gap-3 py-2.5 rounded-2xl text-xs font-bold"
+                style={{ ...nunito, backgroundColor: `${CELESTE}10`, color: CELESTE }}
+              >
+                <ShieldCheck className="w-4 h-4" />
+                {i18n.language === "es"
+                  ? `Decisiones: ${goodDecisions}/${totalDecisions} acertadas`
+                  : `Decisions: ${goodDecisions}/${totalDecisions} correct`
+                }
+                {goodDecisions === totalDecisions && " ⭐"}
+              </motion.div>
+            )}
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
