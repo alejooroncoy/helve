@@ -65,7 +65,10 @@ const GameFlow = () => {
         {state.step === "portfolio" && (
           <PortfolioBuilder
             key="portfolio"
-            onComplete={(p: PortfolioSlot[]) => go("market-event", { portfolio: p })}
+            profile={state.profile}
+            onComplete={(slots: PortfolioSlot[], investments: Investment[]) =>
+              go("market-event", { portfolioSlots: slots, portfolio: investments })
+            }
           />
         )}
 
