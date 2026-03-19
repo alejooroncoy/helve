@@ -16,34 +16,30 @@ interface Props {
 
 const questions: { title: string; options: RiskOption[] }[] = [
   {
-    title: "A market drops 20%. What do you do?",
+    title: "Imagina que ahorras $1,000 y de repente bajan a $800. ¿Qué harías?",
     options: [
-      { label: "Sell everything", score: 0, emoji: "🏃" },
-      { label: "Wait it out", score: 1, emoji: "🧘" },
-      { label: "Invest more", score: 2, emoji: "🚀" },
-      { label: "Check daily & panic", score: 0, emoji: "😰" },
+      { label: "Saco todo mi dinero, no quiero perder más", score: 0, emoji: "😱" },
+      { label: "Espero tranquilo, ya subirá de nuevo", score: 1, emoji: "🧘" },
+      { label: "¡Meto más dinero! Está barato ahora", score: 2, emoji: "🤑" },
     ],
   },
   {
-    title: "When do you need this money?",
+    title: "¿Para cuándo necesitarías usar ese dinero?",
     options: [
-      { label: "Within 2 years", score: 0, emoji: "⏰" },
-      { label: "In 5–10 years", score: 1, emoji: "📅" },
-      { label: "20+ years away", score: 2, emoji: "🌅" },
-      { label: "Not sure yet", score: 1, emoji: "🤷" },
+      { label: "Pronto, en menos de 2 años", score: 0, emoji: "⏰" },
+      { label: "En unos 5 a 10 años", score: 1, emoji: "📅" },
+      { label: "No lo necesito por mucho tiempo (10+ años)", score: 2, emoji: "🌅" },
     ],
   },
   {
-    title: "How do you feel about risk?",
+    title: "Un amigo te propone un negocio: puedes ganar mucho, pero también perder todo. ¿Qué haces?",
     options: [
-      { label: "I avoid it", score: 0, emoji: "🛡️" },
-      { label: "Some is okay", score: 1, emoji: "⚖️" },
-      { label: "Bring it on", score: 2, emoji: "🔥" },
-      { label: "Depends on the day", score: 1, emoji: "🎲" },
+      { label: "No gracias, prefiero lo seguro", score: 0, emoji: "🛡️" },
+      { label: "Le meto algo, pero no todo", score: 1, emoji: "⚖️" },
+      { label: "¡Vamos con todo!", score: 2, emoji: "🔥" },
     ],
   },
 ];
-
 const CELESTE = "#5BB8F5";
 
 const RiskScreen = ({ questionIndex, onAnswer, onBack }: Props) => {
