@@ -335,7 +335,7 @@ const MultiplayerSimulation = ({ mp }: Props) => {
             <motion.div className="bg-card rounded-3xl p-6 w-full max-w-sm shadow-2xl"
               initial={{ scale: 0.8, y: 40 }} animate={{ scale: 1, y: 0 }}>
               <div className="text-center mb-4">
-                <div className="text-4xl mb-2">{activeEvent.emoji}</div>
+                <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-2"><AlertTriangle className="w-6 h-6 text-primary" /></div>
                 <h2 className="text-xl font-black text-foreground" style={nunito}>{t(activeEvent.title)}</h2>
                 <p className="text-sm text-muted-foreground mt-1" style={nunito}>{t(activeEvent.description)}</p>
               </div>

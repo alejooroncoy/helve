@@ -73,7 +73,7 @@ const MultiplayerPicking = ({ mp }: Props) => {
               }}
               onClick={() => !mp.myPlayer?.is_ready && toggleCategory(cls.key)}
               initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.04 }}>
-              <span className="text-2xl">{cls.emoji}</span>
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${CLASS_COLORS?.[cls.key] || "hsl(var(--muted))"}20` }} />
               <div className="flex-1 min-w-0">
                 <span className="text-sm font-bold text-foreground" style={nunito}>{t(`allocation.classes.${cls.key}`)}</span>
                 <p className="text-[10px] text-muted-foreground leading-tight" style={nunito}>{t(`allocation.classDesc.${cls.key}`)}</p>
