@@ -183,12 +183,7 @@ function NestCard({ inv, overlay, onSell, onAsk, onInfo, allocation, onAllocatio
 
       {/* Allocation slider */}
       {!overlay && onAllocationChange && (
-        <div className="mt-2.5 px-1" onClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-[10px] text-muted-foreground" style={nunito}>0%</span>
-            <span className="text-[10px] font-bold" style={{ ...nunito, color: CELESTE }}>{pct}% → CHF {chfAmount}</span>
-            <span className="text-[10px] text-muted-foreground" style={nunito}>{maxSlider}%</span>
-          </div>
+        <div className="mt-2 px-1" onClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
           <Slider
             value={[pct]}
             min={0}
@@ -683,17 +678,16 @@ const Panel = () => {
 
       {/* Stats */}
       <div className="px-5 pb-3">
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-3 gap-3">
           {[
             { label: t("panel.balance"), value: `CHF ${balance.toLocaleString()}`, sub: lastSimGain !== null ? `${lastSimGain > 0 ? "+" : ""}${lastSimGain.toFixed(1)}% ${t("panel.lastSim")}` : `+CHF ${monthlyIncome}${t("panel.perMonth")}`, subStyle: { color: lastSimGain !== null ? (lastSimGain >= 0 ? CELESTE : "hsl(var(--destructive))") : CELESTE } },
-            { label: t("panel.totalAllocated"), value: `${totalAllocated}%`, valueStyle: { color: CELESTE }, sub: `CHF ${Math.round(balance * totalAllocated / 100)}`, subStyle: {} },
             { label: t("panel.risk"), value: `${totalRisk}%`, valueStyle: totalRisk > 60 ? { color: "hsl(var(--destructive))" } : totalRisk > 30 ? {} : { color: CELESTE }, valueClass: totalRisk > 30 && totalRisk <= 60 ? "text-accent" : "", sub: getRiskLabelLocal(totalRisk), subStyle: {} },
-            { label: t("panel.cash"), value: `${cashRemaining}%`, valueStyle: cashRemaining > 0 ? {} : { color: CELESTE }, sub: `CHF ${Math.round(balance * cashRemaining / 100)}`, subStyle: {} },
+            { label: t("panel.returnLabel"), value: `${avgReturn}%`, valueStyle: { color: CELESTE }, sub: t("panel.annual"), subStyle: {} },
           ].map((stat, i) => (
-            <motion.div key={stat.label} className="bg-card rounded-3xl p-2 sm:p-3 shadow-sm" initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 + i * 0.05 }}>
-              <p className="text-[8px] sm:text-[10px] text-muted-foreground uppercase tracking-wider font-medium" style={nunito}>{stat.label}</p>
-              <p className={`text-xs sm:text-lg font-bold mt-0.5 ${"valueClass" in stat ? stat.valueClass : "text-foreground"}`} style={{ ...nunito, ...("valueStyle" in stat ? stat.valueStyle : {}) }}>{stat.value}</p>
-              <p className="text-[8px] sm:text-[10px] text-muted-foreground font-medium mt-0.5" style={{ ...nunito, ...stat.subStyle }}>{stat.sub}</p>
+            <motion.div key={stat.label} className="bg-card rounded-3xl p-2.5 sm:p-3 shadow-sm" initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 + i * 0.05 }}>
+              <p className="text-[9px] sm:text-[10px] text-muted-foreground uppercase tracking-wider font-medium" style={nunito}>{stat.label}</p>
+              <p className={`text-sm sm:text-lg font-bold mt-0.5 ${"valueClass" in stat ? stat.valueClass : "text-foreground"}`} style={{ ...nunito, ...("valueStyle" in stat ? stat.valueStyle : {}) }}>{stat.value}</p>
+              <p className="text-[9px] sm:text-[10px] text-muted-foreground font-medium mt-0.5" style={{ ...nunito, ...stat.subStyle }}>{stat.sub}</p>
             </motion.div>
           ))}
         </div>
@@ -706,35 +700,10 @@ const Panel = () => {
             {/* Left: My Nest */}
             <div className="flex-1 overflow-y-auto lg:pr-2">
               <DropZone id="nest">
-                <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center justify-between mb-3">
                   <h2 className="text-sm font-bold text-foreground uppercase tracking-wide" style={nunito}>{t("panel.myNest")}</h2>
                   <span className="text-xs text-muted-foreground" style={nunito}>{enrichedPortfolio.length}/4</span>
                 </div>
-                {/* Total allocation bar */}
-                {enrichedPortfolio.length > 0 && (
-                  <div className="mb-3">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-[10px] font-bold text-muted-foreground" style={nunito}>{t("panel.totalAllocated")}: {totalAllocated}%</span>
-                      <span className="text-[10px] font-bold" style={{ ...nunito, color: cashRemaining > 0 ? "hsl(var(--muted-foreground))" : CELESTE }}>
-                        {t("panel.cash")}: {cashRemaining}% (CHF {Math.round(balance * cashRemaining / 100)})
-                      </span>
-                    </div>
-                    <div className="h-2 bg-muted rounded-full overflow-hidden flex">
-                      {enrichedPortfolio.map((inv, i) => {
-                        const invPct = allocations[inv.id] ?? 0;
-                        if (invPct === 0) return null;
-                        const colors = [CELESTE, "hsl(var(--accent))", "#34D399", "#F59E0B"];
-                        return (
-                          <div
-                            key={inv.id}
-                            className="h-full transition-all duration-300"
-                            style={{ width: `${invPct}%`, backgroundColor: colors[i % colors.length] }}
-                          />
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
                 {enrichedPortfolio.length === 0 ? (
                   <div className="bg-card/50 rounded-3xl p-5 text-center border-2 border-dashed border-border flex flex-col items-center justify-center gap-2">
                     <Inbox className="w-8 h-8 text-muted-foreground/50" />
