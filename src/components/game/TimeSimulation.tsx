@@ -456,6 +456,7 @@ async function fetchAIScenario(
         focusCategoryLabel: event.investmentName,
         focusDirection: event.direction,
         focusRiskLevel: event.riskLevel,
+        focusImpactPct: event.impactPct,
       },
     });
 

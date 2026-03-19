@@ -73,6 +73,8 @@ serve(async (req) => {
         ? "fast rally / sudden jump"
         : "volatile shake / uncertainty";
 
+    const impactLabel = focusImpactPct != null ? `${focusImpactPct > 0 ? "+" : ""}${focusImpactPct}%` : "";
+
     const systemPrompt = `You are a financial market event generator for an educational investment game.
 You create realistic but simplified market scenarios that teach beginners about investing.
 
@@ -81,6 +83,7 @@ RULES:
 - Create a scenario specifically centered on ${focusedCategory}
 - The scenario MUST clearly mention ${focusedCategory} in the title or description
 - The current trigger for this category is: ${directionHint}
+- CRITICAL: The exact price movement is ${impactLabel}. You MUST use this EXACT percentage in your description (e.g. "a ${impactLabel} ${focusDirection === "drop" ? "drop" : focusDirection === "surge" ? "surge" : "swing"}"). Do NOT invent a different number.
 - Each scenario must have exactly 3 options: hold, sell, buy
 - Exactly ONE option should be marked as is_best=true (the wisest choice for a long-term investor)
 - Make the options feel tied to the focused category. Example: if gold falls, user considers buying more, selling, or holding
