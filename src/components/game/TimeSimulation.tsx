@@ -786,49 +786,59 @@ export default function TimeSimulation({
         </div>
       </div>
 
-      <div className="px-5 pb-3 grid grid-cols-3 gap-3">
-        <div className="bg-card rounded-2xl p-3 shadow-sm text-center">
-          <p className="text-[10px] text-muted-foreground uppercase" style={nunito}>
-            {t("timeSim.invested")}
-          </p>
-          <p className="text-base font-bold text-foreground" style={nunito}>
-            CHF {startBalance}
-          </p>
-        </div>
-        <div className="bg-card rounded-2xl p-3 shadow-sm text-center">
-          <p className="text-[10px] text-muted-foreground uppercase" style={nunito}>
-            {t("timeSim.currentValue")}
-          </p>
-          <p
-            className="text-base font-bold"
-            style={{ ...nunito, color: isPositive ? PRIMARY_COLOR : DANGER_COLOR }}
-          >
-            CHF {lastValue.toLocaleString()}
-          </p>
-        </div>
-        <div className="bg-card rounded-2xl p-3 shadow-sm text-center">
-          <p className="text-[10px] text-muted-foreground uppercase" style={nunito}>
-            {t("timeSim.gain")}
-          </p>
-          <p
-            className="text-base font-bold flex items-center justify-center gap-1"
-            style={{ ...nunito, color: isPositive ? PRIMARY_COLOR : DANGER_COLOR }}
-          >
-            {isPositive ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
-            {totalGain > 0 ? "+" : ""}
-            {totalGain}%
-          </p>
+      {/* Timeline progress */}
+      <div className="px-5 pb-2">
+        <div className="bg-card rounded-2xl p-4 shadow-sm">
+          {/* Balance row */}
+          <div className="flex items-baseline justify-between mb-3">
+            <div>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wide" style={nunito}>
+                {t("timeSim.currentValue")}
+              </p>
+              <p className="text-2xl font-bold text-foreground" style={nunito}>
+                CHF {lastValue.toLocaleString()}
+              </p>
+            </div>
+            <div className="text-right">
+              <p
+                className="text-lg font-bold flex items-center gap-1"
+                style={{ ...nunito, color: isPositive ? PRIMARY_COLOR : DANGER_COLOR }}
+              >
+                {isPositive ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+                {totalGain > 0 ? "+" : ""}{totalGain}%
+              </p>
+              <p className="text-[10px] text-muted-foreground" style={nunito}>
+                {i18n.language === "es" ? "desde" : "from"} CHF {startBalance}
+              </p>
+            </div>
+          </div>
+
+          {/* Time progress bar */}
+          <div className="relative">
+            <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+              <motion.div
+                className="h-full rounded-full"
+                style={{ backgroundColor: PRIMARY_COLOR }}
+                initial={{ width: "0%" }}
+                animate={{ width: `${totalSteps > 0 ? (currentStep / totalSteps) * 100 : 0}%` }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+              />
+            </div>
+            <div className="flex justify-between mt-1.5">
+              {filteredLabels.filter((_, i) => i === 0 || i === filteredLabels.length - 1 || i === Math.floor(filteredLabels.length / 2)).map((label, i) => (
+                <p key={`${label}-${i}`} className="text-[9px] text-muted-foreground" style={nunito}>
+                  {label}
+                </p>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
+      {/* Category charts */}
       <div className="px-5 flex-1 min-h-0 overflow-y-auto">
         {categorySnapshots.length > 0 && (
           <div className="bg-card rounded-3xl p-4 shadow-sm">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-xs font-bold text-foreground" style={nunito}>
-                {data.length > 1 ? filteredLabels[currentStep] : t("timeSim.today")}
-              </p>
-            </div>
             <TimeSimulationCategoryCharts items={categorySnapshots} />
           </div>
         )}
