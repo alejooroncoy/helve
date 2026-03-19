@@ -404,7 +404,7 @@ const Panel = () => {
                   </motion.button>
                 </DrawerTrigger>
                 <DrawerContent className="h-[80vh] p-0">
-                  <CoachChat onClose={() => { setCoachOpen(false); setCoachInitQ(undefined); }} portfolio={activePortfolio} onAddInvestment={(id) => { const inv = availableInvestments.find(i => i.id === id); if (inv) addInvestment(inv); }} onRemoveInvestment={(id) => removeInvestment(id)} initialQuestion={coachInitQ} />
+                  <CoachChat onClose={() => { setCoachOpen(false); setCoachInitQ(undefined); }} portfolio={enrichedPortfolio} onAddInvestment={(id) => { const inv = enrichedAvailable.find(i => i.id === id); if (inv) addInvestment(inv); }} onRemoveInvestment={(id) => removeInvestment(id)} initialQuestion={coachInitQ} />
                 </DrawerContent>
               </Drawer>
             ) : (
