@@ -451,9 +451,9 @@ const Panel = () => {
             <DropZone id="nest">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-sm font-bold text-foreground uppercase tracking-wide" style={nunito}>My Nest</h2>
-                <span className="text-xs text-muted-foreground" style={nunito}>{activePortfolio.length}/4</span>
+                <span className="text-xs text-muted-foreground" style={nunito}>{enrichedPortfolio.length}/4</span>
               </div>
-              {activePortfolio.length === 0 ? (
+              {enrichedPortfolio.length === 0 ? (
                 <div className="bg-card/50 rounded-3xl p-6 text-center border-2 border-dashed border-border flex-1 flex flex-col items-center justify-center gap-2">
                   <Inbox className="w-8 h-8 text-muted-foreground/50" />
                   <p className="text-sm text-muted-foreground" style={nunito}>Your nest is empty!</p>
@@ -462,7 +462,7 @@ const Panel = () => {
               ) : (
                 <div className="space-y-2">
                   <AnimatePresence>
-                    {activePortfolio.map((inv) => (
+                    {enrichedPortfolio.map((inv) => (
                       <motion.div key={inv.id} initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }} layout>
                         <DraggableCard inv={inv} zone="nest" onClick={() => removeInvestment(inv.id)} />
                       </motion.div>
