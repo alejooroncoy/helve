@@ -4,6 +4,11 @@ import { X, FastForward, Pause, Play, TrendingUp, TrendingDown, AlertTriangle, L
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, ReferenceDot } from "recharts";
 import type { Investment } from "@/game/types";
 import { useMonthlyPrices } from "@/hooks/useMarketData";
+import { useTranslation } from "react-i18next";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+
+const CELESTE = "#5BB8F5";
+const nunito = { fontFamily: "'Nunito', sans-serif" };
 
 interface TimeSimulationProps {
   portfolio: Investment[];
@@ -97,11 +102,6 @@ function pickRandom<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-/**
- * Pre-compute portfolio multipliers from real DB monthly prices.
- * For each time step (month index), returns the equal-weighted portfolio multiplier
- * relative to the start, using the LAST N months of real historical data.
- */
 function computeRealMultipliers(
   prices: Record<string, { date: string; price: number }[]>,
   investmentIds: string[],
@@ -120,40 +120,36 @@ function computeRealMultipliers(
     const instrumentMultipliers = available.map(instrumentId => {
       const data = prices[instrumentId]!;
       const totalMonths = data.length;
-      // Take the last maxMonth+1 data points as our window
       const startIdx = Math.max(0, totalMonths - maxMonth - 1);
       const basePrice = data[startIdx]?.price || 1;
-      // Target index for this month
       const targetIdx = Math.min(startIdx + month, totalMonths - 1);
       const targetPrice = data[targetIdx]?.price || basePrice;
       return basePrice > 0 ? targetPrice / basePrice : 1;
     });
 
-    // Equal-weighted average
     return instrumentMultipliers.reduce((sum, m) => sum + m, 0) / instrumentMultipliers.length;
   });
 }
 
 export default function TimeSimulation({ portfolio, initialMonths = 12, initialBalance = 1000, onClose, onComplete, onSellInvestment, onAskCoach }: TimeSimulationProps) {
+  const { t } = useTranslation();
   const [currentStep, setCurrentStep] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [data, setData] = useState<TimePoint[]>([]);
   const [currentEvent, setCurrentEvent] = useState<MarketEvent | null>(null);
-  const [birdMsg, setBirdMsg] = useState("¡Empecemos! Veamos cómo vuela tu nido 🐦");
+  const [birdMsg, setBirdMsg] = useState(t("timeSim.letsStart"));
   const [showEvent, setShowEvent] = useState(false);
   const [showSellPrompt, setShowSellPrompt] = useState(false);
   const [totalGain, setTotalGain] = useState(0);
   const [currentPortfolio, setCurrentPortfolio] = useState(portfolio);
   const intervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Fetch real market data from DB
   const dbIds = useMemo(
     () => portfolio.map(inv => investmentToDbId[inv.id] || inv.id).filter(Boolean),
     [portfolio]
   );
   const { prices, loading: pricesLoading } = useMonthlyPrices(dbIds);
 
-  // Filter timeline steps based on selected period
   const filteredIndices = useMemo(() => {
     const indices: number[] = [];
     for (let i = 0; i < timeMonths.length; i++) {
@@ -165,7 +161,6 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, initialB
   const filteredLabels = filteredIndices.map(i => timeLabels[i]);
   const totalSteps = filteredMonths.length - 1;
 
-  // Pre-compute real multipliers for the entire timeline from DB data
   const realMultipliers = useMemo(() => {
     if (pricesLoading || Object.keys(prices).length === 0) return null;
     return computeRealMultipliers(prices, currentPortfolio.map(i => i.id), filteredMonths);
@@ -173,12 +168,10 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, initialB
 
   const startBalance = initialBalance;
 
-  // Initialize first data point
   useEffect(() => {
-    setData([{ month: 0, label: "Hoy", value: startBalance }]);
+    setData([{ month: 0, label: t("timeSim.today"), value: startBalance }]);
   }, []);
 
-  // Advance one step using real data
   const advanceStep = useCallback(() => {
     if (currentStep >= totalSteps || !realMultipliers) {
       setPlaying(false);
@@ -186,25 +179,19 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, initialB
     }
 
     const nextStep = currentStep + 1;
-
-    // Real portfolio value from historical data
     const realValue = startBalance * realMultipliers[nextStep];
     const newValue = Math.round(realValue * 100) / 100;
-
     const gain = ((newValue - startBalance) / startBalance) * 100;
     setTotalGain(Math.round(gain * 10) / 10);
 
-    // Detect if this step had a significant move → show contextual event
     const prevMultiplier = realMultipliers[currentStep] || 1;
     const stepReturn = (realMultipliers[nextStep] / prevMultiplier) - 1;
 
     let event: MarketEvent | null = null;
     if (stepReturn < -0.08) {
-      // Big drop — pick a negative event
       event = pickRandom(marketEvents.filter(e => e.type === "negative"));
-      event = { ...event, impact: 1 + stepReturn }; // use real impact
+      event = { ...event, impact: 1 + stepReturn };
     } else if (stepReturn > 0.10) {
-      // Big gain — pick a positive event
       event = pickRandom(marketEvents.filter(e => e.type === "positive"));
       event = { ...event, impact: 1 + stepReturn };
     }
@@ -234,7 +221,6 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, initialB
     setCurrentStep(nextStep);
   }, [currentStep, totalSteps, realMultipliers, filteredMonths, filteredLabels]);
 
-  // Auto-play timer
   useEffect(() => {
     if (playing && currentStep < totalSteps) {
       intervalRef.current = setTimeout(advanceStep, 1500);
@@ -256,7 +242,7 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, initialB
   const handleHold = () => {
     setShowSellPrompt(false);
     setShowEvent(false);
-    setBirdMsg("¡Mantuviste! Los pájaros valientes aguantan la tormenta 💪");
+    setBirdMsg("💪");
     setPlaying(true);
   };
 
@@ -270,7 +256,6 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, initialB
   const lastValue = data[data.length - 1]?.value || startBalance;
   const isPositive = lastValue >= startBalance;
 
-  // Loading state
   if (pricesLoading) {
     return (
       <motion.div
@@ -278,8 +263,8 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, initialB
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
       >
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        <p className="text-sm text-muted-foreground font-medium">Cargando datos reales del mercado...</p>
+        <Loader2 className="w-8 h-8 animate-spin" style={{ color: CELESTE }} />
+        <p className="text-sm text-muted-foreground font-medium" style={nunito}>{t("timeSim.loadingMarket")}</p>
       </motion.div>
     );
   }
@@ -300,33 +285,36 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, initialB
       {/* Header */}
       <div className="px-5 pt-5 pb-3 flex items-center justify-between">
         <div>
-          <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
-            Simulación · {periodLabel} · datos reales
+          <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide" style={nunito}>
+            {t("timeSim.simulation")} · {periodLabel} · {t("timeSim.realData")}
           </p>
-          <h1 className="text-xl font-bold text-foreground mt-0.5">
-            {isFinished ? "¡Vuelo completado!" : "Tu nido en el tiempo"}
+          <h1 className="text-xl font-bold text-foreground mt-0.5" style={nunito}>
+            {isFinished ? t("timeSim.flightComplete") : t("timeSim.nestInTime")}
           </h1>
         </div>
-        <button onClick={onClose} className="w-10 h-10 rounded-full bg-card shadow-sm flex items-center justify-center">
-          <X className="w-4 h-4 text-muted-foreground" />
-        </button>
+        <div className="flex items-center gap-2">
+          <LanguageSwitcher />
+          <button onClick={onClose} className="w-10 h-10 rounded-full bg-card shadow-sm flex items-center justify-center">
+            <X className="w-4 h-4 text-muted-foreground" />
+          </button>
+        </div>
       </div>
 
       {/* Stats */}
       <div className="px-5 pb-3 grid grid-cols-3 gap-3">
         <div className="bg-card rounded-2xl p-3 shadow-sm text-center">
-          <p className="text-[10px] text-muted-foreground uppercase">Invertido</p>
-          <p className="text-lg font-bold text-foreground">CHF {startBalance}</p>
+          <p className="text-[10px] text-muted-foreground uppercase" style={nunito}>{t("timeSim.invested")}</p>
+          <p className="text-base font-bold text-foreground" style={nunito}>CHF {startBalance}</p>
         </div>
         <div className="bg-card rounded-2xl p-3 shadow-sm text-center">
-          <p className="text-[10px] text-muted-foreground uppercase">Valor actual</p>
-          <p className={`text-lg font-bold ${isPositive ? "text-primary" : "text-destructive"}`}>
+          <p className="text-[10px] text-muted-foreground uppercase" style={nunito}>{t("timeSim.currentValue")}</p>
+          <p className="text-base font-bold" style={{ ...nunito, color: isPositive ? "hsl(var(--primary))" : "hsl(var(--destructive))" }}>
             CHF {lastValue.toLocaleString()}
           </p>
         </div>
         <div className="bg-card rounded-2xl p-3 shadow-sm text-center">
-          <p className="text-[10px] text-muted-foreground uppercase">Ganancia</p>
-          <p className={`text-lg font-bold flex items-center justify-center gap-1 ${isPositive ? "text-primary" : "text-destructive"}`}>
+          <p className="text-[10px] text-muted-foreground uppercase" style={nunito}>{t("timeSim.gain")}</p>
+          <p className="text-base font-bold flex items-center justify-center gap-1" style={{ ...nunito, color: isPositive ? "hsl(var(--primary))" : "hsl(var(--destructive))" }}>
             {isPositive ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
             {totalGain > 0 ? "+" : ""}{totalGain}%
           </p>
@@ -337,8 +325,8 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, initialB
       <div className="px-5 flex-1 min-h-0">
         <div className="bg-card rounded-3xl p-4 shadow-sm h-full flex flex-col">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-xs font-bold text-foreground">
-              📈 {data.length > 1 ? filteredLabels[currentStep] : "Hoy"}
+            <p className="text-xs font-bold text-foreground" style={nunito}>
+              📈 {data.length > 1 ? filteredLabels[currentStep] : t("timeSim.today")}
             </p>
             <div className="flex items-center gap-1">
               {currentPortfolio.map((inv) => (
@@ -359,7 +347,7 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, initialB
                 <Line
                   type="monotone"
                   dataKey="value"
-                  stroke={isPositive ? "hsl(var(--primary))" : "hsl(var(--destructive))"}
+                  stroke={CELESTE}
                   strokeWidth={3}
                   dot={false}
                   animationDuration={500}
@@ -389,10 +377,10 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, initialB
           animate={{ opacity: 1, y: 0 }}
           className="bg-card rounded-2xl p-3 shadow-sm flex items-center gap-3"
         >
-          <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 border-2 border-primary/20">
+          <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0" style={{ border: `2px solid ${CELESTE}30` }}>
             <img src="/face.png" alt="Coach" className="w-full h-full object-cover" />
           </div>
-          <p className="text-xs text-foreground font-medium flex-1">{birdMsg}</p>
+          <p className="text-xs text-foreground font-medium flex-1" style={nunito}>{birdMsg}</p>
         </motion.div>
       </div>
 
@@ -412,51 +400,54 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, initialB
               className="bg-card rounded-3xl p-6 shadow-xl max-w-sm w-full text-center"
             >
               <span className="text-5xl block mb-3">{currentEvent.emoji}</span>
-              <h2 className="text-lg font-bold text-foreground mb-1">{currentEvent.title}</h2>
-              <p className="text-sm text-muted-foreground mb-4">{currentEvent.description}</p>
+              <h2 className="text-lg font-bold text-foreground mb-1" style={nunito}>{currentEvent.title}</h2>
+              <p className="text-sm text-muted-foreground mb-4" style={nunito}>{currentEvent.description}</p>
 
               {currentEvent.type === "negative" && (
-                <div className="flex items-center gap-1.5 justify-center text-xs text-destructive font-medium mb-4">
+                <div className="flex items-center gap-1.5 justify-center text-xs text-destructive font-medium mb-4" style={nunito}>
                   <AlertTriangle className="w-3.5 h-3.5" />
-                  Tu nido bajó {Math.round((1 - currentEvent.impact) * 100)}%
+                  {t("timeSim.nestDropped", { pct: Math.round((1 - currentEvent.impact) * 100) })}
                 </div>
               )}
               {currentEvent.type === "positive" && (
-                <div className="flex items-center gap-1.5 justify-center text-xs text-primary font-medium mb-4">
+                <div className="flex items-center gap-1.5 justify-center text-xs font-medium mb-4" style={{ ...nunito, color: "hsl(var(--primary))" }}>
                   <TrendingUp className="w-3.5 h-3.5" />
-                  Tu nido subió {Math.round((currentEvent.impact - 1) * 100)}%
+                  {t("timeSim.nestRose", { pct: Math.round((currentEvent.impact - 1) * 100) })}
                 </div>
               )}
 
               {showSellPrompt && currentPortfolio.length > 0 ? (
                 <div className="space-y-2">
-                  <p className="text-xs font-bold text-foreground mb-2">¿Qué quieres hacer?</p>
+                  <p className="text-xs font-bold text-foreground mb-2" style={nunito}>{t("timeSim.whatToDo")}</p>
                   {onAskCoach && (
                     <motion.button
                       onClick={() => onAskCoach(`Hay ${currentEvent.title.toLowerCase()} y mi nido bajó ${Math.round((1 - currentEvent.impact) * 100)}%. ¿Debería vender algo o mantener? Tengo: ${currentPortfolio.map(i => i.name).join(", ")}`)}
-                      className="w-full bg-accent/10 text-accent py-2.5 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 border border-accent/20"
+                      className="w-full py-2.5 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 border"
+                      style={{ ...nunito, backgroundColor: `${CELESTE}10`, color: CELESTE, borderColor: `${CELESTE}30` }}
                       whileTap={{ scale: 0.97 }}
                     >
-                      🐦 Pregúntale al coach
+                      {t("timeSim.askCoach")}
                     </motion.button>
                   )}
                   <motion.button
                     onClick={handleHold}
-                    className="w-full bg-primary text-primary-foreground py-3 rounded-2xl text-sm font-bold"
+                    className="w-full py-3 rounded-2xl text-sm font-bold text-white"
+                    style={{ ...nunito, backgroundColor: CELESTE }}
                     whileTap={{ scale: 0.97 }}
                   >
-                    🦅 ¡Aguantar! Mantengo todo
+                    {t("timeSim.holdAll")}
                   </motion.button>
-                  <p className="text-[10px] text-muted-foreground">o vende una inversión:</p>
+                  <p className="text-[10px] text-muted-foreground" style={nunito}>{t("timeSim.orSell")}</p>
                   <div className="space-y-1.5">
                     {currentPortfolio.map((inv) => (
                       <motion.button
                         key={inv.id}
                         onClick={() => handleSell(inv.id)}
                         className="w-full bg-destructive/10 text-destructive py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2"
+                        style={nunito}
                         whileTap={{ scale: 0.97 }}
                       >
-                        {inv.emoji} Vender {inv.name}
+                        {inv.emoji} {t("timeSim.sellInv", { name: inv.name })}
                       </motion.button>
                     ))}
                   </div>
@@ -466,18 +457,20 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, initialB
                   {onAskCoach && (
                     <motion.button
                       onClick={() => onAskCoach(`Pasó "${currentEvent.title}" en el mercado. ¿Qué significa esto para mi nido?`)}
-                      className="w-full bg-accent/10 text-accent py-2.5 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 border border-accent/20"
+                      className="w-full py-2.5 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 border"
+                      style={{ ...nunito, backgroundColor: `${CELESTE}10`, color: CELESTE, borderColor: `${CELESTE}30` }}
                       whileTap={{ scale: 0.97 }}
                     >
-                      🐦 ¿Qué significa esto?
+                      {t("timeSim.whatDoesThisMean")}
                     </motion.button>
                   )}
                   <motion.button
                     onClick={dismissEvent}
-                    className="w-full bg-primary text-primary-foreground py-3 rounded-2xl text-sm font-bold"
+                    className="w-full py-3 rounded-2xl text-sm font-bold text-white"
+                    style={{ ...nunito, backgroundColor: CELESTE }}
                     whileTap={{ scale: 0.97 }}
                   >
-                    {currentEvent.type === "positive" ? "🎉 ¡Genial!" : "💪 ¡Seguimos!"}
+                    {currentEvent.type === "positive" ? t("timeSim.great") : t("timeSim.letsKeepGoing")}
                   </motion.button>
                 </div>
               )}
@@ -493,11 +486,16 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, initialB
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              className={`text-center py-3 rounded-2xl text-sm font-bold ${isPositive ? "bg-primary/10 text-primary" : "bg-destructive/10 text-destructive"}`}
+              className="text-center py-3 rounded-2xl text-sm font-bold"
+              style={{
+                ...nunito,
+                backgroundColor: isPositive ? "hsl(var(--primary)/0.1)" : "hsl(var(--destructive)/0.1)",
+                color: isPositive ? "hsl(var(--primary))" : "hsl(var(--destructive))",
+              }}
             >
               {isPositive
-                ? `🎉 ¡Tu nido creció! Ganaste CHF ${(lastValue - startBalance).toFixed(0)} en ${periodLabel}`
-                : `😅 Tu nido se encogió CHF ${(startBalance - lastValue).toFixed(0)} en ${periodLabel}. ¡Pero aprendiste!`
+                ? t("timeSim.nestGrew", { amount: (lastValue - startBalance).toFixed(0), period: periodLabel })
+                : t("timeSim.nestShrunk", { amount: (startBalance - lastValue).toFixed(0), period: periodLabel })
               }
             </motion.div>
             <motion.button
@@ -506,10 +504,11 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, initialB
                 onComplete?.(Math.round(finalVal), totalGain);
                 onClose();
               }}
-              className="w-full bg-primary text-primary-foreground py-4 rounded-3xl text-base font-bold"
+              className="w-full py-4 rounded-3xl text-base font-bold text-white"
+              style={{ ...nunito, backgroundColor: CELESTE }}
               whileTap={{ scale: 0.97 }}
             >
-              🪺 Volver a mi nido
+              {t("timeSim.backToNest")}
             </motion.button>
           </div>
         ) : (
@@ -517,20 +516,21 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, initialB
             <motion.button
               onClick={() => realMultipliers && setPlaying(!playing)}
               className="flex-1 bg-card text-foreground py-3.5 rounded-2xl text-sm font-bold shadow-sm flex items-center justify-center gap-2"
-              style={{ opacity: realMultipliers ? 1 : 0.5 }}
+              style={{ ...nunito, opacity: realMultipliers ? 1 : 0.5 }}
               whileTap={{ scale: 0.95 }}
             >
-              {playing ? <><Pause className="w-4 h-4" /> Pausar</> : <><Play className="w-4 h-4" /> {currentStep === 0 ? "Empezar" : "Continuar"}</>}
+              {playing ? <><Pause className="w-4 h-4" /> {t("timeSim.pause")}</> : <><Play className="w-4 h-4" /> {currentStep === 0 ? t("timeSim.start") : t("timeSim.resume")}</>}
             </motion.button>
             {!playing && realMultipliers && (
               <motion.button
                 onClick={advanceStep}
-                className="flex-1 bg-primary text-primary-foreground py-3.5 rounded-2xl text-sm font-bold shadow-sm flex items-center justify-center gap-2"
+                className="flex-1 py-3.5 rounded-2xl text-sm font-bold shadow-sm flex items-center justify-center gap-2 text-white"
+                style={{ ...nunito, backgroundColor: CELESTE }}
                 whileTap={{ scale: 0.95 }}
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
               >
-                <FastForward className="w-4 h-4" /> Avanzar
+                <FastForward className="w-4 h-4" /> {t("timeSim.advance")}
               </motion.button>
             )}
           </div>
