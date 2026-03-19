@@ -84,23 +84,32 @@ function DraggableCard({
 /* ---- Card variants ---- */
 function NestCard({ inv, overlay }: { inv: Investment; overlay?: boolean }) {
   return (
-    <div className={`bg-card rounded-2xl p-3 shadow-sm ${overlay ? "shadow-lg ring-2 ring-primary/30 rotate-2" : ""} cursor-grab active:cursor-grabbing`}>
-      <div className="flex items-center gap-2">
-        <div className="w-9 h-9 bg-primary/10 rounded-xl flex items-center justify-center text-lg flex-shrink-0">
+    <div className={`bg-card rounded-2xl p-3.5 shadow-sm ${overlay ? "shadow-lg ring-2 ring-primary/30 rotate-2" : ""} cursor-grab active:cursor-grabbing`}>
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-xl flex-shrink-0">
           {inv.emoji}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-bold text-foreground truncate">{inv.name}</p>
-          <div className="flex items-center gap-1.5 mt-0.5">
-            <span className={`text-[10px] font-medium ${getRiskColor(inv.riskLevel)}`}>R:{inv.riskLevel}</span>
-            <span className="text-[10px] text-muted-foreground">•</span>
-            <span className="text-[10px] text-muted-foreground">{inv.annualReturn}%</span>
-          </div>
+          <p className="text-sm font-bold text-foreground truncate">{inv.name}</p>
+          <p className="text-[11px] text-muted-foreground mt-0.5">
+            {riskWord(inv.riskLevel)} · Earns ~{inv.annualReturn}% per year
+          </p>
         </div>
-        {!overlay && <span className="text-[10px] text-muted-foreground">✕</span>}
+        {!overlay && <span className="text-[10px] text-muted-foreground bg-muted rounded-full px-2 py-1">✕</span>}
+      </div>
+      {/* Visual risk meter */}
+      <div className="mt-2.5 flex items-center gap-2">
+        <span className="text-[10px] text-muted-foreground font-medium w-8">Risk</span>
+        <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+          <div
+            className={`h-full rounded-full transition-all ${inv.riskLevel <= 3 ? "bg-primary" : inv.riskLevel <= 6 ? "bg-accent" : "bg-destructive"}`}
+            style={{ width: `${inv.riskLevel * 10}%` }}
+          />
+        </div>
+        <span className={`text-[10px] font-bold ${getRiskColor(inv.riskLevel)}`}>{inv.riskLevel}/10</span>
       </div>
       {inv.tag && (
-        <span className="inline-block mt-1.5 text-[9px] font-bold bg-accent/15 text-accent px-2 py-0.5 rounded-full">
+        <span className="inline-block mt-2 text-[10px] font-bold bg-accent/15 text-accent px-2.5 py-0.5 rounded-full">
           {inv.tag}
         </span>
       )}
@@ -110,24 +119,33 @@ function NestCard({ inv, overlay }: { inv: Investment; overlay?: boolean }) {
 
 function ScoutedCard({ inv, overlay }: { inv: Investment; overlay?: boolean }) {
   return (
-    <div className={`bg-card rounded-2xl p-3 shadow-sm border-2 border-dashed border-border ${overlay ? "shadow-lg ring-2 ring-primary/30 -rotate-2 border-primary/40" : "hover:border-primary/40"} cursor-grab active:cursor-grabbing`}>
-      <div className="flex items-center gap-2">
-        <div className="w-9 h-9 bg-secondary rounded-xl flex items-center justify-center text-lg flex-shrink-0">
+    <div className={`bg-card rounded-2xl p-3.5 shadow-sm border-2 border-dashed border-border ${overlay ? "shadow-lg ring-2 ring-primary/30 -rotate-2 border-primary/40" : "hover:border-primary/40"} cursor-grab active:cursor-grabbing`}>
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 bg-secondary rounded-xl flex items-center justify-center text-xl flex-shrink-0">
           {inv.emoji}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-bold text-foreground truncate">{inv.name} {inv.flag || ""}</p>
-          <div className="flex items-center gap-1.5 mt-0.5">
-            <span className={`text-[10px] font-bold ${getRiskColor(inv.riskLevel)}`}>R:{inv.riskLevel}</span>
-            <span className="text-[10px] text-muted-foreground">|</span>
-            <span className="text-[10px] font-medium text-foreground">{inv.annualReturn}%</span>
-          </div>
+          <p className="text-sm font-bold text-foreground truncate">{inv.name} {inv.flag || ""}</p>
+          <p className="text-[11px] text-muted-foreground mt-0.5">
+            {riskWord(inv.riskLevel)} · Earns ~{inv.annualReturn}% per year
+          </p>
         </div>
-        {!overlay && <span className="text-primary text-lg">+</span>}
+        {!overlay && <span className="text-primary text-base font-bold">+</span>}
+      </div>
+      {/* Visual risk meter */}
+      <div className="mt-2.5 flex items-center gap-2">
+        <span className="text-[10px] text-muted-foreground font-medium w-8">Risk</span>
+        <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+          <div
+            className={`h-full rounded-full transition-all ${inv.riskLevel <= 3 ? "bg-primary" : inv.riskLevel <= 6 ? "bg-accent" : "bg-destructive"}`}
+            style={{ width: `${inv.riskLevel * 10}%` }}
+          />
+        </div>
+        <span className={`text-[10px] font-bold ${getRiskColor(inv.riskLevel)}`}>{inv.riskLevel}/10</span>
       </div>
       {inv.tag && (
-        <span className="inline-block mt-1.5 text-[9px] font-bold bg-destructive/10 text-destructive px-2 py-0.5 rounded-full">
-          {inv.tag}
+        <span className={`inline-block mt-2 text-[10px] font-bold px-2.5 py-0.5 rounded-full ${inv.tag === "HIGH RISK" ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"}`}>
+          ⚠️ {inv.tag}
         </span>
       )}
     </div>
