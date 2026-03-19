@@ -642,23 +642,19 @@ export default function TimeSimulation({
 
     const scheduledEvent = aiEventMap[nextStep];
     if (scheduledEvent) {
-      setCurrentStep(nextStep);
-      setPlaying(false);
-      setLoadingDecisionStep(nextStep);
-      setBirdMsg(
-        i18n.language === "es"
-          ? `${scheduledEvent.investmentName} está moviéndose fuerte...`
-          : `${scheduledEvent.investmentName} is moving sharply...`,
-      );
-
+      // Fetch in background — simulation keeps playing
       void ensureScenario(scheduledEvent, newValue).then((scenario) => {
-        setLoadingDecisionStep(null);
         if (!scenario) return;
+        setPlaying(false);
         setActiveAIEvent(scheduledEvent);
         setAiScenario(scenario);
         setShowAIEvent(true);
+        setBirdMsg(
+          i18n.language === "es"
+            ? `${scheduledEvent.investmentName} está moviéndose fuerte...`
+            : `${scheduledEvent.investmentName} is moving sharply...`,
+        );
       });
-      return;
     }
 
     const previousValue = data[data.length - 1]?.value || startBalance;
@@ -720,14 +716,14 @@ export default function TimeSimulation({
   };
 
   useEffect(() => {
-    if (playing && currentStep < totalSteps && loadingDecisionStep === null) {
+    if (playing && currentStep < totalSteps) {
       intervalRef.current = setTimeout(advanceStep, 1300);
     }
 
     return () => {
       if (intervalRef.current) clearTimeout(intervalRef.current);
     };
-  }, [playing, currentStep, totalSteps, advanceStep, loadingDecisionStep]);
+  }, [playing, currentStep, totalSteps, advanceStep]);
 
   const isFinished = currentStep >= totalSteps;
   const lastValue = data[data.length - 1]?.value || startBalance;
@@ -887,23 +883,8 @@ export default function TimeSimulation({
         </motion.div>
       </div>
 
-      <AnimatePresence>
-        {loadingDecisionStep !== null && !showAIEvent && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-background/80 backdrop-blur-sm z-20 flex items-center justify-center px-6"
-          >
-            <div className="bg-card rounded-3xl p-6 shadow-xl max-w-sm w-full text-center">
-              <Loader2 className="w-7 h-7 animate-spin mx-auto mb-3" style={{ color: PRIMARY_COLOR }} />
-              <p className="text-sm text-foreground font-semibold" style={nunito}>
-                {t("timeSim.preparingDecision")}
-              </p>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+
+
 
       <AnimatePresence>
         {showAIEvent && aiScenario && activeAIEvent && (
