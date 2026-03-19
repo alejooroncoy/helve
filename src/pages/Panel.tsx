@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import { toast } from "sonner";
 import { useInstrumentStats } from "@/hooks/useMarketData";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
