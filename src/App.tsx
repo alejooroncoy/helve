@@ -5,6 +5,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/useAuth";
+import ProtectedRoute from "@/components/ProtectedRoute";
+import OnboardingGate from "@/components/OnboardingGate";
 import Index from "./pages/Index.tsx";
 import Panel from "./pages/Panel.tsx";
 import Auth from "./pages/Auth.tsx";
@@ -26,8 +28,18 @@ const App = () => {
           <BrowserRouter>
             <Routes>
               <Route path="/auth" element={<Auth />} />
-              <Route path="/" element={<Index />} />
-              <Route path="/panel" element={<Panel />} />
+              <Route path="/" element={
+                <ProtectedRoute>
+                  <OnboardingGate>
+                    <Index />
+                  </OnboardingGate>
+                </ProtectedRoute>
+              } />
+              <Route path="/panel" element={
+                <ProtectedRoute>
+                  <Panel />
+                </ProtectedRoute>
+              } />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
