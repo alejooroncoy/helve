@@ -196,6 +196,12 @@ const en = {
     buyDialogDesc: "You're adding this egg to your nest. Remember: buying = investing in this asset.",
     buyDialogConfirm: "Got it, buy!",
     buyDialogDontRemind: "Got it, don't remind me again",
+    allocation: "Allocation",
+    cash: "Cash",
+    ofBalance: "of balance",
+    totalAllocated: "Allocated",
+    adjustAllocation: "Drag to adjust %",
+    maxAllocation: "Max allocation reached (100%)",
   },
 
   // Time simulation
