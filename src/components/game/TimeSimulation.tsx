@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, FastForward, Pause, Play, TrendingUp, TrendingDown, AlertTriangle, Loader2 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, ReferenceDot } from "recharts";
 import type { Investment } from "@/game/types";
+import { ASSET_CLASSES } from "@/game/types";
 import { useMonthlyPrices } from "@/hooks/useMarketData";
 import { useTranslation } from "react-i18next";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
@@ -36,26 +37,11 @@ interface MarketEvent {
   type: "positive" | "negative" | "neutral";
 }
 
-// Map game investment IDs to DB instrument IDs
-const investmentToDbId: Record<string, string> = {
-  "ch-bond-aaa": "ch-bond-aaa",
-  "global-bond": "global-bond-agg",
-  "ch-govt-10y": "ch-govt-10y",
-  "smi-index": "smi-index",
-  "eurostoxx50": "eurostoxx50",
-  "gold-chf": "gold-chf",
-  "nestle": "nesn-ch",
-  "novartis": "novn-ch",
-  "djia-index": "djia-index",
-  "dax-index": "dax-index",
-  "apple": "aapl-us",
-  "microsoft": "msft-us",
-  "nvidia": "nvda-us",
-  "logitech": "logn-ch",
-  "ubs": "ubsg-ch",
-  "amazon": "amzn-us",
-  "green-energy": "smi-index",
-};
+// Map category keys to their representative DB IDs
+const categoryToDbIds: Record<string, string[]> = {};
+ASSET_CLASSES.forEach(cls => {
+  categoryToDbIds[cls.key] = cls.dbIds;
+});
 
 const marketEvents: MarketEvent[] = [
   { id: "boom", emoji: "☀️", title: "¡Primavera financiera!", description: "El mercado florece. Tu nido brilla.", impact: 1.12, type: "positive" },
@@ -107,8 +93,9 @@ function computeRealMultipliers(
   investmentIds: string[],
   months: number[]
 ): number[] {
-  const dbIds = investmentIds.map(id => investmentToDbId[id] || id);
-  const available = dbIds.filter(id => prices[id] && prices[id].length > 1);
+  // For each category, get all its DB IDs and average their multipliers
+  const allDbIds = investmentIds.flatMap(id => categoryToDbIds[id] || []);
+  const available = allDbIds.filter(id => prices[id] && prices[id].length > 1);
 
   if (available.length === 0) return months.map(() => 1);
 
@@ -145,7 +132,7 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, initialB
   const intervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const dbIds = useMemo(
-    () => portfolio.map(inv => investmentToDbId[inv.id] || inv.id).filter(Boolean),
+    () => portfolio.flatMap(inv => categoryToDbIds[inv.id] || []).filter(Boolean),
     [portfolio]
   );
   const { prices, loading: pricesLoading } = useMonthlyPrices(dbIds);

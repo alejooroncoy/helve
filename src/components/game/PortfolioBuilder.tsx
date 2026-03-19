@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRightLeft, TrendingUp, Shield, Zap } from "lucide-react";
 import type { Investment, PortfolioSlot, RiskProfile } from "@/game/types";
-import { availableInvestments } from "@/game/types";
+import { availableInvestments, ASSET_CLASSES } from "@/game/types";
 import { useInstrumentStats } from "@/hooks/useMarketData";
 import { useTranslation } from "react-i18next";
 
@@ -14,37 +14,25 @@ interface Props {
 const CELESTE = "#5BB8F5";
 const nunito = { fontFamily: "'Nunito', sans-serif" };
 
-const investmentToDbId: Record<string, string> = {
-  "ch-bond-aaa": "ch-bond-aaa",
-  "global-bond": "global-bond-agg",
-  "ch-govt-10y": "ch-govt-10y",
-  "smi-index": "smi-index",
-  "eurostoxx50": "eurostoxx50",
-  "gold-chf": "gold-chf",
-  "nestle": "nesn-ch",
-  "novartis": "novn-ch",
-  "djia-index": "djia-index",
-  "dax-index": "dax-index",
-  "apple": "aapl-us",
-  "microsoft": "msft-us",
-  "nvidia": "nvda-us",
-  "logitech": "logn-ch",
-  "ubs": "ubsg-ch",
-  "amazon": "amzn-us",
-};
-
-const allDbIds = Object.values(investmentToDbId);
+// Map category keys to their representative DB IDs for stats enrichment
+const categoryToDbIds: Record<string, string[]> = {};
+for (const c of ASSET_CLASSES) {
+  if (c.dbIds.length > 0) categoryToDbIds[c.key] = c.dbIds;
+}
+const allDbIds = ASSET_CLASSES.flatMap(c => c.dbIds);
 
 function getRecommended(profile: RiskProfile): Investment[] {
   const all = availableInvestments;
   if (profile === "conservative") {
-    return [all.find(i => i.id === "ch-bond-aaa")!, all.find(i => i.id === "global-bond")!, all.find(i => i.id === "gold-chf")!];
+    return [all.find(i => i.id === "bonds")!, all.find(i => i.id === "gold")!, all.find(i => i.id === "fx")!];
   }
   if (profile === "growth") {
-    return [all.find(i => i.id === "smi-index")!, all.find(i => i.id === "apple")!, all.find(i => i.id === "nvidia")!];
+    return [all.find(i => i.id === "usStocks")!, all.find(i => i.id === "crypto")!, all.find(i => i.id === "equity")!];
   }
-  return [all.find(i => i.id === "ch-bond-aaa")!, all.find(i => i.id === "smi-index")!, all.find(i => i.id === "djia-index")!];
+  return [all.find(i => i.id === "bonds")!, all.find(i => i.id === "equity")!, all.find(i => i.id === "swissStocks")!];
 }
+
+
 
 function getRiskColor(risk: number): string {
   if (risk <= 3) return "#22c55e";
@@ -80,7 +68,8 @@ const PortfolioBuilder = ({ profile, onComplete }: Props) => {
 
   const enriched = useMemo(() => {
     return portfolio.map(inv => {
-      const dbId = investmentToDbId[inv.id];
+      const dbIds = categoryToDbIds[inv.id];
+      const dbId = dbIds?.[0];
       const real = dbId ? stats[dbId] : null;
       if (real) return { ...inv, annualReturn: real.avgAnnualReturn, riskLevel: real.riskLevel };
       return inv;
@@ -92,7 +81,8 @@ const PortfolioBuilder = ({ profile, onComplete }: Props) => {
     return availableInvestments
       .filter(i => !ids.has(i.id))
       .map(inv => {
-        const dbId = investmentToDbId[inv.id];
+        const dbIds = categoryToDbIds[inv.id];
+        const dbId = dbIds?.[0];
         const real = dbId ? stats[dbId] : null;
         if (real) return { ...inv, annualReturn: real.avgAnnualReturn, riskLevel: real.riskLevel };
         return inv;
@@ -158,7 +148,8 @@ const PortfolioBuilder = ({ profile, onComplete }: Props) => {
       <div className="px-5 space-y-3 flex-1">
         <AnimatePresence mode="popLayout">
           {enriched.map((inv, idx) => {
-            const dbId = investmentToDbId[inv.id];
+            const dbIds = categoryToDbIds[inv.id];
+            const dbId = dbIds?.[0];
             const real = dbId ? stats[dbId] : null;
             return (
               <motion.div

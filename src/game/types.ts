@@ -88,9 +88,27 @@ export interface Investment {
   flag?: string;
   tag?: string;
 }
+// Build category-based investments from ASSET_CLASSES
+export const availableInvestments: Investment[] = ASSET_CLASSES.map(cls => {
+  let type: PortfolioSlot;
+  if (cls.riskWeight <= 3) type = "safe";
+  else if (cls.riskWeight <= 6) type = "balanced";
+  else type = "growth";
 
-// Re-export real investments from marketData as the canonical list
-export { realInvestments as availableInvestments } from "./marketData";
+  const defaultReturns: Record<string, number> = {
+    bonds: 2.5, equity: 6.0, gold: 7.0, fx: 3.5,
+    swissStocks: 5.8, usStocks: 9.0, crypto: 15.0, cleanEnergy: 8.0,
+  };
+
+  return {
+    id: cls.key,
+    name: cls.key,
+    emoji: cls.emoji,
+    type,
+    riskLevel: cls.riskWeight,
+    annualReturn: defaultReturns[cls.key] ?? 5.0,
+  };
+});
 
 export interface GameState {
   step: GameStep;
