@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { useInstrumentStats } from "@/hooks/useMarketData";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
@@ -22,6 +22,7 @@ import {
 } from "@dnd-kit/core";
 import type { Investment } from "@/game/types";
 import { availableInvestments } from "@/game/types";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import {
   LogOut, X, AlertTriangle, Inbox, Shield, TrendingUp, BarChart2,
   Building2, Leaf, Globe, Landmark, Zap, FastForward, MessageCircle, DollarSign, Info,
@@ -134,7 +135,7 @@ function getSuggestions(profile: string, active: Investment[]): Investment[] {
   });
 
   scored.sort((a, b) => b.score - a.score);
-  return scored.slice(0, Math.max(slotsLeft + 1, 4)).map((s) => s.inv);
+  return scored.map((s) => s.inv);
 }
 
 const tagDescriptions: Record<string, string> = {
@@ -325,6 +326,67 @@ function DropZone({ id, children, isOver }: { id: string; children: React.ReactN
       style={active ? { backgroundColor: `${CELESTE}08`, outline: `2px dashed ${CELESTE}40` } : {}}
     >
       {children}
+    </div>
+  );
+}
+/* ---- Virtual horizontal scroll for Scouted ---- */
+function VirtualScoutedList({ suggestions, onBuy, onAsk }: { suggestions: Investment[]; onBuy: (inv: Investment) => void; onAsk: (inv: Investment) => void }) {
+  const parentRef = useRef<HTMLDivElement>(null);
+  const CARD_WIDTH = 200;
+  const GAP = 12;
+
+  const virtualizer = useVirtualizer({
+    count: suggestions.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => CARD_WIDTH + GAP,
+    horizontal: true,
+    overscan: 3,
+  });
+
+  return (
+    <div
+      ref={parentRef}
+      className="overflow-x-auto pb-2 scrollbar-hide"
+      style={{ scrollSnapType: "x mandatory" }}
+    >
+      <div
+        style={{
+          width: `${virtualizer.getTotalSize()}px`,
+          height: "100%",
+          position: "relative",
+        }}
+      >
+        {virtualizer.getVirtualItems().map((virtualItem) => {
+          const inv = suggestions[virtualItem.index];
+          if (!inv) return null;
+          return (
+            <div
+              key={inv.id}
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: `${CARD_WIDTH}px`,
+                transform: `translateX(${virtualItem.start}px)`,
+                scrollSnapAlign: "start",
+              }}
+            >
+              <ScoutedCard
+                inv={inv}
+                onAsk={() => onAsk(inv)}
+              />
+              <motion.button
+                onClick={() => onBuy(inv)}
+                className="w-full mt-1.5 py-1.5 rounded-xl text-[10px] font-bold flex items-center justify-center gap-1 transition-colors"
+                style={{ ...nunito, backgroundColor: `${CELESTE}15`, color: CELESTE }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <DollarSign className="w-3 h-3" /> Comprar
+              </motion.button>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -586,16 +648,14 @@ const Panel = () => {
             )}
           </DropZone>
 
-          {/* Scouted — horizontal scroll on mobile */}
+          {/* Scouted — horizontal virtual scroll */}
           <DropZone id="scouted">
             <h2 className="text-sm font-bold text-foreground uppercase tracking-wide mb-3 mt-4" style={nunito}>🛒 Comprar</h2>
-            <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide" style={{ scrollSnapType: "x mandatory" }}>
-              {suggestions.map((inv) => (
-                <div key={inv.id} className="flex-shrink-0" style={{ width: 200, scrollSnapAlign: "start" }}>
-                  <DraggableCard inv={inv} zone="scouted" onClick={() => addInvestment(inv)} onAsk={() => { setCoachInitQ(`Explica brevemente qué es ${inv.name} y si encaja con mi perfil`); setCoachOpen(true); }} />
-                </div>
-              ))}
-            </div>
+            <VirtualScoutedList
+              suggestions={suggestions}
+              onBuy={addInvestment}
+              onAsk={(inv) => { setCoachInitQ(`Explica brevemente qué es ${inv.name} y si encaja con mi perfil`); setCoachOpen(true); }}
+            />
           </DropZone>
         </div>
 
