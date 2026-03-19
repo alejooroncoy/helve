@@ -58,11 +58,19 @@ const Hub = () => {
             className="w-10 h-10 rounded-full object-cover"
           />
           <div>
-            <h1
-              className="text-2xl text-foreground"
-              style={{ ...nunito, fontWeight: 900 }}
-            >
-              {t("hub.greeting")}
+            {(() => {
+              const meta = user?.user_metadata;
+              const displayName = meta?.full_name || meta?.name || meta?.email?.split("@")[0] || null;
+              const firstName = displayName ? displayName.split(" ")[0] : t("hub.guest");
+              return (
+                <h1
+                  className="text-2xl text-foreground"
+                  style={{ ...nunito, fontWeight: 900 }}
+                >
+                  {t("hub.greeting")}, {firstName}
+                </h1>
+              );
+            })()}
             </h1>
             <p className="text-xs text-muted-foreground" style={nunito}>
               {t("hub.subtitle")}
