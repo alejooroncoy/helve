@@ -857,21 +857,47 @@ const Panel = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
     >
-      {/* Header — Global Balance */}
+      {/* Header — Global Balance + Per-Nest Risk/Return */}
       <div className="px-5 pt-5 pb-2">
         <div className="flex items-center justify-between mb-3">
-          <div>
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium" style={nunito}>
-              {t("panel.balance")}
-            </p>
-            <h1 className="text-3xl text-foreground" style={{ ...nunito, fontWeight: 900 }}>
-              CHF {balance.toLocaleString()}
-            </h1>
-            <p className="text-xs mt-0.5" style={{ ...nunito, color: lastSimGain !== null ? (lastSimGain >= 0 ? CELESTE : "hsl(var(--destructive))") : CELESTE }}>
-              {lastSimGain !== null
-                ? `${lastSimGain > 0 ? "+" : ""}${lastSimGain.toFixed(1)}% ${t("panel.lastSim")}`
-                : `+CHF ${monthlyIncome}${t("panel.perMonth")}`}
-            </p>
+          <div className="flex items-baseline gap-5">
+            {/* Balance */}
+            <div>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium" style={nunito}>
+                {t("panel.balance")}
+              </p>
+              <h1 className="text-3xl text-foreground" style={{ ...nunito, fontWeight: 900 }}>
+                CHF {balance.toLocaleString()}
+              </h1>
+              <p className="text-xs mt-0.5" style={{ ...nunito, color: lastSimGain !== null ? (lastSimGain >= 0 ? CELESTE : "hsl(var(--destructive))") : CELESTE }}>
+                {lastSimGain !== null
+                  ? `${lastSimGain > 0 ? "+" : ""}${lastSimGain.toFixed(1)}% ${t("panel.lastSim")}`
+                  : `+CHF ${monthlyIncome}${t("panel.perMonth")}`}
+              </p>
+            </div>
+            {/* Risk & Return — per nest */}
+            {enrichedPortfolio.length > 0 && (
+              <div className="flex gap-4">
+                <div>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium" style={nunito}>
+                    {t("panel.risk")}
+                  </p>
+                  <p className="text-xl font-bold" style={{ ...nunito, color: totalRisk > 60 ? "hsl(var(--destructive))" : totalRisk > 30 ? "hsl(var(--accent-foreground))" : CELESTE }}>
+                    {totalRisk}%
+                  </p>
+                  <p className="text-[10px] text-muted-foreground" style={nunito}>{getRiskLabelLocal(totalRisk)}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium" style={nunito}>
+                    {t("panel.returnLabel")}
+                  </p>
+                  <p className="text-xl font-bold" style={{ ...nunito, color: CELESTE }}>
+                    {avgReturn}%
+                  </p>
+                  <p className="text-[10px] text-muted-foreground" style={nunito}>{t("panel.annual")}</p>
+                </div>
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-2">
             <LanguageSwitcher />
@@ -1014,26 +1040,6 @@ const Panel = () => {
           )}
         </div>
 
-        {/* Active nest stats bar */}
-        {enrichedPortfolio.length > 0 && (
-          <div className="flex items-center gap-4 mt-2 px-1">
-            <div className="flex items-center gap-1.5">
-              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: totalRisk > 60 ? "hsl(var(--destructive))" : totalRisk > 30 ? "hsl(var(--accent))" : CELESTE }} />
-              <span className="text-[11px] text-muted-foreground" style={nunito}>
-                {t("panel.risk")}: <span className="font-bold text-foreground">{totalRisk}%</span>
-              </span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: CELESTE }} />
-              <span className="text-[11px] text-muted-foreground" style={nunito}>
-                {t("panel.returnLabel")}: <span className="font-bold text-foreground">{avgReturn}%/yr</span>
-              </span>
-            </div>
-            <span className="text-[11px] text-muted-foreground ml-auto" style={nunito}>
-              {enrichedPortfolio.length} {enrichedPortfolio.length === 1 ? "asset" : "assets"} · {totalAllocated}% {t("panel.allocated", { defaultValue: "allocated" })}
-            </span>
-          </div>
-        )}
       </div>
 
       {/* DnD Content */}
