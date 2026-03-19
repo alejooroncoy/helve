@@ -23,10 +23,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+        if (event === "SIGNED_IN") {
+          const redirect = localStorage.getItem("helve_post_login_redirect");
+          if (redirect) {
+            localStorage.removeItem("helve_post_login_redirect");
+            window.location.replace(redirect);
+          }
+        }
       }
     );
 

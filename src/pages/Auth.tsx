@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { ChevronRight, Hand } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
 import { lovable } from "@/integrations/lovable/index";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
@@ -13,9 +14,12 @@ const Auth = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const { t } = useTranslation();
+  const [searchParams] = useSearchParams();
+  const redirectTo = searchParams.get("redirect") ? decodeURIComponent(searchParams.get("redirect")!) : "/";
 
   const handleGoogle = async () => {
     setLoading(true);
+    if (redirectTo !== "/") localStorage.setItem("helve_post_login_redirect", redirectTo);
     const { error } = await lovable.auth.signInWithOAuth("google", {
       redirect_uri: window.location.origin,
     });
@@ -54,7 +58,7 @@ const Auth = () => {
       }, { onConflict: "user_id" });
     }
     localStorage.removeItem("helve_skip_buy_dialog");
-    navigate("/");
+    navigate(redirectTo);
   };
 
   return (
