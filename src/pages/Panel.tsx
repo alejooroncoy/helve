@@ -153,9 +153,9 @@ const tagDescriptions: Record<string, string> = {
 
 /* ---- Draggable investment card ---- */
 function DraggableCard({
-  inv, zone, onClick, onAsk,
+  inv, zone, onClick, onAsk, onSell, onInfo,
 }: {
-  inv: Investment; zone: "scouted" | "nest"; onClick: () => void; onAsk?: () => void;
+  inv: Investment; zone: "scouted" | "nest"; onClick: () => void; onAsk?: () => void; onSell?: () => void; onInfo?: () => void;
 }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `${zone}-${inv.id}`,
@@ -167,10 +167,10 @@ function DraggableCard({
       ref={setNodeRef}
       {...listeners}
       {...attributes}
-      onClick={onClick}
+      onClick={zone === "scouted" ? onClick : undefined}
       className={`touch-none select-none transition-all ${isDragging ? "opacity-30 scale-95" : ""}`}
     >
-      {zone === "nest" ? <NestCard inv={inv} /> : <ScoutedCard inv={inv} onAsk={onAsk} />}
+      {zone === "nest" ? <NestCard inv={inv} onSell={onSell} onAsk={onAsk} onInfo={onInfo} /> : <ScoutedCard inv={inv} onAsk={onAsk} />}
     </div>
   );
 }
