@@ -445,6 +445,7 @@ const en = {
   // Hub screen
   hub: {
     greeting: "Welcome back",
+    guest: "Guest",
     subtitle: "Choose your adventure",
     portfolio: {
       title: "My Portfolio",

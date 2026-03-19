@@ -445,6 +445,7 @@ const es = {
   // Hub screen
   hub: {
     greeting: "Bienvenido de vuelta",
+    guest: "Invitado",
     subtitle: "Elige tu aventura",
     portfolio: {
       title: "Mi Portafolio",
