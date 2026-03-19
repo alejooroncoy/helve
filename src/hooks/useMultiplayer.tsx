@@ -50,9 +50,23 @@ function generateRoomCode(): string {
   return code;
 }
 
-function pickRandomAssets(count: number): Investment[] {
-  // Now we use all 8 categories as available assets
-  return [...availableInvestments];
+function rollRisk(base: number): number {
+  const options = [base - 1, base, base + 1]
+    .filter(v => v >= 1 && v <= 10);
+  return options[Math.floor(Math.random() * options.length)];
+}
+
+function pickRandomAssets(_count: number): Investment[] {
+  const assets = availableInvestments.map(inv => ({
+    ...inv,
+    riskLevel: rollRisk(inv.riskLevel),
+  }));
+  // Fisher-Yates shuffle so order is random (same for all players, stored in DB)
+  for (let i = assets.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [assets[i], assets[j]] = [assets[j], assets[i]];
+  }
+  return assets;
 }
 
 export function useMultiplayer() {
@@ -70,8 +84,14 @@ export function useMultiplayer() {
     const roomChannel = supabase
       .channel(`room-${room.id}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "multiplayer_rooms", filter: `id=eq.${room.id}` },
-        (payload) => {
-          if (payload.new) setRoom(payload.new as any);
+        async () => {
+          // Re-fetch full row so available_assets (JSON) is never truncated by Realtime payload
+          const { data } = await supabase
+            .from("multiplayer_rooms")
+            .select("*")
+            .eq("id", room.id)
+            .single();
+          if (data) setRoom(data as any);
         }
       )
       .on("postgres_changes", { event: "*", schema: "public", table: "room_players", filter: `room_id=eq.${room.id}` },
@@ -210,9 +230,15 @@ export function useMultiplayer() {
       .eq("id", room.id);
   }, [room, user]);
 
-  const saveDecision = useCallback(async (eventIndex: number, decision: string) => {
+  const saveDecision = useCallback(async (
+    eventIndex: number,
+    decision: string,
+    meta?: { title: string; holdImpact: number; sellImpact: number; balanceBefore: number; balanceAfter: number }
+  ) => {
     if (!myPlayer) return;
-    const newDecisions = [...(myPlayer.decisions || []), { eventIndex, decision, timestamp: Date.now() }];
+    const newDecisions = [...(myPlayer.decisions || []), {
+      eventIndex, decision, timestamp: Date.now(), ...meta,
+    }];
     await supabase
       .from("room_players")
       .update({ decisions: newDecisions as any })

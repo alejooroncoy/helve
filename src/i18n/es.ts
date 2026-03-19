@@ -431,6 +431,7 @@ const es = {
     playAgain: "Jugar de nuevo",
     backToNest: "Volver a My Nest",
     eventHistory: "HISTORIAL DE EVENTOS",
+    recommended: "Recomendado",
   },
 
   // Multiplayer market events pool

@@ -10,12 +10,18 @@ import type { useMultiplayer } from "@/hooks/useMultiplayer";
 
 const nunito = { fontFamily: "'Nunito', sans-serif" };
 const INITIAL_BALANCE = 1000;
-const TOTAL_MONTHS = 96; // 8 years
-const STEP_INTERVAL = 700;
-const EVENT_TIMER = 15;
-const NUM_EVENTS = 10;
+const TOTAL_MONTHS = 36; // 3 years (~11s pure + ~25s events = ~36s total)
 
-// Generate event months spread across 8 years
+const CAT_COLORS: Record<string, string> = {
+  bonds: "#60a5fa", equity: "#34d399", gold: "#fbbf24",
+  fx: "#38bdf8", swissStocks: "#f87171", usStocks: "#818cf8",
+  crypto: "#a78bfa", cleanEnergy: "#4ade80",
+};
+const STEP_INTERVAL = 300;
+const EVENT_TIMER = 8;
+const NUM_EVENTS = 6;
+
+// Generate event months spread across simulation
 function generateEventMonths(total: number, count: number): number[] {
   const spacing = Math.floor(total / (count + 1));
   return Array.from({ length: count }, (_, i) => spacing * (i + 1));
@@ -51,6 +57,8 @@ const MultiplayerSimulation = ({ mp }: Props) => {
   const [currentMonth, setCurrentMonth] = useState(0);
   const [balance, setBalance] = useState(INITIAL_BALANCE);
   const [balanceHistory, setBalanceHistory] = useState<number[]>([INITIAL_BALANCE]);
+  const [categoryHistories, setCategoryHistories] = useState<Record<string, number[]>>({});
+  const [selectedCat, setSelectedCat] = useState<string | null>(null);
   const [paused, setPaused] = useState(false);
   const [activeEvent, setActiveEvent] = useState<MarketEventType | null>(null);
   const [eventTimer, setEventTimer] = useState(EVENT_TIMER);
@@ -65,35 +73,46 @@ const MultiplayerSimulation = ({ mp }: Props) => {
   const eventMonths = useMemo(() => generateEventMonths(TOTAL_MONTHS, NUM_EVENTS), []);
   const pickedEvents = useMemo(() => pickEvents(NUM_EVENTS), []);
 
-  // Compute monthly multipliers
-  const multipliers = useMemo(() => {
-    if (!prices || Object.keys(prices).length === 0) return [];
-    const mults: number[] = [];
-    for (let m = 0; m < TOTAL_MONTHS; m++) {
-      let totalMult = 0;
-      let count = 0;
-      for (const key of myCategories) {
-        const cls = ASSET_CLASSES.find(c => c.key === key);
-        if (!cls) continue;
+  // Per-category monthly multipliers
+  const categoryMultipliers = useMemo(() => {
+    if (!prices || Object.keys(prices).length === 0) return {} as Record<string, number[]>;
+    const result: Record<string, number[]> = {};
+    for (const key of myCategories) {
+      const cls = ASSET_CLASSES.find(c => c.key === key);
+      if (!cls) continue;
+      const mults: number[] = [];
+      for (let m = 0; m < TOTAL_MONTHS; m++) {
         if (cls.dbIds.length > 0) {
+          let total = 0, count = 0;
           for (const dbId of cls.dbIds) {
             const series = prices[dbId];
             if (!series || series.length < 2) continue;
             const idx = Math.min(m, series.length - 2);
             const p0 = series[idx].price;
             const p1 = series[Math.min(idx + 1, series.length - 1)].price;
-            if (p0 > 0) { totalMult += p1 / p0; count++; }
+            if (p0 > 0) { total += p1 / p0; count++; }
           }
+          mults.push(count > 0 ? total / count : 1.003);
         } else if (cls.syntheticMonthly) {
-          const r = 1 + cls.syntheticMonthly.mean + (Math.random() - 0.5) * cls.syntheticMonthly.vol;
-          totalMult += r;
-          count++;
+          mults.push(1 + cls.syntheticMonthly.mean + (Math.random() - 0.5) * cls.syntheticMonthly.vol);
+        } else {
+          mults.push(1.003);
         }
       }
-      mults.push(count > 0 ? totalMult / count : 1.003);
+      result[key] = mults;
     }
-    return mults;
+    return result;
   }, [prices, myCategories]);
+
+  // Flat combined multipliers for total balance (average across categories)
+  const multipliers = useMemo(() => {
+    const keys = Object.keys(categoryMultipliers);
+    if (keys.length === 0) return [];
+    return Array.from({ length: TOTAL_MONTHS }, (_, m) => {
+      const vals = keys.map(k => categoryMultipliers[k][m] ?? 1);
+      return vals.reduce((s, v) => s + v, 0) / vals.length;
+    });
+  }, [categoryMultipliers]);
 
   // Advance simulation
   useEffect(() => {
@@ -120,13 +139,23 @@ const MultiplayerSimulation = ({ mp }: Props) => {
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   }, [pricesLoading, paused, activeEvent, finished, multipliers, eventsTriggered, eventMonths, pickedEvents]);
 
-  // Update balance
+  // Update balance + per-category histories
   useEffect(() => {
     if (currentMonth > 0 && multipliers[currentMonth - 1]) {
       setBalance(prev => {
         const newBal = prev * multipliers[currentMonth - 1];
         setBalanceHistory(h => [...h, newBal]);
         return newBal;
+      });
+      setCategoryHistories(prev => {
+        const next = { ...prev };
+        for (const key of myCategories) {
+          const mult = categoryMultipliers[key]?.[currentMonth - 1] ?? 1;
+          const last = (prev[key] ?? [INITIAL_BALANCE]);
+          const prevVal = last[last.length - 1] ?? INITIAL_BALANCE;
+          next[key] = [...last, prevVal * mult];
+        }
+        return next;
       });
     }
   }, [currentMonth, multipliers]);
@@ -156,14 +185,23 @@ const MultiplayerSimulation = ({ mp }: Props) => {
     if (timerRef.current) clearInterval(timerRef.current);
 
     const impact = decision === "sell" ? activeEvent.sellImpact : activeEvent.holdImpact;
+    let balanceBefore = 0;
+    let balanceAfter = 0;
     setBalance(prev => {
-      const newBal = prev * impact;
-      setBalanceHistory(h => [...h.slice(0, -1), newBal]);
-      return newBal;
+      balanceBefore = prev;
+      balanceAfter = prev * impact;
+      setBalanceHistory(h => [...h.slice(0, -1), balanceAfter]);
+      return balanceAfter;
     });
 
     setEventHistory(prev => [...prev, { event: activeEvent, decision, month: currentMonth }]);
-    mp.saveDecision(eventsTriggered.length - 1, decision);
+    mp.saveDecision(eventsTriggered.length - 1, decision, {
+      title: activeEvent.title,
+      holdImpact: activeEvent.holdImpact,
+      sellImpact: activeEvent.sellImpact,
+      balanceBefore: Math.round(balanceBefore),
+      balanceAfter: Math.round(balanceAfter),
+    });
 
     setTimeout(() => {
       setActiveEvent(null);
@@ -234,21 +272,58 @@ const MultiplayerSimulation = ({ mp }: Props) => {
         </p>
       </div>
 
-      {/* Mini chart */}
+      {/* Per-category chart with tab selector */}
       <div className="bg-card rounded-2xl p-3 shadow-md mb-3">
-        <svg viewBox="0 0 300 60" className="w-full h-14">
-          {balanceHistory.length > 1 && (
-            <polyline fill="none" stroke="hsl(var(--primary))" strokeWidth="2"
-              points={balanceHistory.map((v, i) => {
-                const x = (i / Math.max(balanceHistory.length - 1, 1)) * 300;
-                const min = Math.min(...balanceHistory) * 0.95;
-                const max = Math.max(...balanceHistory) * 1.05;
-                const y = 55 - ((v - min) / (max - min || 1)) * 45;
-                return `${x},${y}`;
-              }).join(" ")}
-            />
-          )}
-        </svg>
+        {/* Category tabs */}
+        <div className="flex gap-1.5 mb-2 overflow-x-auto pb-1">
+          {myCategories.map(key => {
+            const active = (selectedCat ?? myCategories[0]) === key;
+            return (
+              <button key={key}
+                onClick={() => setSelectedCat(key)}
+                className="flex-shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold transition-all"
+                style={{
+                  backgroundColor: active ? (CAT_COLORS[key] ?? "#aaa") : "hsl(var(--muted))",
+                  color: active ? "white" : "hsl(var(--muted-foreground))",
+                  ...nunito,
+                }}
+              >
+                {t(`allocation.classes.${key}`)}
+              </button>
+            );
+          })}
+        </div>
+        {/* Single category line */}
+        {(() => {
+          const key = selectedCat ?? myCategories[0];
+          const hist = categoryHistories[key];
+          if (!hist || hist.length < 2) return (
+            <div className="h-14 flex items-center justify-center">
+              <span className="text-[10px] text-muted-foreground" style={nunito}>—</span>
+            </div>
+          );
+          const min = Math.min(...hist) * 0.97;
+          const max = Math.max(...hist) * 1.03;
+          const range = max - min || 1;
+          const toY = (v: number) => 58 - ((v - min) / range) * 50;
+          const color = CAT_COLORS[key] ?? "#aaa";
+          const points = hist.map((v, i) =>
+            `${(i / Math.max(hist.length - 1, 1)) * 300},${toY(v)}`
+          ).join(" ");
+          const last = hist[hist.length - 1];
+          const pct = ((last - INITIAL_BALANCE) / INITIAL_BALANCE * 100);
+          return (
+            <div>
+              <svg viewBox="0 0 300 65" className="w-full h-14">
+                <polyline fill="none" stroke={color} strokeWidth="2"
+                  strokeLinejoin="round" points={points} />
+              </svg>
+              <p className="text-[10px] text-right font-bold mt-0.5" style={{ color, ...nunito }}>
+                {pct >= 0 ? "+" : ""}{pct.toFixed(1)}%
+              </p>
+            </div>
+          );
+        })()}
       </div>
 
       {/* Event history carousel — scrolls right, newest on left */}

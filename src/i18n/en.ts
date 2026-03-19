@@ -408,7 +408,7 @@ const en = {
     waitingHost: "Waiting for host to start...",
     pickAssets: "Pick Your Categories",
     pickAssetsDesc: "Choose up to {{max}} asset categories. Your money will be split equally.",
-    pickCategoriesDesc: "Each player starts with 1,000 CHF — split equally across your picks.",
+    pickCategoriesDesc: "Each player starts with 1,000 CHF, split equally across your picks.",
     ready: "Ready!",
     waitingOthers: "Waiting for other players...",
     simulation: "Live Simulation",
@@ -431,6 +431,7 @@ const en = {
     playAgain: "Play Again",
     backToNest: "Back to My Nest",
     eventHistory: "EVENT HISTORY",
+    recommended: "Recommended",
   },
 
   // Multiplayer market events pool

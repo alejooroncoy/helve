@@ -9,7 +9,7 @@ import type { useMultiplayer } from "@/hooks/useMultiplayer";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 const nunito = { fontFamily: "'Nunito', sans-serif" };
-const MAX_PICKS = 5;
+const MAX_PICKS = 4;
 
 const CLASS_COLORS: Record<AssetClass, string> = {
   bonds: "hsl(210, 60%, 55%)", equity: "hsl(145, 58%, 36%)", gold: "hsl(38, 92%, 50%)",
@@ -35,6 +35,12 @@ const MultiplayerPicking = ({ mp }: Props) => {
   const { user } = useAuth();
   const [selected, setSelected] = useState<AssetClass[]>([]);
   const isHost = user?.id === mp.room?.host_user_id;
+
+  // Build a map of rolled risks from the room's available_assets (same for all players)
+  const rolledRisks: Record<string, number> = {};
+  for (const asset of (mp.room?.available_assets ?? [])) {
+    rolledRisks[asset.id] = asset.riskLevel;
+  }
 
   const toggleCategory = (key: AssetClass) => {
     setSelected(prev => {
@@ -78,10 +84,13 @@ const MultiplayerPicking = ({ mp }: Props) => {
 
       {/* Category list */}
       <div className="flex-1 space-y-2 mb-4">
-        {ASSET_CLASSES.map((cls, i) => {
+        {(mp.room?.available_assets ?? ASSET_CLASSES.map(c => ({ ...c, id: c.key }))).map((asset, i) => {
+          const cls = ASSET_CLASSES.find(c => c.key === asset.id)!;
+          if (!cls) return null;
           const isSelected = selected.includes(cls.key);
           const color = CLASS_COLORS[cls.key];
           const Icon = CLASS_ICONS[cls.key];
+          const risk = (asset as any).riskLevel ?? cls.riskWeight;
           return (
             <motion.button key={cls.key}
               className="w-full flex items-center gap-3 p-3 rounded-2xl text-left"
@@ -106,10 +115,10 @@ const MultiplayerPicking = ({ mp }: Props) => {
                 </span>
                 <div className="flex items-center gap-2 mt-1">
                   <span className="text-[10px] font-bold flex-shrink-0" style={{ color }}>
-                    {t("portfolio.risk")} {cls.riskWeight}/10
+                    {t("portfolio.risk")} {risk}/10
                   </span>
                   <div className="flex-1 h-1 rounded-full overflow-hidden" style={{ background: "hsl(var(--muted))" }}>
-                    <div className="h-full rounded-full" style={{ width: `${cls.riskWeight * 10}%`, backgroundColor: color }} />
+                    <div className="h-full rounded-full" style={{ width: `${risk * 10}%`, backgroundColor: color }} />
                   </div>
                 </div>
               </div>
