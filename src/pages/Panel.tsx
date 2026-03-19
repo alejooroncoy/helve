@@ -684,7 +684,7 @@ const Panel = () => {
               <DropZone id="nest">
                 <div className="flex items-center justify-between mb-3">
                   <h2 className="text-sm font-bold text-foreground uppercase tracking-wide" style={nunito}>{nests.find(n => n.id === activeNestId)?.name || t("panel.myNest")}</h2>
-                  <span className="text-xs text-muted-foreground" style={nunito}>{enrichedPortfolio.length}/4</span>
+                  <span className="text-xs text-muted-foreground" style={nunito}>{enrichedPortfolio.length}</span>
                 </div>
                 {enrichedPortfolio.length === 0 ? (
                   <div className="bg-card/50 rounded-3xl p-5 text-center border-2 border-dashed border-border flex flex-col items-center justify-center gap-2">
