@@ -24,6 +24,8 @@ export interface EventMarker {
   pointIndex: number;
   /** short label shown on the chart */
   label?: string;
+  /** time label like "6 meses", "1 año" */
+  timeLabel?: string;
   direction?: "drop" | "surge" | "shake";
 }
 
