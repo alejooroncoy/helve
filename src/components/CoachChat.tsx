@@ -1,8 +1,10 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Send, Volume2, VolumeX, TrendingUp, ArrowRightLeft, Lightbulb, Mic, MicOff, MessageCircle, Check, ArrowRight } from "lucide-react";
+import { X, Send, Volume2, VolumeX, TrendingUp, ArrowRightLeft, Lightbulb, Mic, MicOff, MessageCircle, Check, ArrowRight, Trash2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import type { Investment } from "@/game/types";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -240,27 +242,58 @@ interface CoachChatProps {
   onAddInvestment?: (investmentId: string) => void;
   onRemoveInvestment?: (investmentId: string) => void;
   initialQuestion?: string;
+  onSwapAccepted?: (removeId: string, addId: string) => void;
 }
 
-export default function CoachChat({ onClose, portfolio, onAddInvestment, onRemoveInvestment, initialQuestion }: CoachChatProps) {
+export default function CoachChat({ onClose, portfolio, onAddInvestment, onRemoveInvestment, initialQuestion, onSwapAccepted }: CoachChatProps) {
+  const { user } = useAuth();
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [loadingHistory, setLoadingHistory] = useState(true);
   const [initSent, setInitSent] = useState(false);
   const [playingIdx, setPlayingIdx] = useState<number | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Load chat history from DB
+  useEffect(() => {
+    if (!user) { setLoadingHistory(false); return; }
+    supabase
+      .from("chat_messages")
+      .select("role, content")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: true })
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          setMessages(data.map(m => ({ role: m.role as "user" | "assistant", content: m.content })));
+        }
+        setLoadingHistory(false);
+      });
+  }, [user]);
+
+  // Save message to DB
+  const persistMessage = useCallback(async (msg: Msg) => {
+    if (!user) return;
+    await supabase.from("chat_messages").insert({ user_id: user.id, role: msg.role, content: msg.content });
+  }, [user]);
+
+  const clearChat = useCallback(async () => {
+    if (!user) return;
+    await supabase.from("chat_messages").delete().eq("user_id", user.id);
+    setMessages([]);
+  }, [user]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
 
   useEffect(() => {
-    if (initialQuestion && !initSent && messages.length === 0) {
+    if (initialQuestion && !initSent && !loadingHistory && messages.length >= 0) {
       setInitSent(true);
       setTimeout(() => send(initialQuestion), 300);
     }
-  }, [initialQuestion, initSent]);
+  }, [initialQuestion, initSent, loadingHistory]);
 
   const stopAudio = useCallback(() => {
     if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
@@ -284,6 +317,7 @@ export default function CoachChat({ onClose, portfolio, onAddInvestment, onRemov
     const userMsg: Msg = { role: "user", content: text };
     if (!overrideText) setInput("");
     setMessages((prev) => [...prev, userMsg]);
+    persistMessage(userMsg);
     setLoading(true);
     try {
       const { text: responseText, actions } = await chatWithTools({ messages: [...messages, userMsg], portfolio });
@@ -291,24 +325,32 @@ export default function CoachChat({ onClose, portfolio, onAddInvestment, onRemov
         if (action.type === "add" && onAddInvestment) onAddInvestment(action.investmentId);
         else if (action.type === "remove" && onRemoveInvestment) onRemoveInvestment(action.investmentId);
       }
-      setMessages((prev) => [...prev, { role: "assistant", content: responseText }]);
+      const assistantMsg: Msg = { role: "assistant", content: responseText };
+      setMessages((prev) => [...prev, assistantMsg]);
+      persistMessage(assistantMsg);
     } catch (e) {
-      setMessages((prev) => [...prev, { role: "assistant", content: e instanceof Error ? e.message : "Connection error" }]);
+      const errMsg: Msg = { role: "assistant", content: e instanceof Error ? e.message : "Connection error" };
+      setMessages((prev) => [...prev, errMsg]);
     } finally {
       setLoading(false);
     }
   };
 
   const handleAcceptSwap = useCallback((swap: string) => {
-    // Format: "id_remove -> id_add"
     const parts = swap.split("->").map(s => s.trim());
     if (parts.length === 2) {
-      if (onRemoveInvestment) onRemoveInvestment(parts[0]);
-      setTimeout(() => {
-        if (onAddInvestment) onAddInvestment(parts[1]);
-      }, 300);
+      if (onSwapAccepted) {
+        onSwapAccepted(parts[0], parts[1]);
+      } else {
+        if (onRemoveInvestment) onRemoveInvestment(parts[0]);
+        setTimeout(() => {
+          if (onAddInvestment) onAddInvestment(parts[1]);
+        }, 300);
+      }
+      // Close chat after swap to show portfolio changes
+      setTimeout(() => onClose(), 800);
     }
-  }, [onAddInvestment, onRemoveInvestment]);
+  }, [onAddInvestment, onRemoveInvestment, onSwapAccepted, onClose]);
 
   const quickQuestions = portfolio && portfolio.length > 0
     ? ["How is my nest doing?", "Should I diversify?", "What's my risk level?"]
@@ -329,6 +371,11 @@ export default function CoachChat({ onClose, portfolio, onAddInvestment, onRemov
               : "Your investment guide"}
           </p>
         </div>
+        {messages.length > 0 && (
+          <button onClick={clearChat} className="p-1.5 rounded-full hover:bg-destructive/10 transition-colors" title="Clear chat">
+            <Trash2 className="w-4 h-4 text-muted-foreground hover:text-destructive" />
+          </button>
+        )}
         <button onClick={onClose} className="p-1.5 rounded-full hover:bg-muted transition-colors">
           <X className="w-4 h-4 text-muted-foreground" />
         </button>
