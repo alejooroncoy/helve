@@ -329,6 +329,15 @@ export default function TimeSimulation({ portfolio, onClose, onSellInvestment, o
               {showSellPrompt && currentPortfolio.length > 0 ? (
                 <div className="space-y-2">
                   <p className="text-xs font-bold text-foreground mb-2">¿Qué quieres hacer?</p>
+                  {onAskCoach && (
+                    <motion.button
+                      onClick={() => onAskCoach(`Hay ${currentEvent.title.toLowerCase()} y mi nido bajó ${Math.round((1 - currentEvent.impact) * 100)}%. ¿Debería vender algo o mantener? Tengo: ${currentPortfolio.map(i => i.name).join(", ")}`)}
+                      className="w-full bg-accent/10 text-accent py-2.5 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 border border-accent/20"
+                      whileTap={{ scale: 0.97 }}
+                    >
+                      🐦 Pregúntale al coach
+                    </motion.button>
+                  )}
                   <motion.button
                     onClick={handleHold}
                     className="w-full bg-primary text-primary-foreground py-3 rounded-2xl text-sm font-bold"
@@ -351,13 +360,24 @@ export default function TimeSimulation({ portfolio, onClose, onSellInvestment, o
                   </div>
                 </div>
               ) : (
-                <motion.button
-                  onClick={dismissEvent}
-                  className="w-full bg-primary text-primary-foreground py-3 rounded-2xl text-sm font-bold"
-                  whileTap={{ scale: 0.97 }}
-                >
-                  {currentEvent.type === "positive" ? "🎉 ¡Genial!" : "💪 ¡Seguimos!"}
-                </motion.button>
+                <div className="space-y-2">
+                  {onAskCoach && (
+                    <motion.button
+                      onClick={() => onAskCoach(`Pasó "${currentEvent.title}" en el mercado. ¿Qué significa esto para mi nido?`)}
+                      className="w-full bg-accent/10 text-accent py-2.5 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 border border-accent/20"
+                      whileTap={{ scale: 0.97 }}
+                    >
+                      🐦 ¿Qué significa esto?
+                    </motion.button>
+                  )}
+                  <motion.button
+                    onClick={dismissEvent}
+                    className="w-full bg-primary text-primary-foreground py-3 rounded-2xl text-sm font-bold"
+                    whileTap={{ scale: 0.97 }}
+                  >
+                    {currentEvent.type === "positive" ? "🎉 ¡Genial!" : "💪 ¡Seguimos!"}
+                  </motion.button>
+                </div>
               )}
             </motion.div>
           </motion.div>
