@@ -22,7 +22,6 @@ import {
 } from "@dnd-kit/core";
 import type { Investment } from "@/game/types";
 import { availableInvestments } from "@/game/types";
-import { useVirtualizer } from "@tanstack/react-virtual";
 import {
   LogOut, X, AlertTriangle, Inbox, Shield, TrendingUp, BarChart2,
   Building2, Leaf, Globe, Landmark, Zap, FastForward, MessageCircle, DollarSign, Info,
@@ -329,71 +328,75 @@ function DropZone({ id, children, isOver }: { id: string; children: React.ReactN
     </div>
   );
 }
-/* ---- Virtual horizontal scroll for Scouted ---- */
-function VirtualScoutedList({ suggestions, onBuy, onAsk }: { suggestions: Investment[]; onBuy: (inv: Investment) => void; onAsk: (inv: Investment) => void }) {
-  const parentRef = useRef<HTMLDivElement>(null);
-  const CARD_WIDTH = 200;
-  const GAP = 12;
-
-  const virtualizer = useVirtualizer({
-    count: suggestions.length,
-    getScrollElement: () => parentRef.current,
-    estimateSize: () => CARD_WIDTH + GAP,
-    horizontal: true,
-    overscan: 3,
-  });
-
-  if (suggestions.length === 0) {
-    return <p className="text-xs text-muted-foreground py-4 text-center" style={nunito}>No hay inversiones disponibles</p>;
-  }
-
+/* ---- Buy confirmation dialog ---- */
+function BuyConfirmDialog({ inv, onConfirm, onCancel }: { inv: Investment; onConfirm: (dontShowAgain: boolean) => void; onCancel: () => void }) {
   return (
-    <div
-      ref={parentRef}
-      className="overflow-x-auto pb-2 scrollbar-hide"
-      style={{ scrollSnapType: "x mandatory", height: 180 }}
+    <motion.div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 px-4 pb-6"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      onClick={onCancel}
     >
-      <div
-        style={{
-          width: `${virtualizer.getTotalSize()}px`,
-          height: "100%",
-          position: "relative",
-        }}
+      <motion.div
+        className="w-full max-w-sm bg-card rounded-3xl p-5 shadow-xl"
+        initial={{ y: 100, scale: 0.95 }}
+        animate={{ y: 0, scale: 1 }}
+        exit={{ y: 100, scale: 0.95 }}
+        onClick={(e) => e.stopPropagation()}
       >
-        {virtualizer.getVirtualItems().map((virtualItem) => {
-          const inv = suggestions[virtualItem.index];
-          if (!inv) return null;
-          return (
-            <div
-              key={inv.id}
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                width: `${CARD_WIDTH}px`,
-                height: "100%",
-                transform: `translateX(${virtualItem.start}px)`,
-                scrollSnapAlign: "start",
-              }}
-            >
-              <div className="flex flex-col h-full">
-                <div className="flex-1">
-                  <ScoutedCard inv={inv} onAsk={() => onAsk(inv)} />
-                </div>
-                <motion.button
-                  onClick={() => onBuy(inv)}
-                  className="w-full mt-1.5 py-1.5 rounded-xl text-[10px] font-bold flex items-center justify-center gap-1 transition-colors"
-                  style={{ ...nunito, backgroundColor: `${CELESTE}15`, color: CELESTE }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <DollarSign className="w-3 h-3" /> Comprar
-                </motion.button>
-              </div>
+        {/* Owl mascot */}
+        <div className="flex items-start gap-3 mb-4">
+          <motion.img
+            src="/perspectiva1.png"
+            alt="Búho"
+            className="w-14 h-14 rounded-full shadow-md flex-shrink-0"
+            animate={{ rotate: [0, -8, 8, -4, 0] }}
+            transition={{ duration: 0.8 }}
+          />
+          <div>
+            <p className="text-base font-bold text-foreground" style={nunito}>¡Estás comprando!</p>
+            <p className="text-xs text-muted-foreground mt-0.5" style={nunito}>
+              Vas a agregar este huevito a tu nido. Recuerda: comprar = invertir en este activo.
+            </p>
+          </div>
+        </div>
+
+        {/* Investment preview */}
+        <div className="bg-muted/50 rounded-2xl p-3 mb-4 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${CELESTE}18`, color: CELESTE }}>
+            {getInvestmentIcon(inv)}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-bold text-foreground" style={nunito}>{inv.name} {inv.flag || ""}</p>
+            <div className="flex items-center gap-2 mt-0.5">
+              <span className="text-xs" style={{ ...nunito, color: getRiskBarColor(inv.riskLevel), fontWeight: 700 }}>Riesgo {inv.riskLevel}/10</span>
+              <span className="text-xs" style={{ ...nunito, color: CELESTE, fontWeight: 700 }}>{inv.annualReturn}%/año</span>
             </div>
-          );
-        })}
-      </div>
-    </div>
+          </div>
+        </div>
+
+        {/* Buttons */}
+        <div className="space-y-2">
+          <motion.button
+            onClick={() => onConfirm(false)}
+            className="w-full py-3 rounded-2xl text-sm font-bold text-white"
+            style={{ ...nunito, backgroundColor: CELESTE }}
+            whileTap={{ scale: 0.97 }}
+          >
+            🪺 Entendido, ¡comprar!
+          </motion.button>
+          <motion.button
+            onClick={() => onConfirm(true)}
+            className="w-full py-2.5 rounded-2xl text-xs font-bold text-muted-foreground bg-muted/60"
+            style={nunito}
+            whileTap={{ scale: 0.97 }}
+          >
+            Entendido, no volver a recordarme
+          </motion.button>
+        </div>
+      </motion.div>
+    </motion.div>
   );
 }
 
@@ -410,6 +413,8 @@ const Panel = () => {
     "¡Arrastra una inversión a tu nido o tócala!"
   );
   const [draggedItem, setDraggedItem] = useState<{ inv: Investment; zone: string } | null>(null);
+  const [buyDialogInv, setBuyDialogInv] = useState<Investment | null>(null);
+  const [skipBuyDialog, setSkipBuyDialog] = useState(() => localStorage.getItem("helve_skip_buy_dialog") === "1");
   const [coachOpen, setCoachOpen] = useState(false);
   const [coachInitQ, setCoachInitQ] = useState<string | undefined>(undefined);
   const [simulationOpen, setSimulationOpen] = useState(false);
@@ -473,7 +478,7 @@ const Panel = () => {
     ? (enrichedPortfolio.reduce((s, i) => s + i.annualReturn, 0) / enrichedPortfolio.length).toFixed(1)
     : "0.0";
 
-  const addInvestment = (inv: Investment) => {
+  const executeBuy = useCallback((inv: Investment) => {
     if (activePortfolio.length >= 4) {
       setMascotMessage("🪺 ¡Tu nido está lleno! Vende un huevo para hacer espacio.");
       return;
@@ -486,7 +491,29 @@ const Panel = () => {
     if (newRisk > 70) setMascotMessage("🦉 ¡Cuidado! Compraste algo arriesgado. Tu nido tiembla un poco...");
     else if (newRisk < 20) setMascotMessage("🦉 ¡Buena compra! Un huevito muy seguro para tu nido.");
     else setMascotMessage("🦉 ¡Comprado! Buen ojo, ese huevo se ve prometedor.");
-  };
+  }, [activePortfolio, saveProgress]);
+
+  const tryBuyInvestment = useCallback((inv: Investment) => {
+    if (activePortfolio.length >= 4) {
+      setMascotMessage("🪺 ¡Tu nido está lleno! Vende un huevo para hacer espacio.");
+      return;
+    }
+    if (activePortfolio.find((i) => i.id === inv.id)) return;
+    if (skipBuyDialog) {
+      executeBuy(inv);
+    } else {
+      setBuyDialogInv(inv);
+    }
+  }, [activePortfolio, skipBuyDialog, executeBuy]);
+
+  const handleBuyConfirm = useCallback((dontShowAgain: boolean) => {
+    if (dontShowAgain) {
+      setSkipBuyDialog(true);
+      localStorage.setItem("helve_skip_buy_dialog", "1");
+    }
+    if (buyDialogInv) executeBuy(buyDialogInv);
+    setBuyDialogInv(null);
+  }, [buyDialogInv, executeBuy]);
 
   const removeInvestment = (id: string) => {
     const sold = activePortfolio.find(i => i.id === id);
@@ -512,7 +539,7 @@ const Panel = () => {
     if (!over) return;
     const data = active.data.current as { inv: Investment; zone: string };
     const dropTarget = over.id as string;
-    if (data.zone === "scouted" && dropTarget === "nest") addInvestment(data.inv);
+    if (data.zone === "scouted" && dropTarget === "nest") tryBuyInvestment(data.inv);
     if (data.zone === "nest" && dropTarget === "scouted") removeInvestment(data.inv.id);
   };
 
@@ -558,7 +585,7 @@ const Panel = () => {
                   </motion.button>
                 </DrawerTrigger>
                 <DrawerContent className="h-[80vh] p-0">
-                  <CoachChat onClose={() => { setCoachOpen(false); setCoachInitQ(undefined); }} portfolio={enrichedPortfolio} onAddInvestment={(id) => { const inv = enrichedAvailable.find(i => i.id === id); if (inv) addInvestment(inv); }} onRemoveInvestment={(id) => removeInvestment(id)} initialQuestion={coachInitQ} />
+                  <CoachChat onClose={() => { setCoachOpen(false); setCoachInitQ(undefined); }} portfolio={enrichedPortfolio} onAddInvestment={(id) => { const inv = enrichedAvailable.find(i => i.id === id); if (inv) tryBuyInvestment(inv); }} onRemoveInvestment={(id) => removeInvestment(id)} initialQuestion={coachInitQ} />
                 </DrawerContent>
               </Drawer>
             ) : (
@@ -572,7 +599,7 @@ const Panel = () => {
                   </motion.button>
                 </PopoverTrigger>
                 <PopoverContent side="bottom" align="end" className="w-[380px] h-[500px] p-0 rounded-2xl overflow-hidden">
-                  <CoachChat onClose={() => { setCoachOpen(false); setCoachInitQ(undefined); }} portfolio={enrichedPortfolio} onAddInvestment={(id) => { const inv = enrichedAvailable.find(i => i.id === id); if (inv) addInvestment(inv); }} onRemoveInvestment={(id) => removeInvestment(id)} initialQuestion={coachInitQ} />
+                  <CoachChat onClose={() => { setCoachOpen(false); setCoachInitQ(undefined); }} portfolio={enrichedPortfolio} onAddInvestment={(id) => { const inv = enrichedAvailable.find(i => i.id === id); if (inv) tryBuyInvestment(inv); }} onRemoveInvestment={(id) => removeInvestment(id)} initialQuestion={coachInitQ} />
                 </PopoverContent>
               </Popover>
             )}
@@ -654,14 +681,16 @@ const Panel = () => {
             )}
           </DropZone>
 
-          {/* Scouted — horizontal virtual scroll */}
+          {/* Scouted — horizontal scroll */}
           <DropZone id="scouted">
             <h2 className="text-sm font-bold text-foreground uppercase tracking-wide mb-3 mt-4" style={nunito}>🛒 Comprar</h2>
-            <VirtualScoutedList
-              suggestions={suggestions}
-              onBuy={addInvestment}
-              onAsk={(inv) => { setCoachInitQ(`Explica brevemente qué es ${inv.name} y si encaja con mi perfil`); setCoachOpen(true); }}
-            />
+            <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide" style={{ scrollSnapType: "x mandatory" }}>
+              {suggestions.map((inv) => (
+                <div key={inv.id} className="flex-shrink-0" style={{ width: 190, scrollSnapAlign: "start" }}>
+                  <DraggableCard inv={inv} zone="scouted" onClick={() => tryBuyInvestment(inv)} onAsk={() => { setCoachInitQ(`Explica brevemente qué es ${inv.name} y si encaja con mi perfil`); setCoachOpen(true); }} />
+                </div>
+              ))}
+            </div>
           </DropZone>
         </div>
 
@@ -732,6 +761,17 @@ const Panel = () => {
             onComplete={handleSimulationComplete}
             onSellInvestment={handleSimSell}
             onAskCoach={(q) => { setCoachInitQ(q); setCoachOpen(true); }}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Buy confirmation dialog */}
+      <AnimatePresence>
+        {buyDialogInv && (
+          <BuyConfirmDialog
+            inv={buyDialogInv}
+            onConfirm={handleBuyConfirm}
+            onCancel={() => setBuyDialogInv(null)}
           />
         )}
       </AnimatePresence>
