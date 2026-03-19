@@ -945,18 +945,11 @@ export default function TimeSimulation({
                     : (i18n.language === "es" ? "Tensión" : "Volatile");
                 const stepIdx = activeAIEvent.step;
                 const tLabel = filteredLabels[stepIdx] || "";
-                // Compute a direction-consistent change %
-                const riskFactor = 2 + activeAIEvent.riskLevel * 1.2;
-                const eventChangePct = activeAIEvent.direction === "drop"
-                  ? -riskFactor
-                  : activeAIEvent.direction === "surge"
-                    ? riskFactor
-                    : (Math.random() > 0.5 ? 1 : -1) * riskFactor * 0.5;
                 const marker: EventMarker = {
                   pointIndex: Math.max(0, snap.points.length - 1),
                   label: dirLabel,
                   timeLabel: tLabel,
-                  changePct: Math.round(eventChangePct * 10) / 10,
+                  changePct: activeAIEvent.impactPct,
                   direction: activeAIEvent.direction,
                 };
                 return (
