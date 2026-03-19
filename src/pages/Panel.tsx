@@ -588,7 +588,7 @@ const Panel = () => {
 
           {/* Scouted — horizontal scroll on mobile */}
           <DropZone id="scouted">
-            <h2 className="text-sm font-bold text-foreground uppercase tracking-wide mb-3 mt-4" style={nunito}>Explorar</h2>
+            <h2 className="text-sm font-bold text-foreground uppercase tracking-wide mb-3 mt-4" style={nunito}>🛒 Comprar</h2>
             <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide" style={{ scrollSnapType: "x mandatory" }}>
               {suggestions.map((inv) => (
                 <div key={inv.id} className="flex-shrink-0" style={{ width: 200, scrollSnapAlign: "start" }}>
