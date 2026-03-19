@@ -488,7 +488,7 @@ const Panel = () => {
   ];
 
   return (
-    <motion.div className="min-h-screen bg-background flex flex-col" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+    <motion.div className="min-h-screen bg-background flex flex-col overflow-y-auto" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
       {/* Header */}
       <div className="px-5 pt-6 pb-3">
         <div className="flex items-center justify-between">
