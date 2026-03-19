@@ -289,7 +289,7 @@ const Panel = () => {
                 </motion.button>
               </DrawerTrigger>
               <DrawerContent className="h-[80vh] p-0">
-                <CoachChat onClose={() => setCoachOpen(false)} />
+                <CoachChat onClose={() => setCoachOpen(false)} portfolio={activePortfolio} />
               </DrawerContent>
             </Drawer>
           ) : (
