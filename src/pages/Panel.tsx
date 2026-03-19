@@ -464,7 +464,7 @@ const Panel = () => {
     if (newRisk > 70) mascotToast(t("panel.riskyBuy"));
     else if (newRisk < 20) mascotToast(t("panel.safeBuy"));
     else mascotToast(t("panel.normalBuy"));
-  }, [activePortfolio, allocations, saveProgress, t]);
+  }, [activePortfolio, allocations, saveNestData, t]);
 
   const tryBuyInvestment = useCallback((inv: Investment) => {
     if (activePortfolio.length >= 4) { mascotToast(t("panel.nestFull")); return; }
