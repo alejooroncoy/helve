@@ -746,9 +746,11 @@ const Panel = () => {
           </div>
         </div>
 
-        <DragOverlay>
+        <DragOverlay dropAnimation={null}>
           {draggedItem ? (
-            draggedItem.zone === "nest" ? <NestCard inv={draggedItem.inv} overlay /> : <ScoutedCard inv={draggedItem.inv} overlay />
+            <div style={{ width: draggedItem.zone === "scouted" ? 170 : "auto", maxWidth: 340 }}>
+              {draggedItem.zone === "nest" ? <NestCard inv={draggedItem.inv} overlay /> : <ScoutedCard inv={draggedItem.inv} overlay />}
+            </div>
           ) : null}
         </DragOverlay>
       </DndContext>
