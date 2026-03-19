@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, FastForward, Pause, Play, TrendingUp, TrendingDown, AlertTriangle } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, ReferenceDot } from "recharts";
@@ -6,6 +6,7 @@ import type { Investment } from "@/game/types";
 
 interface TimeSimulationProps {
   portfolio: Investment[];
+  initialMonths?: number;
   onClose: () => void;
   onSellInvestment: (id: string) => void;
   onAskCoach?: (question: string) => void;
@@ -72,7 +73,7 @@ function pickRandom<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-export default function TimeSimulation({ portfolio, onClose, onSellInvestment, onAskCoach }: TimeSimulationProps) {
+export default function TimeSimulation({ portfolio, initialMonths = 12, onClose, onSellInvestment, onAskCoach }: TimeSimulationProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [data, setData] = useState<TimePoint[]>([]);
@@ -83,6 +84,18 @@ export default function TimeSimulation({ portfolio, onClose, onSellInvestment, o
   const [totalGain, setTotalGain] = useState(0);
   const [currentPortfolio, setCurrentPortfolio] = useState(portfolio);
   const intervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Filter timeline steps based on selected period
+  const filteredIndices = useMemo(() => {
+    const indices: number[] = [];
+    for (let i = 0; i < timeMonths.length; i++) {
+      if (timeMonths[i] <= initialMonths) indices.push(i);
+    }
+    return indices;
+  }, [initialMonths]);
+  const filteredMonths = filteredIndices.map(i => timeMonths[i]);
+  const filteredLabels = filteredIndices.map(i => timeLabels[i]);
+  const totalSteps = filteredMonths.length - 1;
 
   const startBalance = 1000;
 
@@ -102,13 +115,13 @@ export default function TimeSimulation({ portfolio, onClose, onSellInvestment, o
 
   // Advance one step
   const advanceStep = useCallback(() => {
-    if (currentStep >= timeMonths.length - 1) {
+    if (currentStep >= totalSteps) {
       setPlaying(false);
       return;
     }
 
     const nextStep = currentStep + 1;
-    const monthsDiff = timeMonths[nextStep] - timeMonths[currentStep];
+    const monthsDiff = filteredMonths[nextStep] - filteredMonths[currentStep];
 
     // Should an event happen? (40% chance per step)
     const eventHappens = Math.random() < 0.4 && nextStep > 1;
@@ -128,8 +141,8 @@ export default function TimeSimulation({ portfolio, onClose, onSellInvestment, o
       setTotalGain(Math.round(gain * 10) / 10);
 
       const point: TimePoint = {
-        month: timeMonths[nextStep],
-        label: timeLabels[nextStep],
+        month: filteredMonths[nextStep],
+        label: filteredLabels[nextStep],
         value: Math.round(newValue),
         event: event || undefined,
       };
@@ -152,11 +165,11 @@ export default function TimeSimulation({ portfolio, onClose, onSellInvestment, o
     }
 
     setCurrentStep(nextStep);
-  }, [currentStep, getMonthlyReturn]);
+  }, [currentStep, getMonthlyReturn, totalSteps, filteredMonths, filteredLabels]);
 
   // Auto-play timer
   useEffect(() => {
-    if (playing && currentStep < timeMonths.length - 1) {
+    if (playing && currentStep < totalSteps) {
       intervalRef.current = setTimeout(advanceStep, 1500);
     }
     return () => {
@@ -186,7 +199,7 @@ export default function TimeSimulation({ portfolio, onClose, onSellInvestment, o
     setPlaying(true);
   };
 
-  const isFinished = currentStep >= timeMonths.length - 1;
+  const isFinished = currentStep >= totalSteps;
   const lastValue = data[data.length - 1]?.value || startBalance;
   const isPositive = lastValue >= startBalance;
 
@@ -236,7 +249,7 @@ export default function TimeSimulation({ portfolio, onClose, onSellInvestment, o
         <div className="bg-card rounded-3xl p-4 shadow-sm h-full flex flex-col">
           <div className="flex items-center justify-between mb-2">
             <p className="text-xs font-bold text-foreground">
-              📈 {data.length > 1 ? timeLabels[currentStep] : "Hoy"}
+              📈 {data.length > 1 ? filteredLabels[currentStep] : "Hoy"}
             </p>
             <div className="flex items-center gap-1">
               {currentPortfolio.map((inv) => (

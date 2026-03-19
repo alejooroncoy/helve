@@ -254,6 +254,7 @@ const Panel = () => {
   const [coachOpen, setCoachOpen] = useState(false);
   const [coachInitQ, setCoachInitQ] = useState<string | undefined>(undefined);
   const [simulationOpen, setSimulationOpen] = useState(false);
+  const [simMonths, setSimMonths] = useState(12);
   const isMobile = useIsMobile();
 
   useEffect(() => {
@@ -447,27 +448,50 @@ const Panel = () => {
 
       {/* Bottom Actions */}
       <div className="px-5 pb-6 pt-3 bg-gradient-to-t from-background via-background to-transparent">
+        {/* Period selector */}
+        <div className="flex gap-2 mb-3">
+          {([
+            { label: "3 meses", months: 3 },
+            { label: "6 meses", months: 6 },
+            { label: "1 año", months: 12 },
+            { label: "5 años", months: 60 },
+          ] as const).map((p) => (
+            <button
+              key={p.months}
+              onClick={() => setSimMonths(p.months)}
+              className="flex-1 py-2 rounded-2xl text-xs transition-all border-2"
+              style={{
+                ...nunito,
+                fontWeight: 700,
+                borderColor: simMonths === p.months ? CELESTE : "hsl(var(--border))",
+                backgroundColor: simMonths === p.months ? CELESTE + "15" : "hsl(var(--card))",
+                color: simMonths === p.months ? CELESTE : "hsl(var(--muted-foreground))",
+              }}
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
         <motion.button
           className="w-full py-4 rounded-3xl text-base shadow-lg transition-all flex items-center justify-center gap-2 text-white"
           style={{
             ...nunito,
             fontWeight: 900,
-            backgroundColor: activePortfolio.length > 0 ? CELESTE : undefined,
-            opacity: activePortfolio.length === 0 ? 0.4 : 1,
-            cursor: activePortfolio.length === 0 ? "not-allowed" : "pointer",
             background: activePortfolio.length === 0 ? "hsl(var(--muted))" : CELESTE,
             color: activePortfolio.length === 0 ? "hsl(var(--muted-foreground))" : "white",
+            opacity: activePortfolio.length === 0 ? 0.4 : 1,
+            cursor: activePortfolio.length === 0 ? "not-allowed" : "pointer",
           }}
           onClick={activePortfolio.length > 0 ? handleSimulate : undefined}
           whileHover={activePortfolio.length > 0 ? { scale: 1.02 } : {}}
           whileTap={activePortfolio.length > 0 ? { scale: 0.97 } : {}}
         >
           <FastForward className="w-4 h-4" />
-          Simulate 1 Year
+          Simular {simMonths <= 6 ? `${simMonths} meses` : simMonths === 12 ? "1 año" : "5 años"}
         </motion.button>
         {activePortfolio.length === 0 && (
           <p className="text-[10px] text-muted-foreground text-center mt-2" style={nunito}>
-            Add investments to your nest to simulate
+            Agrega inversiones a tu nido para simular
           </p>
         )}
       </div>
@@ -476,6 +500,7 @@ const Panel = () => {
         {simulationOpen && (
           <TimeSimulation
             portfolio={activePortfolio}
+            initialMonths={simMonths}
             onClose={() => setSimulationOpen(false)}
             onSellInvestment={handleSimSell}
             onAskCoach={(q) => { setCoachInitQ(q); setCoachOpen(true); }}
