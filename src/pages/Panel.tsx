@@ -1,6 +1,10 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import { Drawer, DrawerTrigger, DrawerContent } from "@/components/ui/drawer";
+import { useIsMobile } from "@/hooks/use-mobile";
+import CoachChat from "@/components/CoachChat";
 import {
   DndContext,
   DragOverlay,
