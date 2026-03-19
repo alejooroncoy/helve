@@ -22,6 +22,7 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { supabase } from "@/integrations/supabase/client";
 import TimeSimulationCategoryCharts, {
   type CategoryTrendSnapshot,
+  type EventMarker,
   getCategoryColor,
 } from "./TimeSimulationCategoryCharts";
 
@@ -927,9 +928,19 @@ export default function TimeSimulation({
               {(() => {
                 const snap = categorySnapshots.find((s) => s.id === activeAIEvent.investmentId);
                 if (!snap) return null;
+                const dirLabel = activeAIEvent.direction === "drop"
+                  ? (i18n.language === "es" ? "Caída" : "Drop")
+                  : activeAIEvent.direction === "surge"
+                    ? (i18n.language === "es" ? "Subida" : "Surge")
+                    : (i18n.language === "es" ? "Tensión" : "Volatile");
+                const marker: EventMarker = {
+                  pointIndex: Math.max(0, snap.points.length - 1),
+                  label: dirLabel,
+                  direction: activeAIEvent.direction,
+                };
                 return (
                   <div className="mb-4 rounded-2xl bg-background/60 p-3">
-                    <TimeSimulationCategoryCharts items={[snap]} detail />
+                    <TimeSimulationCategoryCharts items={[snap]} detail eventMarker={marker} />
                   </div>
                 );
               })()}
