@@ -163,7 +163,6 @@ const PortfolioBuilder = ({ profile, onComplete }: Props) => {
               >
                 <div className="flex items-start gap-3">
                   <div className="flex-1 min-w-0">
-                  <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <p className="text-foreground truncate" style={{ ...nunito, fontWeight: 700 }}>{inv.name}</p>
                       {inv.flag && <span className="text-sm">{inv.flag}</span>}
