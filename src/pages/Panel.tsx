@@ -144,9 +144,12 @@ function DraggableCard({
   );
 }
 
-function NestCard({ inv, overlay, onSell, onAsk, onInfo }: { inv: Investment; overlay?: boolean; onSell?: () => void; onAsk?: () => void; onInfo?: () => void }) {
+function NestCard({ inv, overlay, onSell, onAsk, onInfo, allocation, onAllocationChange, maxAllocation, balance }: { inv: Investment; overlay?: boolean; onSell?: () => void; onAsk?: () => void; onInfo?: () => void; allocation?: number; onAllocationChange?: (pct: number) => void; maxAllocation?: number; balance?: number }) {
   const [expanded, setExpanded] = useState(false);
   const { t } = useTranslation();
+  const pct = allocation ?? 25;
+  const chfAmount = balance ? Math.round(balance * pct / 100) : 0;
+  const maxSlider = Math.min(100, pct + (maxAllocation ?? 100));
 
   return (
     <div className={`bg-card rounded-2xl p-3.5 shadow-sm ${overlay ? "shadow-lg rotate-2" : ""} cursor-grab active:cursor-grabbing`} style={overlay ? { boxShadow: `0 0 0 2px ${CELESTE}40` } : {}}>
@@ -168,18 +171,28 @@ function NestCard({ inv, overlay, onSell, onAsk, onInfo }: { inv: Investment; ov
             </span>
           </div>
         </div>
+        {/* Allocation badge */}
         {!overlay && (
-          <div
-            className="w-7 h-7 rounded-full bg-muted flex items-center justify-center flex-shrink-0 cursor-pointer"
-            onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
-            onPointerDown={(e) => e.stopPropagation()}
-          >
-            <motion.div animate={{ rotate: expanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
-              <Info className="w-3.5 h-3.5 text-muted-foreground" />
-            </motion.div>
+          <div className="flex flex-col items-end flex-shrink-0" onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }} onPointerDown={(e) => e.stopPropagation()}>
+            <span className="text-sm font-bold" style={{ ...nunito, color: CELESTE }}>{pct}%</span>
+            <span className="text-[10px] text-muted-foreground" style={nunito}>CHF {chfAmount}</span>
           </div>
         )}
       </div>
+
+      {/* Allocation slider */}
+      {!overlay && onAllocationChange && (
+        <div className="mt-2.5 px-1" onClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
+          <Slider
+            value={[pct]}
+            min={0}
+            max={maxSlider}
+            step={1}
+            onValueChange={([v]) => onAllocationChange(v)}
+            className="w-full"
+          />
+        </div>
+      )}
 
       {inv.tag && (
         <div className="mt-2 flex items-center gap-1.5">
