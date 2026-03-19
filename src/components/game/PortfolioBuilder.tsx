@@ -249,7 +249,6 @@ const PortfolioBuilder = ({ profile, onComplete }: Props) => {
                   whileTap={{ scale: 0.97 }}
                 >
                   <div className="flex-1 min-w-0">
-                  <div className="flex-1 min-w-0">
                     <p className="text-sm text-foreground truncate" style={{ ...nunito, fontWeight: 600 }}>
                       {inv.name} {inv.flag || ""}
                     </p>
