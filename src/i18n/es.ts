@@ -267,6 +267,12 @@ const es = {
     totalAllocated: "Asignado",
     adjustAllocation: "Desliza para ajustar %",
     maxAllocation: "Asignación máxima alcanzada (100%)",
+    newNest: "Nuevo Nido",
+    nestTab: "Nido {{n}}",
+    deleteNest: "Eliminar nido",
+    deleteNestConfirm: "¿Eliminar este nido y todas sus inversiones?",
+    maxNests: "Puedes tener hasta 4 nidos",
+    renameNest: "Renombrar",
   },
 
   // Time simulation
