@@ -158,7 +158,7 @@ function computeRealMultipliers(
 }
 
 export default function TimeSimulation({ portfolio, initialMonths = 12, initialBalance = 1000, onClose, onComplete, onSellInvestment, onAskCoach }: TimeSimulationProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [currentStep, setCurrentStep] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [data, setData] = useState<TimePoint[]>([]);
@@ -169,6 +169,25 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, initialB
   const [totalGain, setTotalGain] = useState(0);
   const [currentPortfolio, setCurrentPortfolio] = useState(portfolio);
   const intervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // AI Battle Royale state
+  const [aiScenario, setAiScenario] = useState<AIScenario | null>(null);
+  const [showAIEvent, setShowAIEvent] = useState(false);
+  const [aiFeedback, setAiFeedback] = useState<{ text: string; isGood: boolean } | null>(null);
+  const [showAIFeedback, setShowAIFeedback] = useState(false);
+  const aiScenarioCache = useRef<Record<number, AIScenario | null>>({});
+  const aiFetchingRef = useRef<Set<number>>(new Set());
+
+  // Pick 2 random steps for AI events (not first or last)
+  const aiEventSteps = useMemo(() => {
+    const filteredCount = Math.max(0, initialMonths <= 6 ? 3 : initialMonths <= 12 ? 5 : 9);
+    if (filteredCount < 4) return [];
+    const candidates = [];
+    for (let i = 2; i < filteredCount - 1; i++) candidates.push(i);
+    // Shuffle and pick 2
+    const shuffled = [...candidates].sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, Math.min(2, shuffled.length)).sort((a, b) => a - b);
+  }, [initialMonths]);
 
   const dbIds = useMemo(
     () => portfolio.flatMap(inv => categoryToDbIds[inv.id] || []).filter(Boolean),
@@ -198,6 +217,20 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, initialB
     setData([{ month: 0, label: t("timeSim.today"), value: startBalance }]);
   }, []);
 
+  // Pre-fetch AI scenarios 1 step before they're needed
+  useEffect(() => {
+    for (const eventStep of aiEventSteps) {
+      const prefetchAt = Math.max(0, eventStep - 1);
+      if (currentStep >= prefetchAt && !aiScenarioCache.current[eventStep] && !aiFetchingRef.current.has(eventStep)) {
+        aiFetchingRef.current.add(eventStep);
+        const lastValue = data[data.length - 1]?.value || startBalance;
+        fetchAIScenario(currentPortfolio, lastValue, filteredLabels[eventStep] || "", i18n.language).then(scenario => {
+          aiScenarioCache.current[eventStep] = scenario;
+        });
+      }
+    }
+  }, [currentStep, aiEventSteps, currentPortfolio, data, filteredLabels, i18n.language, startBalance]);
+
   const advanceStep = useCallback(() => {
     if (currentStep >= totalSteps || !realMultipliers) {
       setPlaying(false);
@@ -205,6 +238,27 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, initialB
     }
 
     const nextStep = currentStep + 1;
+
+    // Check if this step has an AI event ready
+    if (aiEventSteps.includes(nextStep) && aiScenarioCache.current[nextStep]) {
+      setAiScenario(aiScenarioCache.current[nextStep]!);
+      setShowAIEvent(true);
+      setPlaying(false);
+      // Still advance data
+      const realValue = startBalance * realMultipliers[nextStep];
+      const newValue = Math.round(realValue * 100) / 100;
+      const gain = ((newValue - startBalance) / startBalance) * 100;
+      setTotalGain(Math.round(gain * 10) / 10);
+      const point: TimePoint = {
+        month: filteredMonths[nextStep],
+        label: filteredLabels[nextStep],
+        value: Math.round(newValue),
+      };
+      setData(prev => [...prev, point]);
+      setCurrentStep(nextStep);
+      return;
+    }
+
     const realValue = startBalance * realMultipliers[nextStep];
     const newValue = Math.round(realValue * 100) / 100;
     const gain = ((newValue - startBalance) / startBalance) * 100;
@@ -245,7 +299,23 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, initialB
     }
 
     setCurrentStep(nextStep);
-  }, [currentStep, totalSteps, realMultipliers, filteredMonths, filteredLabels]);
+  }, [currentStep, totalSteps, realMultipliers, filteredMonths, filteredLabels, aiEventSteps, startBalance]);
+
+  const handleAIChoice = (option: AIScenarioOption) => {
+    setShowAIEvent(false);
+    setAiFeedback({
+      text: option.is_best ? option.feedback_good : option.feedback_bad,
+      isGood: option.is_best,
+    });
+    setShowAIFeedback(true);
+  };
+
+  const dismissAIFeedback = () => {
+    setShowAIFeedback(false);
+    setAiFeedback(null);
+    setAiScenario(null);
+    setPlaying(true);
+  };
 
   useEffect(() => {
     if (playing && currentStep < totalSteps) {
