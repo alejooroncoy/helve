@@ -175,7 +175,7 @@ function DraggableCard({
       {...listeners}
       {...attributes}
       onClick={zone === "scouted" ? onClick : undefined}
-      className={`touch-none select-none transition-all ${isDragging ? "opacity-30 scale-95" : ""}`}
+      className={`touch-none select-none transition-all h-full ${isDragging ? "opacity-30 scale-95" : ""}`}
     >
       {zone === "nest" ? <NestCard inv={inv} onSell={onSell} onAsk={onAsk} onInfo={onInfo} /> : <ScoutedCard inv={inv} onAsk={onAsk} />}
     </div>
@@ -279,7 +279,7 @@ function NestCard({ inv, overlay, onSell, onAsk, onInfo }: { inv: Investment; ov
 
 function ScoutedCard({ inv, overlay, onAsk }: { inv: Investment; overlay?: boolean; onAsk?: () => void }) {
   return (
-    <div className={`bg-card rounded-2xl p-3 shadow-sm border-2 border-dashed border-border ${overlay ? "-rotate-2" : ""} cursor-grab active:cursor-grabbing min-h-[120px] flex flex-col`} style={overlay ? { boxShadow: `0 0 0 2px ${CELESTE}40`, borderColor: `${CELESTE}60` } : {}}>
+    <div className={`bg-card rounded-2xl p-3 shadow-sm border-2 border-dashed border-border ${overlay ? "-rotate-2" : ""} cursor-grab active:cursor-grabbing min-h-[120px] h-full flex flex-col`} style={overlay ? { boxShadow: `0 0 0 2px ${CELESTE}40`, borderColor: `${CELESTE}60` } : {}}>
       <div className="flex items-start gap-2">
         <div className="w-9 h-9 bg-secondary rounded-xl flex items-center justify-center text-muted-foreground flex-shrink-0">
           {getInvestmentIcon(inv)}
@@ -289,6 +289,7 @@ function ScoutedCard({ inv, overlay, onAsk }: { inv: Investment; overlay?: boole
           {inv.flag && <span className="text-[10px]">{inv.flag}</span>}
         </div>
       </div>
+      <div className="flex-grow" />
       <div className="flex items-center gap-2 mt-2">
         <span className="text-[10px] text-muted-foreground" style={nunito}>Riesgo</span>
         <span className="text-[10px] font-bold" style={{ ...nunito, color: getRiskBarColor(inv.riskLevel) }}>{inv.riskLevel}/10</span>
@@ -666,9 +667,9 @@ const Panel = () => {
           {/* Scouted — horizontal scroll */}
           <DropZone id="scouted">
             <h2 className="text-sm font-bold text-foreground uppercase tracking-wide mb-3 mt-4" style={nunito}>🛒 Comprar</h2>
-            <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide" style={{ scrollSnapType: "x mandatory" }}>
+            <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide items-stretch" style={{ scrollSnapType: "x mandatory" }}>
               {suggestions.map((inv) => (
-                <div key={inv.id} className="flex-shrink-0" style={{ width: 190, scrollSnapAlign: "start" }}>
+                <div key={inv.id} className="flex-shrink-0 flex" style={{ width: 190, scrollSnapAlign: "start" }}>
                   <DraggableCard inv={inv} zone="scouted" onClick={() => tryBuyInvestment(inv)} onAsk={() => { setCoachInitQ(`Explica brevemente qué es ${inv.name} y si encaja con mi perfil`); setCoachOpen(true); }} />
                 </div>
               ))}
