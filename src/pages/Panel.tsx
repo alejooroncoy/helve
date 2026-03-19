@@ -488,18 +488,34 @@ const Panel = () => {
   }, [buyDialogInv, executeBuy]);
 
   const removeInvestment = (id: string) => {
-    const sold = activePortfolio.find(i => i.id === id);
+    const removed = activePortfolio.find(i => i.id === id);
     setActivePortfolio((prev) => {
       const next = prev.filter((i) => i.id !== id);
       saveProgress({ portfolio: next });
       return next;
     });
-    if (sold) {
-      mascotToast(t("panel.soldMsg", { name: sold.name }));
+    if (removed) {
+      mascotToast(t("panel.soldMsg", { name: removed.name }));
     } else {
       mascotToast(t("panel.soldGeneric"));
     }
   };
+
+  const handleSwapFromCoach = useCallback((removeId: string, addId: string) => {
+    const toRemove = activePortfolio.find(i => i.id === removeId);
+    const toAdd = enrichedAvailable.find(i => i.id === addId);
+    if (!toAdd) return;
+    setActivePortfolio((prev) => {
+      const next = prev.filter((i) => i.id !== removeId);
+      if (!next.find(i => i.id === addId) && next.length < 4) {
+        next.push(toAdd);
+      }
+      saveProgress({ portfolio: next });
+      return next;
+    });
+    const removeName = toRemove?.name || removeId;
+    mascotToast(t("panel.swapMsg", { removed: removeName, added: toAdd.name }));
+  }, [activePortfolio, enrichedAvailable, saveProgress, t]);
 
   const handleDragStart = (event: DragStartEvent) => {
     setDraggedItem(event.active.data.current as { inv: Investment; zone: string });
