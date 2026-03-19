@@ -610,7 +610,7 @@ export default function TimeSimulation({
   }, [currentStep, aiEventPlan, data, ensureScenario, startBalance]);
 
   const advanceStep = useCallback(() => {
-    if (currentStep >= totalSteps || !categoryMultipliers) {
+    if (currentStep >= totalSteps) {
       setPlaying(false);
       return;
     }
