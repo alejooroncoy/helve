@@ -369,8 +369,8 @@ export default function CoachChat({ onClose, portfolio, onAddInvestment, onRemov
           <p className="text-sm font-bold text-foreground" style={nunito}>{t("coach.title")}</p>
           <p className="text-[10px] font-medium" style={{ color: CELESTE, ...nunito }}>
             {portfolio && portfolio.length > 0
-              ? `Analyzing ${portfolio.length} investment${portfolio.length > 1 ? "s" : ""}`
-              : "Your investment guide"}
+              ? t("coach.analyzing", { count: portfolio.length, plural: portfolio.length > 1 ? "s" : "" })
+              : t("coach.yourGuide")}
           </p>
         </div>
         {messages.length > 0 && (
