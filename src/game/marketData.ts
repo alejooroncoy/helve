@@ -1,179 +1,37 @@
 /**
- * Investment definitions for the game.
- * All financial stats (CAGR, volatility, risk) are loaded from DB via useInstrumentStats.
- * The values here are defaults/fallbacks only.
+ * Category-based investment definitions for the game.
+ * Each "investment" represents an asset category, not an individual stock.
+ * Financial stats are loaded from DB via useInstrumentStats.
  */
 
 import type { Investment } from "./types";
+import { ASSET_CLASSES } from "./types";
 
-// ── Investment catalog ──────────────────────────────────────────────────────
+// Build category-based investments from ASSET_CLASSES
+export const realInvestments: Investment[] = ASSET_CLASSES.map(cls => {
+  let type: "safe" | "balanced" | "growth";
+  if (cls.riskWeight <= 3) type = "safe";
+  else if (cls.riskWeight <= 6) type = "balanced";
+  else type = "growth";
 
-export const realInvestments: Investment[] = [
-  // ─── SAFE (Bonds & Fixed Income) ───
-  {
-    id: "ch-bond-aaa",
-    name: "Swiss Bond AAA-BBB",
-    emoji: "🏦",
-    type: "safe",
-    riskLevel: 1,
-    annualReturn: 2.8,
-    flag: "🇨🇭",
-    tag: "AAA",
-  },
-  {
-    id: "global-bond",
-    name: "Bloomberg Global Bond Index",
-    emoji: "🌐",
-    type: "safe",
-    riskLevel: 2,
-    annualReturn: 3.1,
-    flag: "🌍",
-  },
-  {
-    id: "ch-govt-10y",
-    name: "Swiss Government Bond 10Y",
-    emoji: "🏛️",
-    type: "safe",
-    riskLevel: 1,
-    annualReturn: 1.5,
-    flag: "🇨🇭",
-    tag: "GOV",
-  },
+  // Default annual returns (fallback before DB enrichment)
+  const defaultReturns: Record<string, number> = {
+    bonds: 2.5,
+    equity: 6.0,
+    gold: 7.0,
+    fx: 3.5,
+    swissStocks: 5.8,
+    usStocks: 9.0,
+    crypto: 15.0,
+    cleanEnergy: 8.0,
+  };
 
-  // ─── BALANCED (Indices, Gold, Stable Stocks) ───
-  {
-    id: "smi-index",
-    name: "SMI Index (Swiss Market)",
-    emoji: "📊",
-    type: "balanced",
-    riskLevel: 5,
-    annualReturn: 6.2,
-    flag: "🇨🇭",
-  },
-  {
-    id: "eurostoxx50",
-    name: "EuroStoxx 50",
-    emoji: "🇪🇺",
-    type: "balanced",
-    riskLevel: 5,
-    annualReturn: 5.8,
-    flag: "🇪🇺",
-  },
-  {
-    id: "gold-chf",
-    name: "Gold (CHF)",
-    emoji: "🥇",
-    type: "balanced",
-    riskLevel: 4,
-    annualReturn: 7.1,
-    flag: "🇨🇭",
-  },
-  {
-    id: "nestle",
-    name: "Nestlé S.A.",
-    emoji: "🍫",
-    type: "balanced",
-    riskLevel: 4,
-    annualReturn: 5.5,
-    flag: "🇨🇭",
-    tag: "NESN",
-  },
-  {
-    id: "novartis",
-    name: "Novartis AG",
-    emoji: "💊",
-    type: "balanced",
-    riskLevel: 5,
-    annualReturn: 6.8,
-    flag: "🇨🇭",
-    tag: "NOVN",
-  },
-  {
-    id: "green-energy",
-    name: "Green Energy Fund",
-    emoji: "🌱",
-    type: "balanced",
-    riskLevel: 5,
-    annualReturn: 5.2,
-  },
-
-  // ─── GROWTH (High-return Indices & Stocks) ───
-  {
-    id: "djia-index",
-    name: "Dow Jones Industrial",
-    emoji: "🗽",
-    type: "growth",
-    riskLevel: 6,
-    annualReturn: 9.4,
-    flag: "🇺🇸",
-  },
-  {
-    id: "dax-index",
-    name: "DAX (Total Return)",
-    emoji: "📈",
-    type: "growth",
-    riskLevel: 6,
-    annualReturn: 8.7,
-    flag: "🇩🇪",
-  },
-  {
-    id: "apple",
-    name: "Apple Inc.",
-    emoji: "🍎",
-    type: "growth",
-    riskLevel: 7,
-    annualReturn: 28.5,
-    flag: "🇺🇸",
-    tag: "AAPL",
-  },
-  {
-    id: "microsoft",
-    name: "Microsoft Corp.",
-    emoji: "💻",
-    type: "growth",
-    riskLevel: 7,
-    annualReturn: 24.2,
-    flag: "🇺🇸",
-    tag: "MSFT",
-  },
-  {
-    id: "nvidia",
-    name: "NVIDIA Corp.",
-    emoji: "🎮",
-    type: "growth",
-    riskLevel: 9,
-    annualReturn: 45.0,
-    flag: "🇺🇸",
-    tag: "NVDA",
-  },
-  {
-    id: "logitech",
-    name: "Logitech International",
-    emoji: "🖱️",
-    type: "growth",
-    riskLevel: 7,
-    annualReturn: 14.8,
-    flag: "🇨🇭",
-    tag: "LOGN",
-  },
-  {
-    id: "ubs",
-    name: "UBS Group AG",
-    emoji: "🏦",
-    type: "growth",
-    riskLevel: 7,
-    annualReturn: 8.2,
-    flag: "🇨🇭",
-    tag: "UBSG",
-  },
-  {
-    id: "amazon",
-    name: "Amazon.com Inc.",
-    emoji: "📦",
-    type: "growth",
-    riskLevel: 8,
-    annualReturn: 31.0,
-    flag: "🇺🇸",
-    tag: "AMZN",
-  },
-];
+  return {
+    id: cls.key,
+    name: cls.key, // Will be translated via t(`allocation.classes.${cls.key}`)
+    emoji: cls.emoji,
+    type,
+    riskLevel: cls.riskWeight,
+    annualReturn: defaultReturns[cls.key] ?? 5.0,
+  };
+});

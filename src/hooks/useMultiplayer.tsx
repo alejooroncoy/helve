@@ -51,8 +51,8 @@ function generateRoomCode(): string {
 }
 
 function pickRandomAssets(count: number): Investment[] {
-  const shuffled = [...availableInvestments].sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, count);
+  // Now we use all 8 categories as available assets
+  return [...availableInvestments];
 }
 
 export function useMultiplayer() {
@@ -114,7 +114,7 @@ export function useMultiplayer() {
     if (!user) return null;
     setLoading(true);
     const code = generateRoomCode();
-    const assets = pickRandomAssets(10);
+    const assets = pickRandomAssets(8);
 
     const { data: roomData, error: roomErr } = await supabase
       .from("multiplayer_rooms")
