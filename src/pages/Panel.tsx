@@ -932,7 +932,7 @@ const Panel = () => {
               <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium" style={nunito}>
                 {t("panel.invested")}
               </p>
-              <p className="text-sm font-bold mt-0.5" style={{ ...nunito, color: CELESTE }}>
+              <p className="text-lg font-bold mt-0.5" style={{ ...nunito, color: CELESTE }}>
                 CHF {Math.round(balance * totalAllocated / 100).toLocaleString()}
               </p>
             </div>
