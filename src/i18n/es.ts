@@ -235,6 +235,8 @@ const es = {
     myNest: "Mi Nido",
     panelTitle: "Panel",
     balance: "Balance (compartido)",
+    capital: "Capital",
+    invested: "Invertido",
     risk: "Riesgo",
     returnLabel: "Retorno",
     annual: "Anual",
