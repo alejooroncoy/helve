@@ -36,6 +36,7 @@ const GameFlow = () => {
       ...prev,
       step: "portfolio",
       portfolio: [],
+      portfolioSlots: [],
       stormChoice: null,
       simulationResult: 0,
     }));
