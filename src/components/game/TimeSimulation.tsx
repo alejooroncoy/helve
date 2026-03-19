@@ -1112,9 +1112,9 @@ export default function TimeSimulation({
         ) : (
           <div className="flex gap-3">
             <motion.button
-              onClick={() => categoryMultipliers && setPlaying(!playing)}
-              className="flex-1 bg-card text-foreground py-3.5 rounded-2xl text-sm font-bold shadow-sm flex items-center justify-center gap-2"
-              style={{ ...nunito, opacity: categoryMultipliers ? 1 : 0.5 }}
+              onClick={() => setPlaying(!playing)}
+              className="flex-1 py-3.5 rounded-2xl text-sm font-bold shadow-sm flex items-center justify-center gap-2"
+              style={{ ...nunito, backgroundColor: PRIMARY_COLOR, color: "hsl(var(--primary-foreground))" }}
               whileTap={{ scale: 0.95 }}
             >
               {playing ? (
