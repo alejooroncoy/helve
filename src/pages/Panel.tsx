@@ -329,6 +329,67 @@ function DropZone({ id, children, isOver }: { id: string; children: React.ReactN
     </div>
   );
 }
+/* ---- Virtual horizontal scroll for Scouted ---- */
+function VirtualScoutedList({ suggestions, onBuy, onAsk }: { suggestions: Investment[]; onBuy: (inv: Investment) => void; onAsk: (inv: Investment) => void }) {
+  const parentRef = useRef<HTMLDivElement>(null);
+  const CARD_WIDTH = 200;
+  const GAP = 12;
+
+  const virtualizer = useVirtualizer({
+    count: suggestions.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => CARD_WIDTH + GAP,
+    horizontal: true,
+    overscan: 3,
+  });
+
+  return (
+    <div
+      ref={parentRef}
+      className="overflow-x-auto pb-2 scrollbar-hide"
+      style={{ scrollSnapType: "x mandatory" }}
+    >
+      <div
+        style={{
+          width: `${virtualizer.getTotalSize()}px`,
+          height: "100%",
+          position: "relative",
+        }}
+      >
+        {virtualizer.getVirtualItems().map((virtualItem) => {
+          const inv = suggestions[virtualItem.index];
+          if (!inv) return null;
+          return (
+            <div
+              key={inv.id}
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: `${CARD_WIDTH}px`,
+                transform: `translateX(${virtualItem.start}px)`,
+                scrollSnapAlign: "start",
+              }}
+            >
+              <ScoutedCard
+                inv={inv}
+                onAsk={() => onAsk(inv)}
+              />
+              <motion.button
+                onClick={() => onBuy(inv)}
+                className="w-full mt-1.5 py-1.5 rounded-xl text-[10px] font-bold flex items-center justify-center gap-1 transition-colors"
+                style={{ ...nunito, backgroundColor: `${CELESTE}15`, color: CELESTE }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <DollarSign className="w-3 h-3" /> Comprar
+              </motion.button>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 /* ---- Main Panel ---- */
 const Panel = () => {
