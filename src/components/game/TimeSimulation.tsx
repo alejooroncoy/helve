@@ -22,6 +22,7 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { supabase } from "@/integrations/supabase/client";
 import TimeSimulationCategoryCharts, {
   type CategoryTrendSnapshot,
+  getCategoryColor,
 } from "./TimeSimulationCategoryCharts";
 
 const PRIMARY_COLOR = "hsl(var(--primary))";
@@ -202,22 +203,23 @@ function getEventCount(initialMonths: number, portfolio: Investment[]) {
   const normalizedRisk = clamp((avgRisk - 2) / 7, 0, 1);
 
   if (initialMonths <= 3) {
-    return Math.random() < 0.28 + normalizedRisk * 0.37 ? 1 : 0;
+    return Math.random() < 0.35 + normalizedRisk * 0.35 ? 1 : 0;
   }
 
   if (initialMonths <= 6) {
-    return Math.random() < 0.48 + normalizedRisk * 0.28 ? 1 : 0;
+    return 1;
   }
 
   if (initialMonths <= 12) {
-    return 1 + (normalizedRisk > 0.5 && portfolio.length > 1 ? 1 : 0);
+    return Math.min(2, 1 + (normalizedRisk > 0.35 || portfolio.length > 1 ? 1 : 0));
   }
 
   if (initialMonths <= 24) {
-    return Math.min(3, 2 + (normalizedRisk > 0.58 ? 1 : 0));
+    return Math.min(3, 2 + (normalizedRisk > 0.4 ? 1 : 0));
   }
 
-  return Math.min(Math.min(5, portfolio.length || 1), 3 + Math.round(normalizedRisk * 2));
+  // 5 years: 3-5 events across different categories
+  return Math.min(Math.min(5, portfolio.length), 3 + Math.round(normalizedRisk * 2));
 }
 
 function pickEventSteps(totalSteps: number, eventCount: number) {
@@ -521,7 +523,7 @@ export default function TimeSimulation({
   const categorySnapshots = useMemo<CategoryTrendSnapshot[]>(() => {
     if (!categoryMultipliers) return [];
 
-    return currentPortfolio.map((investment) => {
+    return currentPortfolio.map((investment, idx) => {
       const series = categoryMultipliers[investment.id] || filteredMonths.map(() => 1);
       const first = series[0] || 1;
       const last = series[series.length - 1] || first;
@@ -532,6 +534,7 @@ export default function TimeSimulation({
         label: t(`allocation.classes.${investment.id}`),
         riskLevel: investment.riskLevel,
         changePct,
+        color: getCategoryColor(idx),
         points: series.map((value, index) => ({
           index,
           value: Math.round(value * 1000) / 10,
@@ -607,7 +610,7 @@ export default function TimeSimulation({
   }, [currentStep, aiEventPlan, data, ensureScenario, startBalance]);
 
   const advanceStep = useCallback(() => {
-    if (currentStep >= totalSteps || !categoryMultipliers) {
+    if (currentStep >= totalSteps) {
       setPlaying(false);
       return;
     }
@@ -720,7 +723,7 @@ export default function TimeSimulation({
   const totalDecisions = aiDecisions.current.length;
   const goodDecisions = aiDecisions.current.filter((decision) => decision.isGood).length;
   const decisionsByStep = new Map(aiDecisions.current.map((decision) => [decision.step, decision]));
-  const showCategorySnapshots = currentStep === 0 && !playing && !showAIEvent && !showAIFeedback;
+  const showCategorySnapshots = !showAIEvent && !showAIFeedback && !isFinished;
 
   if (pricesLoading) {
     return (
@@ -817,14 +820,11 @@ export default function TimeSimulation({
         </div>
       </div>
 
-      <div className="px-5 flex-1 min-h-0 space-y-3">
-        {showCategorySnapshots && (
-          <TimeSimulationCategoryCharts
-            title={t("timeSim.categorySnapshots")}
-            subtitle={t("timeSim.categorySnapshotsHint")}
-            riskLabel={(level) => t("timeSim.riskLabel", { level })}
-            items={categorySnapshots}
-          />
+      <div className="px-5 flex-1 min-h-0 space-y-3 overflow-y-auto">
+        {showCategorySnapshots && categorySnapshots.length > 0 && (
+          <div className="bg-card rounded-3xl p-4 shadow-sm">
+            <TimeSimulationCategoryCharts items={categorySnapshots} />
+          </div>
         )}
 
         <div className="bg-card rounded-3xl p-4 shadow-sm h-full flex flex-col min-h-0">
@@ -944,15 +944,8 @@ export default function TimeSimulation({
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.8, opacity: 0 }}
               transition={{ type: "spring", damping: 20 }}
-              className="bg-card rounded-3xl p-6 shadow-xl max-w-sm w-full text-center"
+              className="bg-card rounded-3xl p-5 shadow-xl max-w-sm w-full text-center max-h-[85vh] overflow-y-auto"
             >
-              <div
-                className="w-12 h-12 rounded-full mx-auto mb-3 flex items-center justify-center"
-                style={{ backgroundColor: PRIMARY_SOFT }}
-              >
-                <AlertTriangle className="w-6 h-6" style={{ color: PRIMARY_COLOR }} />
-              </div>
-
               <div className="mb-3 flex items-center justify-center gap-2 flex-wrap">
                 <span
                   className="rounded-full px-3 py-1 text-[11px] font-semibold"
@@ -968,12 +961,23 @@ export default function TimeSimulation({
                 </span>
               </div>
 
-              <h2 className="text-lg font-bold text-foreground mb-1" style={nunito}>
+              <h2 className="text-base font-bold text-foreground mb-1" style={nunito}>
                 {aiScenario.title}
               </h2>
-              <p className="text-sm text-muted-foreground mb-5" style={nunito}>
+              <p className="text-xs text-muted-foreground mb-3 leading-relaxed" style={nunito}>
                 {aiScenario.description}
               </p>
+
+              {/* Category sparkline in modal */}
+              {(() => {
+                const snap = categorySnapshots.find((s) => s.id === activeAIEvent.investmentId);
+                if (!snap) return null;
+                return (
+                  <div className="mb-4 rounded-2xl bg-background/60 p-3">
+                    <TimeSimulationCategoryCharts items={[snap]} detail />
+                  </div>
+                );
+              })()}
 
               <div className="space-y-2.5">
                 {aiScenario.options.map((option) => {
@@ -1108,9 +1112,9 @@ export default function TimeSimulation({
         ) : (
           <div className="flex gap-3">
             <motion.button
-              onClick={() => categoryMultipliers && setPlaying(!playing)}
-              className="flex-1 bg-card text-foreground py-3.5 rounded-2xl text-sm font-bold shadow-sm flex items-center justify-center gap-2"
-              style={{ ...nunito, opacity: categoryMultipliers ? 1 : 0.5 }}
+              onClick={() => setPlaying(!playing)}
+              className="flex-1 py-3.5 rounded-2xl text-sm font-bold shadow-sm flex items-center justify-center gap-2"
+              style={{ ...nunito, backgroundColor: PRIMARY_COLOR, color: "hsl(var(--primary-foreground))" }}
               whileTap={{ scale: 0.95 }}
             >
               {playing ? (
