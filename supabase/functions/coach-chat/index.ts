@@ -329,12 +329,13 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, portfolio } = await req.json();
+    const { messages, portfolio, language } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
+    const lang = (language || "en").slice(0, 2).toLowerCase();
     const liveInstrumentStats = await fetchInstrumentStats();
-    const systemPrompt = buildSystemPrompt(liveInstrumentStats);
+    const systemPrompt = buildSystemPrompt(liveInstrumentStats, lang);
 
     // Build portfolio context
     let contextMessage = "";

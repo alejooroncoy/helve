@@ -30,7 +30,7 @@ async function chatWithTools({
       "Content-Type": "application/json",
       Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
     },
-    body: JSON.stringify({ messages, portfolio }),
+    body: JSON.stringify({ messages, portfolio, language: document.documentElement.lang || localStorage.getItem("i18nextLng") || "en" }),
   });
 
   if (!resp.ok) {
