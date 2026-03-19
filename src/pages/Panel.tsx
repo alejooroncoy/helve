@@ -532,7 +532,7 @@ const Panel = () => {
   };
 
   const handleSimulate = () => {
-    saveProgress({ portfolio: activePortfolio });
+    saveNestData({ portfolio: activePortfolio });
     setSimulationOpen(true);
   };
 
