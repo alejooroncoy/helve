@@ -312,12 +312,13 @@ function buildAIEventPlan(portfolio: Investment[], initialMonths: number, totalS
 function buildFallbackScenario(event: ScheduledAIEvent, language: string): AIScenario {
   const isSpanish = language === "es";
   const categoryName = event.investmentName;
+  const pctLabel = `${event.impactPct > 0 ? "+" : ""}${event.impactPct}%`;
 
   if (event.direction === "drop") {
     return {
-      title: isSpanish ? `${categoryName} cae hoy` : `${categoryName} drops today`,
+      title: isSpanish ? `${categoryName} cae un ${Math.abs(event.impactPct)}%` : `${categoryName} drops ${Math.abs(event.impactPct)}%`,
       description: isSpanish
-        ? `${categoryName} recibe presión fuerte y ahora vale menos. Tu nido está expuesto aquí, así que toca decidir.`
+        ? `${categoryName} sufre una caída del ${Math.abs(event.impactPct)}%. Tu nido está expuesto aquí, así que toca decidir.`
         : `${categoryName} is under pressure and suddenly trades lower. Your nest is exposed here, so you need to decide.`,
       options: [
         {
