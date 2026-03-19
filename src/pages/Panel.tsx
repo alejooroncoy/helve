@@ -284,7 +284,11 @@ const Panel = () => {
 
   const handleSimulate = () => {
     saveProgress({ portfolio: activePortfolio });
-    navigate("/");
+    setSimulationOpen(true);
+  };
+
+  const handleSimSell = (id: string) => {
+    removeInvestment(id);
   };
 
   const handleSignOut = async () => {
