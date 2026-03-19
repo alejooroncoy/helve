@@ -371,6 +371,11 @@ export default function CoachChat({ onClose, portfolio, onAddInvestment, onRemov
               : "Your investment guide"}
           </p>
         </div>
+        {messages.length > 0 && (
+          <button onClick={clearChat} className="p-1.5 rounded-full hover:bg-destructive/10 transition-colors" title="Clear chat">
+            <Trash2 className="w-4 h-4 text-muted-foreground hover:text-destructive" />
+          </button>
+        )}
         <button onClick={onClose} className="p-1.5 rounded-full hover:bg-muted transition-colors">
           <X className="w-4 h-4 text-muted-foreground" />
         </button>
