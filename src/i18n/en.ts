@@ -109,6 +109,57 @@ const en = {
     },
   },
 
+  // Asset allocation
+  allocation: {
+    title: "ASSET ALLOCATION",
+    reset: "Reset to recommended",
+    remaining: "{{pct}}% remaining to allocate",
+    over: "{{pct}}% over — reduce some classes",
+    mustEqual100: "ALLOCATION MUST EQUAL 100%",
+    classes: {
+      bonds: "Bonds",
+      equity: "Equity",
+      gold: "Gold",
+      realEstate: "Real Estate",
+      alternatives: "Alternatives",
+    },
+    classDesc: {
+      bonds: "Low risk, stable income. Government & corporate debt.",
+      equity: "Higher risk, higher growth. Stock market indices.",
+      gold: "Inflation hedge. Store of value.",
+      realEstate: "Steady income. Property investments.",
+      alternatives: "High risk, uncorrelated returns. Crypto, commodities.",
+    },
+    feedback: {
+      aligned: {
+        title: "✅ Well aligned with your profile!",
+        desc: "This allocation matches your {{profile}} risk tolerance. Good balance for your goals.",
+      },
+      tooAggressive: {
+        title: "⚠️ More aggressive than your profile",
+        desc: "Your allocation has more risk than a typical {{profile}} portfolio. That's OK if you understand the volatility — let's see how it performs!",
+      },
+      tooConservative: {
+        title: "⚠️ More conservative than your profile",
+        desc: "Your allocation is safer than a typical {{profile}} portfolio. You might miss some growth — let's simulate and see!",
+      },
+    },
+    summary: {
+      aligned: {
+        title: "📊 Your allocation performed as expected",
+        desc: "Your portfolio matched your risk profile, delivering returns consistent with your tolerance for volatility.",
+      },
+      tooAggressive: {
+        title: "📊 Higher risk brought bigger swings",
+        desc: "Your aggressive allocation amplified both gains and losses. Consider whether you're comfortable with these fluctuations long-term.",
+      },
+      tooConservative: {
+        title: "📊 Safety came at the cost of growth",
+        desc: "Your conservative allocation protected against losses but limited upside. A bit more equity exposure could help over longer horizons.",
+      },
+    },
+  },
+
   // Market event
   market: {
     stormTitle: "A storm hits the market",
@@ -153,6 +204,14 @@ const en = {
     allSafeInsight: "Playing it safe preserved your money, but growth was limited. A little risk can go a long way.",
     stayInsight: "Staying invested during the storm helped your garden recover and grow stronger.",
     balancedInsight: "A balanced approach gave you steady growth without too many surprises.",
+    tooAggressiveInsight: "Your portfolio was riskier than your profile suggested. The extra volatility can pay off, but make sure you can handle the dips!",
+    tooConservativeInsight: "Your portfolio was safer than needed for your profile. You avoided losses, but also missed potential growth. Finding the right balance is key.",
+    highEquityInsight: "Heavy equity exposure means big upside potential — but also sharper drops during market downturns. Diversification smooths the ride.",
+    highBondsInsight: "Bonds provide stability and predictable income. Great for short-term goals, but long-term growth may require some equity exposure.",
+    yourAllocation: "YOUR ALLOCATION",
+    riskScore: "Risk score: {{score}}/10",
+    aligned: "Aligned with your profile ✅",
+    misaligned: "Differs from your profile ⚠️",
   },
 
   // Loop screen

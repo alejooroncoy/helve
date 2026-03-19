@@ -1,13 +1,13 @@
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
-import type { GameStep, PortfolioSlot, Investment, GameState } from "@/game/types";
+import type { GameStep, GameState, AssetAllocation } from "@/game/types";
 import { initialGameState, getProfile } from "@/game/types";
 import { useUserProgress } from "@/hooks/useUserProgress";
 import WelcomeScreen from "./WelcomeScreen";
 import RiskScreen from "./RiskScreen";
 import ProfileResult from "./ProfileResult";
-import PortfolioBuilder from "./PortfolioBuilder";
+import AssetAllocationBuilder from "./AssetAllocationBuilder";
 import MarketEvent from "./MarketEvent";
 import SimulationScreen from "./SimulationScreen";
 import LearningMoment from "./LearningMoment";
@@ -34,7 +34,6 @@ const GameFlow = () => {
     } else {
       const profile = getProfile(newTotal);
       go("profile-result", { riskScore: newTotal, riskScores: newScores, profile });
-      // Save risk profile to DB
       saveProgress({
         risk_score: newTotal,
         risk_scores: newScores,
@@ -55,7 +54,6 @@ const GameFlow = () => {
   };
 
   const handleProfileContinue = async () => {
-    // Mark onboarding as completed and save profile
     await saveProgress({
       onboarding_completed: true,
       risk_profile: state.profile,
@@ -65,13 +63,16 @@ const GameFlow = () => {
     navigate("/panel");
   };
 
+  const handleAllocationComplete = (allocation: AssetAllocation) => {
+    go("market-event", { assetAllocation: allocation });
+  };
+
   const resetFull = () => setState(initialGameState);
   const resetToPortfolio = () =>
     setState((prev) => ({
       ...prev,
       step: "portfolio",
-      portfolio: [],
-      portfolioSlots: [],
+      assetAllocation: initialGameState.assetAllocation,
       stormChoice: null,
       simulationResult: 0,
     }));
@@ -99,12 +100,10 @@ const GameFlow = () => {
         )}
 
         {state.step === "portfolio" && (
-          <PortfolioBuilder
+          <AssetAllocationBuilder
             key="portfolio"
             profile={state.profile}
-            onComplete={(slots: PortfolioSlot[], investments: Investment[]) =>
-              go("market-event", { portfolioSlots: slots, portfolio: investments })
-            }
+            onComplete={handleAllocationComplete}
           />
         )}
 
@@ -118,8 +117,8 @@ const GameFlow = () => {
         {state.step === "simulation" && (
           <SimulationScreen
             key="simulation"
-            portfolio={state.portfolioSlots}
-            investments={state.portfolio}
+            allocation={state.assetAllocation}
+            profile={state.profile}
             stormChoice={state.stormChoice}
             onContinue={(r) => go("learning", { simulationResult: r })}
           />
@@ -128,7 +127,8 @@ const GameFlow = () => {
         {state.step === "learning" && (
           <LearningMoment
             key="learning"
-            portfolio={state.portfolioSlots}
+            allocation={state.assetAllocation}
+            profile={state.profile}
             stormChoice={state.stormChoice}
             result={state.simulationResult}
             onContinue={() => go("loop")}

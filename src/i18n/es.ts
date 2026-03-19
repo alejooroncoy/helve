@@ -109,6 +109,57 @@ const es = {
     },
   },
 
+  // Asset allocation
+  allocation: {
+    title: "ASIGNACIÓN DE ACTIVOS",
+    reset: "Volver a recomendado",
+    remaining: "{{pct}}% restante por asignar",
+    over: "{{pct}}% de más — reduce alguna clase",
+    mustEqual100: "LA ASIGNACIÓN DEBE SUMAR 100%",
+    classes: {
+      bonds: "Bonos",
+      equity: "Acciones",
+      gold: "Oro",
+      realEstate: "Bienes Raíces",
+      alternatives: "Alternativos",
+    },
+    classDesc: {
+      bonds: "Bajo riesgo, ingreso estable. Deuda gubernamental y corporativa.",
+      equity: "Mayor riesgo, mayor crecimiento. Índices bursátiles.",
+      gold: "Cobertura contra inflación. Reserva de valor.",
+      realEstate: "Ingreso estable. Inversiones inmobiliarias.",
+      alternatives: "Alto riesgo, retornos no correlacionados. Crypto, materias primas.",
+    },
+    feedback: {
+      aligned: {
+        title: "✅ ¡Bien alineado con tu perfil!",
+        desc: "Esta asignación coincide con tu tolerancia al riesgo de {{profile}}. Buen balance para tus objetivos.",
+      },
+      tooAggressive: {
+        title: "⚠️ Más agresivo que tu perfil",
+        desc: "Tu asignación tiene más riesgo que un portafolio típico de {{profile}}. Está bien si entiendes la volatilidad — ¡veamos cómo le va!",
+      },
+      tooConservative: {
+        title: "⚠️ Más conservador que tu perfil",
+        desc: "Tu asignación es más segura que un portafolio típico de {{profile}}. Podrías perderte algo de crecimiento — ¡simulemos y veamos!",
+      },
+    },
+    summary: {
+      aligned: {
+        title: "📊 Tu asignación rindió como se esperaba",
+        desc: "Tu portafolio coincidió con tu perfil de riesgo, entregando retornos consistentes con tu tolerancia a la volatilidad.",
+      },
+      tooAggressive: {
+        title: "📊 Mayor riesgo trajo mayores vaivenes",
+        desc: "Tu asignación agresiva amplificó tanto las ganancias como las pérdidas. Considera si te sientes cómodo con estas fluctuaciones a largo plazo.",
+      },
+      tooConservative: {
+        title: "📊 La seguridad tuvo un costo en crecimiento",
+        desc: "Tu asignación conservadora protegió contra pérdidas pero limitó las ganancias. Un poco más de exposición a acciones podría ayudar en horizontes más largos.",
+      },
+    },
+  },
+
   // Market event
   market: {
     stormTitle: "Una tormenta golpea el mercado",
@@ -153,6 +204,14 @@ const es = {
     allSafeInsight: "Jugar seguro preservó tu dinero, pero el crecimiento fue limitado. Un poco de riesgo puede dar mucho.",
     stayInsight: "Mantenerte invertido durante la tormenta ayudó a tu jardín a recuperarse y crecer más fuerte.",
     balancedInsight: "Un enfoque equilibrado te dio un crecimiento constante sin demasiadas sorpresas.",
+    tooAggressiveInsight: "Tu portafolio fue más arriesgado de lo que tu perfil sugería. La volatilidad extra puede dar frutos, ¡pero asegúrate de poder manejar las caídas!",
+    tooConservativeInsight: "Tu portafolio fue más seguro de lo necesario para tu perfil. Evitaste pérdidas, pero también perdiste crecimiento potencial. Encontrar el balance correcto es clave.",
+    highEquityInsight: "Alta exposición a acciones significa gran potencial de subida — pero también caídas más pronunciadas en mercados bajistas. La diversificación suaviza el camino.",
+    highBondsInsight: "Los bonos brindan estabilidad e ingreso predecible. Genial para metas a corto plazo, pero el crecimiento a largo plazo puede requerir algo de exposición a acciones.",
+    yourAllocation: "TU ASIGNACIÓN",
+    riskScore: "Puntaje de riesgo: {{score}}/10",
+    aligned: "Alineado con tu perfil ✅",
+    misaligned: "Diferente a tu perfil ⚠️",
   },
 
   // Loop screen
