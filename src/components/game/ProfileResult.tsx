@@ -17,10 +17,10 @@ const mascotImages: Record<RiskProfile, string> = {
   growth: "/mascot-growth.png",
 };
 
-const riskBlocks: Record<RiskProfile, { filled: number; color: string; label: string }> = {
-  conservative: { filled: 1, color: "#3fb074", label: "Low" },
-  balanced:     { filled: 2, color: "#facc15", label: "Moderate" },
-  growth:       { filled: 3, color: "#f87171", label: "High" },
+const riskBlocks: Record<RiskProfile, { filled: number; color: string; labelKey: string }> = {
+  conservative: { filled: 1, color: "#3fb074", labelKey: "portfolio.low" },
+  balanced:     { filled: 2, color: "#facc15", labelKey: "portfolio.medium" },
+  growth:       { filled: 3, color: "#f87171", labelKey: "portfolio.high" },
 };
 
 const ProfileResult = ({ profile, onContinue }: Props) => {
@@ -28,7 +28,8 @@ const ProfileResult = ({ profile, onContinue }: Props) => {
   const title = t(`profile.${profile}.title`);
   const card = t(`profile.${profile}.card`);
   const mascot = mascotImages[profile];
-  const { filled, color, label } = riskBlocks[profile];
+  const { filled, color, labelKey } = riskBlocks[profile];
+  const label = t(labelKey);
 
   return (
     <motion.div
@@ -62,7 +63,7 @@ const ProfileResult = ({ profile, onContinue }: Props) => {
         animate={{ opacity: 1 }}
         transition={{ delay: 0.6 }}
       >
-        Risk profile: <span style={{ color, fontWeight: 900 }}>{label}</span>
+        {t("profile.riskProfile")}: <span style={{ color, fontWeight: 900 }}>{label}</span>
       </motion.p>
 
       <div className="flex-1 flex flex-col items-center justify-center px-6 gap-5">

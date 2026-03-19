@@ -30,12 +30,17 @@ const MultiplayerLobby = ({ mp }: Props) => {
   const streamRef = useRef<MediaStream | null>(null);
   const scanActiveRef = useRef(false);
 
-  // Auto-fill code when arriving via QR scan (native camera)
+  // Auto-join when arriving via QR scan (native camera)
   useEffect(() => {
     const code = searchParams.get("code");
     if (code) {
-      setJoinCode(code.toUpperCase());
+      const upper = code.toUpperCase();
+      setJoinCode(upper);
       setMode("join");
+      const name = user?.email?.split("@")[0] || "Player";
+      mp.joinRoom(upper, name).then((room) => {
+        if (!room) toast.error(t("multiplayer.roomNotFound"));
+      });
     }
   }, []);
 
@@ -71,12 +76,22 @@ const MultiplayerLobby = ({ mp }: Props) => {
             if (barcodes.length > 0) {
               const raw: string = barcodes[0].rawValue;
               stopScan();
+              let code: string | null = null;
               try {
                 const url = new URL(raw);
-                const code = url.searchParams.get("code");
-                if (code) setJoinCode(code.toUpperCase());
+                code = url.searchParams.get("code");
               } catch {
-                if (raw.length === 6) setJoinCode(raw.toUpperCase());
+                if (raw.length === 6) code = raw;
+              }
+              if (code) {
+                const upper = code.toUpperCase();
+                setJoinCode(upper);
+                setMode("join");
+                mp.joinRoom(upper, displayName.trim() || "Player").then((room) => {
+                  if (!room) toast.error(t("multiplayer.roomNotFound"));
+                });
+              } else {
+                toast.error(t("multiplayer.invalidQR"));
               }
               return;
             }
@@ -100,13 +115,24 @@ const MultiplayerLobby = ({ mp }: Props) => {
   };
 
   const handleCreate = async () => {
-    const room = await mp.createRoom(displayName);
-    if (!room) toast.error("Failed to create room");
+    if (!displayName.trim()) {
+      toast.error(t("multiplayer.nameRequired"));
+      return;
+    }
+    const room = await mp.createRoom(displayName.trim());
+    if (!room) toast.error(t("multiplayer.createError"));
   };
 
   const handleJoin = async () => {
-    if (joinCode.length < 6) return;
-    const room = await mp.joinRoom(joinCode, displayName);
+    if (!displayName.trim()) {
+      toast.error(t("multiplayer.nameRequired"));
+      return;
+    }
+    if (joinCode.length < 6) {
+      toast.error(t("multiplayer.codeRequired"));
+      return;
+    }
+    const room = await mp.joinRoom(joinCode, displayName.trim());
     if (!room) toast.error(t("multiplayer.roomNotFound"));
   };
 

@@ -81,6 +81,7 @@ const en = {
       card: "You don't fear storms and always seek the Golden Fruit. You'll fly high and far. Let's build your Nest together!",
     },
     buildMyNest: "BUILD MY NEST",
+    riskProfile: "Risk profile",
   },
 
   // Portfolio builder
@@ -388,7 +389,11 @@ const en = {
     yourName: "Your display name",
     enterCode: "Room code",
     back: "Back",
-    roomNotFound: "Room not found or full",
+    roomNotFound: "Room not found or already full",
+    createError: "Failed to create room, please try again",
+    nameRequired: "Please enter a display name",
+    codeRequired: "Please enter the 6-character room code",
+    invalidQR: "Invalid QR code",
     waitingRoom: "Waiting Room",
     roomCode: "Share this code",
     scanQR: "Scan QR",
@@ -458,12 +463,16 @@ const en = {
     guest: "Guest",
     subtitle: "Choose your adventure",
     portfolio: {
-      title: "My Portfolio",
+      title: "My Nest",
       desc: "Build and simulate your investment nest",
     },
     multiplayer: {
       title: "Multiplayer",
       desc: "Compete with friends in real-time",
+    },
+    map: {
+      title: "Map",
+      desc: "Coming soon",
     },
     multiplayerSteps: [
       { title: "Create or Join", description: "Start a room and invite friends with a code or QR. Up to 4 players can compete." },

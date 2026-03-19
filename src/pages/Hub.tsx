@@ -173,15 +173,16 @@ const Hub = () => {
             </div>
             <div className="flex-1">
               <h2 className="text-lg text-foreground" style={{ ...nunito, fontWeight: 800 }}>
-                Map
+                {t("hub.map.title")}
               </h2>
               <p className="text-xs text-muted-foreground mt-0.5" style={nunito}>
-                Coming soon
+                {t("hub.map.desc")}
               </p>
             </div>
             <Lock className="w-5 h-5 flex-shrink-0 text-muted-foreground" />
           </div>
-        </div>{/* end cards inner */}
+        </div>{/* end map card */}
+        </div>{/* end flex flex-col gap-4 */}
       </div>{/* end centered wrapper */}
 
       {/* Multiplayer onboarding modal */}

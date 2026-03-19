@@ -81,6 +81,7 @@ const es = {
       card: "No le temes a las tormentas y siempre buscas la Fruta Dorada. Volarás alto y lejos. ¡Vamos a construir tu Nido juntos!",
     },
     buildMyNest: "CONSTRUIR MI NIDO",
+    riskProfile: "Perfil de riesgo",
   },
 
   // Portfolio builder
@@ -388,7 +389,11 @@ const es = {
     yourName: "Tu nombre",
     enterCode: "Código de sala",
     back: "Atrás",
-    roomNotFound: "Sala no encontrada o llena",
+    roomNotFound: "Sala no encontrada o ya está llena",
+    createError: "Error al crear la sala, inténtalo de nuevo",
+    nameRequired: "Por favor ingresa un nombre",
+    codeRequired: "Por favor ingresa el código de 6 caracteres",
+    invalidQR: "Código QR inválido",
     waitingRoom: "Sala de espera",
     roomCode: "Comparte este código",
     scanQR: "Escanear QR",
@@ -458,12 +463,16 @@ const es = {
     guest: "Invitado",
     subtitle: "Elige tu aventura",
     portfolio: {
-      title: "Mi Portafolio",
+      title: "Mi Nido",
       desc: "Construye y simula tu nido de inversiones",
     },
     multiplayer: {
       title: "Multiplayer",
       desc: "Compite con amigos en tiempo real",
+    },
+    map: {
+      title: "Mapa",
+      desc: "Próximamente",
     },
     multiplayerSteps: [
       { title: "Crea o Unete", description: "Crea una sala e invita amigos con un codigo o QR. Hasta 4 jugadores pueden competir." },
