@@ -574,6 +574,107 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, initialB
         )}
       </AnimatePresence>
 
+      {/* AI Battle Royale Event overlay */}
+      <AnimatePresence>
+        {showAIEvent && aiScenario && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-background/80 backdrop-blur-sm z-20 flex items-center justify-center px-6"
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0, y: 30 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ type: "spring", damping: 20 }}
+              className="bg-card rounded-3xl p-6 shadow-xl max-w-sm w-full text-center"
+            >
+              <div className="w-12 h-12 rounded-full mx-auto mb-3 flex items-center justify-center" style={{ backgroundColor: `${CELESTE}15` }}>
+                <AlertTriangle className="w-6 h-6" style={{ color: CELESTE }} />
+              </div>
+              <h2 className="text-lg font-bold text-foreground mb-1" style={nunito}>{aiScenario.title}</h2>
+              <p className="text-sm text-muted-foreground mb-5" style={nunito}>{aiScenario.description}</p>
+
+              <div className="space-y-2.5">
+                {aiScenario.options.map((option) => {
+                  const Icon = ACTION_ICONS[option.action];
+                  const color = ACTION_COLORS[option.action];
+                  return (
+                    <motion.button
+                      key={option.action}
+                      onClick={() => handleAIChoice(option)}
+                      className="w-full py-3.5 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 border"
+                      style={{ ...nunito, borderColor: `${typeof color === 'string' && color.startsWith('#') ? color : CELESTE}30`, color }}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.97 }}
+                    >
+                      <Icon className="w-4 h-4" />
+                      {option.label}
+                    </motion.button>
+                  );
+                })}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* AI Feedback overlay */}
+      <AnimatePresence>
+        {showAIFeedback && aiFeedback && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-background/80 backdrop-blur-sm z-20 flex items-center justify-center px-6"
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0, y: 30 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ type: "spring", damping: 20 }}
+              className="bg-card rounded-3xl p-6 shadow-xl max-w-sm w-full text-center"
+            >
+              <div
+                className="w-14 h-14 rounded-full mx-auto mb-3 flex items-center justify-center"
+                style={{
+                  backgroundColor: aiFeedback.isGood ? "hsl(var(--primary)/0.1)" : "hsl(var(--destructive)/0.1)",
+                }}
+              >
+                {aiFeedback.isGood
+                  ? <ShieldCheck className="w-7 h-7" style={{ color: "hsl(var(--primary))" }} />
+                  : <ShieldAlert className="w-7 h-7" style={{ color: "hsl(var(--destructive))" }} />
+                }
+              </div>
+              <h3
+                className="text-base font-bold mb-2"
+                style={{
+                  ...nunito,
+                  color: aiFeedback.isGood ? "hsl(var(--primary))" : "hsl(var(--destructive))",
+                }}
+              >
+                {aiFeedback.isGood
+                  ? (i18n.language === "es" ? "Buena decisión" : "Great call!")
+                  : (i18n.language === "es" ? "No te preocupes" : "Don't worry!")
+                }
+              </h3>
+              <p className="text-sm text-muted-foreground mb-5 leading-relaxed" style={nunito}>
+                {aiFeedback.text}
+              </p>
+              <motion.button
+                onClick={dismissAIFeedback}
+                className="w-full py-3.5 rounded-2xl text-sm font-bold text-white"
+                style={{ ...nunito, backgroundColor: CELESTE }}
+                whileTap={{ scale: 0.97 }}
+              >
+                {i18n.language === "es" ? "Continuar" : "Continue"}
+              </motion.button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Controls */}
       <div className="px-5 pb-6 pt-2">
         {isFinished ? (
