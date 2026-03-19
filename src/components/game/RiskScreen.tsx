@@ -119,7 +119,7 @@ const RiskScreen = ({ questionIndex, onAnswer, onBack }: Props) => {
               borderRight: `12px solid white`,
             }}
           />
-          <p className="font-serif text-foreground text-base leading-snug" style={{ fontWeight: 600 }}>
+          <p className="text-foreground text-base leading-snug" style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 600 }}>
             {q.title}
           </p>
         </div>
@@ -145,8 +145,8 @@ const RiskScreen = ({ questionIndex, onAnswer, onBack }: Props) => {
             >
               <span className="text-2xl">{opt.emoji}</span>
               <span
-                className="font-serif text-foreground text-base"
-                style={{ fontWeight: 600, color: isSelected ? CELESTE : undefined }}
+                className="text-foreground text-base"
+                style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 600, color: isSelected ? CELESTE : undefined }}
               >
                 {opt.label}
               </span>
@@ -160,8 +160,9 @@ const RiskScreen = ({ questionIndex, onAnswer, onBack }: Props) => {
         <button
           onClick={handleContinue}
           disabled={selected === null}
-          className="w-full py-4 rounded-2xl font-serif tracking-widest text-sm text-white transition-opacity"
+          className="w-full py-4 rounded-2xl tracking-widest text-sm text-white transition-opacity"
           style={{
+            fontFamily: "'Nunito', sans-serif",
             backgroundColor: CELESTE,
             fontWeight: 900,
             opacity: selected === null ? 0.4 : 1,

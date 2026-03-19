@@ -4,28 +4,19 @@ import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { AuthProvider, useAuth } from "@/hooks/useAuth";
+import { AuthProvider } from "@/hooks/useAuth";
 import Index from "./pages/Index.tsx";
 import Panel from "./pages/Panel.tsx";
 import Auth from "./pages/Auth.tsx";
+import Onboarding from "./pages/Onboarding.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import SplashScreen from "./components/SplashScreen.tsx";
 
 const queryClient = new QueryClient();
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
-  if (loading) return (
-    <div className="min-h-screen bg-background flex items-center justify-center">
-      <span className="text-4xl animate-pulse">🪺</span>
-    </div>
-  );
-  if (!user) return <Navigate to="/auth" replace />;
-  return <>{children}</>;
-}
-
 const App = () => {
   const [showSplash, setShowSplash] = useState(true);
+  const onboardingDone = localStorage.getItem("onboarding_done");
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -37,8 +28,9 @@ const App = () => {
           <BrowserRouter>
             <Routes>
               <Route path="/auth" element={<Auth />} />
-              <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-              <Route path="/panel" element={<ProtectedRoute><Panel /></ProtectedRoute>} />
+              <Route path="/onboarding" element={<Onboarding />} />
+              <Route path="/" element={onboardingDone ? <Index /> : <Navigate to="/onboarding" replace />} />
+              <Route path="/panel" element={<Panel />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

@@ -21,18 +21,41 @@ import {
 } from "@dnd-kit/core";
 import type { Investment } from "@/game/types";
 import { availableInvestments } from "@/game/types";
-import { LogOut } from "lucide-react";
+import {
+  LogOut, X, AlertTriangle, Inbox, Shield, TrendingUp, BarChart2,
+  Building2, Leaf, Globe, Landmark, Zap, FastForward,
+} from "lucide-react";
+
+const nunito = { fontFamily: "'Nunito', sans-serif" };
+const CELESTE = "#5BB8F5";
+
+function getInvestmentIcon(inv: Investment) {
+  const name = inv.name.toLowerCase();
+  if (name.includes("bond") || name.includes("treasury")) return <Landmark className="w-5 h-5" />;
+  if (name.includes("real estate")) return <Building2 className="w-5 h-5" />;
+  if (name.includes("energy") || name.includes("green")) return <Leaf className="w-5 h-5" />;
+  if (name.includes("global") || name.includes("world")) return <Globe className="w-5 h-5" />;
+  if (name.includes("tech") || name.includes("innovation")) return <Zap className="w-5 h-5" />;
+  if (inv.type === "safe") return <Shield className="w-5 h-5" />;
+  if (inv.type === "growth") return <TrendingUp className="w-5 h-5" />;
+  return <BarChart2 className="w-5 h-5" />;
+}
 
 function getRiskColor(risk: number): string {
-  if (risk <= 3) return "text-primary";
+  if (risk <= 3) return "";
   if (risk <= 6) return "text-accent";
   return "text-destructive";
 }
 
-function getRiskBg(risk: number): string {
-  if (risk <= 3) return "bg-primary/10";
-  if (risk <= 6) return "bg-accent/10";
-  return "bg-destructive/10";
+function getRiskInlineColor(risk: number): React.CSSProperties {
+  if (risk <= 3) return { color: CELESTE };
+  return {};
+}
+
+function getRiskBarColor(risk: number): string {
+  if (risk <= 3) return CELESTE;
+  if (risk <= 6) return "hsl(var(--accent))";
+  return "hsl(var(--destructive))";
 }
 
 function getRiskLabel(risk: number): string {
@@ -55,73 +78,48 @@ function getSuggestions(profile: string, active: Investment[]): Investment[] {
   const pool = availableInvestments.filter((i) => !activeIds.has(i.id));
   if (pool.length === 0) return [];
 
-  // Risk comfort zone per profile
   const riskRange = profile === "conservative" ? [1, 4]
     : profile === "growth" ? [5, 10]
     : [3, 7];
 
-  // Current portfolio metrics
   const avgRisk = active.length
     ? active.reduce((s, i) => s + i.riskLevel, 0) / active.length
     : riskRange[0] + (riskRange[1] - riskRange[0]) / 2;
   const hasType = (t: string) => activeTypes.has(t as any);
   const slotsLeft = 4 - active.length;
 
-  // Score each candidate: higher = better suggestion
   const scored = pool.map((inv) => {
     let score = 0;
-
-    // 1. Risk fit: prefer investments within the profile's comfort zone
     const inRange = inv.riskLevel >= riskRange[0] && inv.riskLevel <= riskRange[1];
     if (inRange) score += 30;
     else score -= Math.abs(inv.riskLevel - (riskRange[0] + riskRange[1]) / 2) * 3;
-
-    // 2. Diversification: prefer types not yet in portfolio
     if (!hasType(inv.type)) score += 25;
-
-    // 3. Balance: if portfolio is too risky, prefer safer; if too safe, prefer growth
     if (active.length > 0) {
-      if (avgRisk > 7 && inv.riskLevel <= 4) score += 20; // counterbalance risk
-      if (avgRisk < 3 && inv.riskLevel >= 5) score += 15; // nudge toward growth
+      if (avgRisk > 7 && inv.riskLevel <= 4) score += 20;
+      if (avgRisk < 3 && inv.riskLevel >= 5) score += 15;
     }
-
-    // 4. Return efficiency: reward good risk-adjusted returns
     const efficiency = inv.annualReturn / Math.max(inv.riskLevel, 1);
     score += efficiency * 2;
-
-    // 5. Beginner-friendly bonus for safe/balanced with decent returns
     if (profile === "conservative" && inv.riskLevel <= 3) score += 10;
     if (profile === "balanced" && inv.riskLevel >= 3 && inv.riskLevel <= 6) score += 10;
-
-    // 6. If portfolio is empty, heavily favor profile-matching investments
     if (active.length === 0) {
       if (profile === "conservative" && inv.type === "safe") score += 20;
       if (profile === "balanced" && inv.type === "balanced") score += 20;
       if (profile === "growth" && inv.type === "growth") score += 20;
     }
-
-    // 7. Slight penalty for very high risk on conservative profiles
     if (profile === "conservative" && inv.riskLevel >= 8) score -= 15;
-
     return { inv, score };
   });
 
-  // Sort by score descending, show up to 4
   scored.sort((a, b) => b.score - a.score);
   return scored.slice(0, Math.max(slotsLeft + 1, 4)).map((s) => s.inv);
 }
 
 /* ---- Draggable investment card ---- */
 function DraggableCard({
-  inv,
-  zone,
-  onClick,
-  onAsk,
+  inv, zone, onClick, onAsk,
 }: {
-  inv: Investment;
-  zone: "scouted" | "nest";
-  onClick: () => void;
-  onAsk?: () => void;
+  inv: Investment; zone: "scouted" | "nest"; onClick: () => void; onAsk?: () => void;
 }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `${zone}-${inv.id}`,
@@ -136,44 +134,42 @@ function DraggableCard({
       onClick={onClick}
       className={`touch-none select-none transition-all ${isDragging ? "opacity-30 scale-95" : ""}`}
     >
-      {zone === "nest" ? (
-        <NestCard inv={inv} />
-      ) : (
-        <ScoutedCard inv={inv} onAsk={onAsk} />
-      )}
+      {zone === "nest" ? <NestCard inv={inv} /> : <ScoutedCard inv={inv} onAsk={onAsk} />}
     </div>
   );
 }
 
-/* ---- Card variants ---- */
 function NestCard({ inv, overlay }: { inv: Investment; overlay?: boolean }) {
   return (
-    <div className={`bg-card rounded-2xl p-3.5 shadow-sm ${overlay ? "shadow-lg ring-2 ring-primary/30 rotate-2" : ""} cursor-grab active:cursor-grabbing`}>
+    <div className={`bg-card rounded-2xl p-3.5 shadow-sm ${overlay ? "shadow-lg rotate-2" : ""} cursor-grab active:cursor-grabbing`} style={overlay ? { boxShadow: `0 0 0 2px ${CELESTE}40` } : {}}>
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-xl flex-shrink-0">
-          {inv.emoji}
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${CELESTE}18`, color: CELESTE }}>
+          {getInvestmentIcon(inv)}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-bold text-foreground truncate">{inv.name}</p>
-          <p className="text-[11px] text-muted-foreground mt-0.5">
+          <p className="text-sm font-bold text-foreground truncate" style={nunito}>{inv.name}</p>
+          <p className="text-[11px] text-muted-foreground mt-0.5" style={nunito}>
             {riskWord(inv.riskLevel)} · Earns ~{inv.annualReturn}% per year
           </p>
         </div>
-        {!overlay && <span className="text-[10px] text-muted-foreground bg-muted rounded-full px-2 py-1">✕</span>}
+        {!overlay && (
+          <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+            <X className="w-3 h-3 text-muted-foreground" />
+          </div>
+        )}
       </div>
-      {/* Visual risk meter */}
       <div className="mt-2.5 flex items-center gap-2">
-        <span className="text-[10px] text-muted-foreground font-medium w-8">Risk</span>
+        <span className="text-[10px] text-muted-foreground font-medium w-8" style={nunito}>Risk</span>
         <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
           <div
-            className={`h-full rounded-full transition-all ${inv.riskLevel <= 3 ? "bg-primary" : inv.riskLevel <= 6 ? "bg-accent" : "bg-destructive"}`}
-            style={{ width: `${inv.riskLevel * 10}%` }}
+            className="h-full rounded-full transition-all"
+            style={{ width: `${inv.riskLevel * 10}%`, backgroundColor: getRiskBarColor(inv.riskLevel) }}
           />
         </div>
-        <span className={`text-[10px] font-bold ${getRiskColor(inv.riskLevel)}`}>{inv.riskLevel}/10</span>
+        <span className={`text-[10px] font-bold ${getRiskColor(inv.riskLevel)}`} style={{ ...nunito, ...getRiskInlineColor(inv.riskLevel) }}>{inv.riskLevel}/10</span>
       </div>
       {inv.tag && (
-        <span className="inline-block mt-2 text-[10px] font-bold bg-accent/15 text-accent px-2.5 py-0.5 rounded-full">
+        <span className="inline-block mt-2 text-[10px] font-bold bg-accent/15 text-accent px-2.5 py-0.5 rounded-full" style={nunito}>
           {inv.tag}
         </span>
       )}
@@ -183,14 +179,14 @@ function NestCard({ inv, overlay }: { inv: Investment; overlay?: boolean }) {
 
 function ScoutedCard({ inv, overlay, onAsk }: { inv: Investment; overlay?: boolean; onAsk?: () => void }) {
   return (
-    <div className={`bg-card rounded-2xl p-3.5 shadow-sm border-2 border-dashed border-border ${overlay ? "shadow-lg ring-2 ring-primary/30 -rotate-2 border-primary/40" : "hover:border-primary/40"} cursor-grab active:cursor-grabbing`}>
+    <div className={`bg-card rounded-2xl p-3.5 shadow-sm border-2 border-dashed border-border ${overlay ? "-rotate-2" : ""} cursor-grab active:cursor-grabbing`} style={overlay ? { boxShadow: `0 0 0 2px ${CELESTE}40`, borderColor: `${CELESTE}60` } : {}}>
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 bg-secondary rounded-xl flex items-center justify-center text-xl flex-shrink-0">
-          {inv.emoji}
+        <div className="w-10 h-10 bg-secondary rounded-xl flex items-center justify-center text-muted-foreground flex-shrink-0">
+          {getInvestmentIcon(inv)}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-bold text-foreground truncate">{inv.name} {inv.flag || ""}</p>
-          <p className="text-[11px] text-muted-foreground mt-0.5">
+          <p className="text-sm font-bold text-foreground truncate" style={nunito}>{inv.name} {inv.flag || ""}</p>
+          <p className="text-[11px] text-muted-foreground mt-0.5" style={nunito}>
             {riskWord(inv.riskLevel)} · Earns ~{inv.annualReturn}% per year
           </p>
         </div>
@@ -200,27 +196,28 @@ function ScoutedCard({ inv, overlay, onAsk }: { inv: Investment; overlay?: boole
               onClick={(e) => { e.stopPropagation(); e.preventDefault(); onAsk(); }}
               onPointerDown={(e) => e.stopPropagation()}
               className="w-7 h-7 rounded-full bg-accent/10 text-accent flex items-center justify-center text-xs font-bold cursor-pointer hover:bg-accent/20 transition-colors"
+              style={nunito}
             >
               ?
             </span>
           )}
-          {!overlay && <span className="text-primary text-base font-bold">+</span>}
+          {!overlay && <span className="text-base font-bold" style={{ color: CELESTE }}>+</span>}
         </div>
       </div>
-      {/* Visual risk meter */}
       <div className="mt-2.5 flex items-center gap-2">
-        <span className="text-[10px] text-muted-foreground font-medium w-8">Risk</span>
+        <span className="text-[10px] text-muted-foreground font-medium w-8" style={nunito}>Risk</span>
         <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
           <div
-            className={`h-full rounded-full transition-all ${inv.riskLevel <= 3 ? "bg-primary" : inv.riskLevel <= 6 ? "bg-accent" : "bg-destructive"}`}
-            style={{ width: `${inv.riskLevel * 10}%` }}
+            className="h-full rounded-full transition-all"
+            style={{ width: `${inv.riskLevel * 10}%`, backgroundColor: getRiskBarColor(inv.riskLevel) }}
           />
         </div>
-        <span className={`text-[10px] font-bold ${getRiskColor(inv.riskLevel)}`}>{inv.riskLevel}/10</span>
+        <span className={`text-[10px] font-bold ${getRiskColor(inv.riskLevel)}`} style={{ ...nunito, ...getRiskInlineColor(inv.riskLevel) }}>{inv.riskLevel}/10</span>
       </div>
       {inv.tag && (
-        <span className={`inline-block mt-2 text-[10px] font-bold px-2.5 py-0.5 rounded-full ${inv.tag === "HIGH RISK" ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"}`}>
-          ⚠️ {inv.tag}
+        <span className={`inline-flex items-center gap-1 mt-2 text-[10px] font-bold px-2.5 py-0.5 rounded-full ${inv.tag === "HIGH RISK" ? "bg-destructive/10 text-destructive" : ""}`} style={{ ...nunito, ...(inv.tag !== "HIGH RISK" ? { backgroundColor: `${CELESTE}18`, color: CELESTE } : {}) }}>
+          {inv.tag === "HIGH RISK" && <AlertTriangle className="w-3 h-3" />}
+          {inv.tag}
         </span>
       )}
     </div>
@@ -228,24 +225,15 @@ function ScoutedCard({ inv, overlay, onAsk }: { inv: Investment; overlay?: boole
 }
 
 /* ---- Droppable zone ---- */
-function DropZone({
-  id,
-  children,
-  isOver,
-}: {
-  id: string;
-  children: React.ReactNode;
-  isOver?: boolean;
-}) {
+function DropZone({ id, children, isOver }: { id: string; children: React.ReactNode; isOver?: boolean }) {
   const { setNodeRef, isOver: over } = useDroppable({ id });
   const active = isOver ?? over;
 
   return (
     <div
       ref={setNodeRef}
-      className={`flex-1 min-w-0 rounded-3xl transition-all duration-200 p-1 -m-1 flex flex-col ${
-        active ? "bg-primary/5 ring-2 ring-primary/20 ring-dashed" : ""
-      }`}
+      className="flex-1 min-w-0 rounded-3xl transition-all duration-200 p-1 -m-1 flex flex-col"
+      style={active ? { backgroundColor: `${CELESTE}08`, outline: `2px dashed ${CELESTE}40` } : {}}
     >
       {children}
     </div>
@@ -260,7 +248,7 @@ const Panel = () => {
   const [activePortfolio, setActivePortfolio] = useState<Investment[]>([]);
   const [profile, setProfile] = useState("balanced");
   const [mascotMessage, setMascotMessage] = useState(
-    "Hey there! 👋 Drag an investment into your nest — or just tap it!"
+    "Drag an investment into your nest — or just tap it!"
   );
   const [draggedItem, setDraggedItem] = useState<{ inv: Investment; zone: string } | null>(null);
   const [coachOpen, setCoachOpen] = useState(false);
@@ -268,44 +256,31 @@ const Panel = () => {
   const [simulationOpen, setSimulationOpen] = useState(false);
   const isMobile = useIsMobile();
 
-  // Load saved progress on mount
   useEffect(() => {
     loadProgress().then((p) => {
       if (p) {
         setProfile(p.risk_profile);
-        if (p.portfolio && p.portfolio.length > 0) {
-          setActivePortfolio(p.portfolio);
-        }
+        if (p.portfolio && p.portfolio.length > 0) setActivePortfolio(p.portfolio);
       }
     });
   }, [loadProgress]);
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
-  );
-
-  const suggestions = useMemo(
-    () => getSuggestions(profile, activePortfolio),
-    [profile, activePortfolio]
-  );
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+  const suggestions = useMemo(() => getSuggestions(profile, activePortfolio), [profile, activePortfolio]);
 
   const totalRisk = activePortfolio.length
     ? Math.round(activePortfolio.reduce((s, i) => s + i.riskLevel, 0) / activePortfolio.length * 10)
     : 0;
 
   const balance = 1000;
-  const monthlyIncome = activePortfolio.reduce(
-    (s, i) => s + Math.round((balance * i.annualReturn) / 100 / 12),
-    0
-  );
-
+  const monthlyIncome = activePortfolio.reduce((s, i) => s + Math.round((balance * i.annualReturn) / 100 / 12), 0);
   const avgReturn = activePortfolio.length
     ? (activePortfolio.reduce((s, i) => s + i.annualReturn, 0) / activePortfolio.length).toFixed(1)
     : "0.0";
 
   const addInvestment = (inv: Investment) => {
     if (activePortfolio.length >= 4) {
-      setMascotMessage("Your nest is full! 🪹 Remove one egg to make room.");
+      setMascotMessage("Your nest is full! Remove one egg to make room.");
       return;
     }
     if (activePortfolio.find((i) => i.id === inv.id)) return;
@@ -313,9 +288,9 @@ const Panel = () => {
     setActivePortfolio(next);
     saveProgress({ portfolio: next });
     const newRisk = Math.round(next.reduce((s, i) => s + i.riskLevel, 0) / next.length * 10);
-    if (newRisk > 70) setMascotMessage("Careful! Risky airspace! 🦅 Maybe add something steadier?");
-    else if (newRisk < 20) setMascotMessage("Very cozy nest! 🪺 Safe and warm.");
-    else setMascotMessage("Great pick! 🐦 Your flock is looking strong!");
+    if (newRisk > 70) setMascotMessage("Careful! High risk ahead. Maybe add something steadier?");
+    else if (newRisk < 20) setMascotMessage("Very safe nest! Cozy and steady.");
+    else setMascotMessage("Great pick! Your portfolio is looking strong.");
   };
 
   const removeInvestment = (id: string) => {
@@ -324,39 +299,26 @@ const Panel = () => {
       saveProgress({ portfolio: next });
       return next;
     });
-    setMascotMessage("Egg removed! 🥚 Pick a new one from Scouted.");
+    setMascotMessage("Investment removed. Pick a new one from Scouted.");
   };
 
   const handleDragStart = (event: DragStartEvent) => {
-    const data = event.active.data.current as { inv: Investment; zone: string };
-    setDraggedItem(data);
+    setDraggedItem(event.active.data.current as { inv: Investment; zone: string });
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     setDraggedItem(null);
     if (!over) return;
-
     const data = active.data.current as { inv: Investment; zone: string };
     const dropTarget = over.id as string;
-
-    // Scouted → Nest
-    if (data.zone === "scouted" && dropTarget === "nest") {
-      addInvestment(data.inv);
-    }
-    // Nest → Scouted (remove)
-    if (data.zone === "nest" && dropTarget === "scouted") {
-      removeInvestment(data.inv.id);
-    }
+    if (data.zone === "scouted" && dropTarget === "nest") addInvestment(data.inv);
+    if (data.zone === "nest" && dropTarget === "scouted") removeInvestment(data.inv.id);
   };
 
   const handleSimulate = () => {
     saveProgress({ portfolio: activePortfolio });
     setSimulationOpen(true);
-  };
-
-  const handleSimSell = (id: string) => {
-    removeInvestment(id);
   };
 
   const handleSignOut = async () => {
@@ -374,8 +336,8 @@ const Panel = () => {
       <div className="px-5 pt-6 pb-3">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs text-muted-foreground font-medium tracking-wide uppercase">My Nest</p>
-            <h1 className="text-2xl font-bold text-foreground mt-0.5">Dashboard</h1>
+            <p className="text-xs text-muted-foreground font-medium tracking-wide uppercase" style={nunito}>My Nest</p>
+            <h1 className="text-2xl text-foreground mt-0.5" style={{ ...nunito, fontWeight: 900 }}>Dashboard</h1>
           </div>
           <div className="flex items-center gap-2">
             <motion.button
@@ -385,35 +347,35 @@ const Panel = () => {
             >
               <LogOut className="w-4 h-4" />
             </motion.button>
-          {isMobile ? (
-            <Drawer open={coachOpen} onOpenChange={setCoachOpen}>
-              <DrawerTrigger asChild>
-                <motion.button
-                  className="w-12 h-12 rounded-full bg-card shadow-md overflow-hidden border-2 border-primary/20"
-                  whileTap={{ scale: 0.9 }}
-                >
-                  <img src="/face.png" alt="Coach IA" className="w-full h-full object-cover" />
-                </motion.button>
-              </DrawerTrigger>
-              <DrawerContent className="h-[80vh] p-0">
-                <CoachChat onClose={() => { setCoachOpen(false); setCoachInitQ(undefined); }} portfolio={activePortfolio} onAddInvestment={(id) => { const inv = availableInvestments.find(i => i.id === id); if (inv) addInvestment(inv); }} onRemoveInvestment={(id) => removeInvestment(id)} initialQuestion={coachInitQ} />
-              </DrawerContent>
-            </Drawer>
-          ) : (
-            <Popover open={coachOpen} onOpenChange={setCoachOpen}>
-              <PopoverTrigger asChild>
-                <motion.button
-                  className="w-12 h-12 rounded-full bg-card shadow-md overflow-hidden border-2 border-primary/20"
-                  whileTap={{ scale: 0.9 }}
-                >
-                  <img src="/face.png" alt="Coach IA" className="w-full h-full object-cover" />
-                </motion.button>
-              </PopoverTrigger>
-              <PopoverContent side="bottom" align="end" className="w-[380px] h-[500px] p-0 rounded-2xl overflow-hidden">
-                <CoachChat onClose={() => { setCoachOpen(false); setCoachInitQ(undefined); }} portfolio={activePortfolio} onAddInvestment={(id) => { const inv = availableInvestments.find(i => i.id === id); if (inv) addInvestment(inv); }} onRemoveInvestment={(id) => removeInvestment(id)} initialQuestion={coachInitQ} />
-              </PopoverContent>
-            </Popover>
-          )}
+            {isMobile ? (
+              <Drawer open={coachOpen} onOpenChange={setCoachOpen}>
+                <DrawerTrigger asChild>
+                  <motion.button
+                    className="w-12 h-12 rounded-full bg-card shadow-md overflow-hidden border-2" style={{ borderColor: `${CELESTE}40` }}
+                    whileTap={{ scale: 0.9 }}
+                  >
+                    <img src="/perspectiva1.png" alt="Coach" className="w-full h-full object-cover" />
+                  </motion.button>
+                </DrawerTrigger>
+                <DrawerContent className="h-[80vh] p-0">
+                  <CoachChat onClose={() => { setCoachOpen(false); setCoachInitQ(undefined); }} portfolio={activePortfolio} onAddInvestment={(id) => { const inv = availableInvestments.find(i => i.id === id); if (inv) addInvestment(inv); }} onRemoveInvestment={(id) => removeInvestment(id)} initialQuestion={coachInitQ} />
+                </DrawerContent>
+              </Drawer>
+            ) : (
+              <Popover open={coachOpen} onOpenChange={setCoachOpen}>
+                <PopoverTrigger asChild>
+                  <motion.button
+                    className="w-12 h-12 rounded-full bg-card shadow-md overflow-hidden border-2" style={{ borderColor: `${CELESTE}40` }}
+                    whileTap={{ scale: 0.9 }}
+                  >
+                    <img src="/perspectiva1.png" alt="Coach" className="w-full h-full object-cover" />
+                  </motion.button>
+                </PopoverTrigger>
+                <PopoverContent side="bottom" align="end" className="w-[380px] h-[500px] p-0 rounded-2xl overflow-hidden">
+                  <CoachChat onClose={() => { setCoachOpen(false); setCoachInitQ(undefined); }} portfolio={activePortfolio} onAddInvestment={(id) => { const inv = availableInvestments.find(i => i.id === id); if (inv) addInvestment(inv); }} onRemoveInvestment={(id) => removeInvestment(id)} initialQuestion={coachInitQ} />
+                </PopoverContent>
+              </Popover>
+            )}
           </div>
         </div>
       </div>
@@ -421,24 +383,19 @@ const Panel = () => {
       {/* Stats */}
       <div className="px-5 pb-3">
         <div className="grid grid-cols-3 gap-3">
-          <motion.div className="bg-card rounded-3xl p-4 shadow-sm" initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }}>
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Balance</p>
-            <p className="text-xl font-bold text-foreground mt-1">€{balance.toLocaleString()}</p>
-            <p className="text-[10px] text-primary font-medium mt-0.5">+€{monthlyIncome}/mo</p>
-          </motion.div>
-          <motion.div className="bg-card rounded-3xl p-4 shadow-sm" initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.15 }}>
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Risk Level</p>
-            <p className={`text-xl font-bold mt-1 ${totalRisk > 60 ? "text-destructive" : totalRisk > 30 ? "text-accent" : "text-primary"}`}>{totalRisk}%</p>
-            <p className="text-[10px] text-muted-foreground font-medium mt-0.5">{getRiskLabel(totalRisk)}</p>
-          </motion.div>
-          <motion.div className="bg-card rounded-3xl p-4 shadow-sm" initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }}>
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Avg Return</p>
-            <p className="text-xl font-bold text-primary mt-1">{avgReturn}%</p>
-            <p className="text-[10px] text-muted-foreground font-medium mt-0.5">Annual</p>
-          </motion.div>
+          {[
+            { label: "Balance", value: `€${balance.toLocaleString()}`, sub: `+€${monthlyIncome}/mo`, subStyle: { color: CELESTE } },
+            { label: "Risk Level", value: `${totalRisk}%`, valueStyle: totalRisk > 60 ? { color: "hsl(var(--destructive))" } : totalRisk > 30 ? {} : { color: CELESTE }, valueClass: totalRisk > 30 && totalRisk <= 60 ? "text-accent" : "", sub: getRiskLabel(totalRisk), subStyle: {} },
+            { label: "Avg Return", value: `${avgReturn}%`, valueStyle: { color: CELESTE }, sub: "Annual", subStyle: {} },
+          ].map((stat, i) => (
+            <motion.div key={stat.label} className="bg-card rounded-3xl p-4 shadow-sm" initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 + i * 0.05 }}>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium" style={nunito}>{stat.label}</p>
+              <p className={`text-xl font-bold mt-1 ${"valueClass" in stat ? stat.valueClass : "text-foreground"}`} style={{ ...nunito, ...("valueStyle" in stat ? stat.valueStyle : {}) }}>{stat.value}</p>
+              <p className="text-[10px] text-muted-foreground font-medium mt-0.5" style={{ ...nunito, ...stat.subStyle }}>{stat.sub}</p>
+            </motion.div>
+          ))}
         </div>
       </div>
-
 
       {/* DnD Content */}
       <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
@@ -447,14 +404,14 @@ const Panel = () => {
             {/* LEFT: My Nest */}
             <DropZone id="nest">
               <div className="flex items-center justify-between mb-3">
-                <h2 className="text-sm font-bold text-foreground uppercase tracking-wide">My Nest 🪺</h2>
-                <span className="text-xs text-muted-foreground">{activePortfolio.length}/4</span>
+                <h2 className="text-sm font-bold text-foreground uppercase tracking-wide" style={nunito}>My Nest</h2>
+                <span className="text-xs text-muted-foreground" style={nunito}>{activePortfolio.length}/4</span>
               </div>
               {activePortfolio.length === 0 ? (
-                <div className="bg-card/50 rounded-3xl p-6 text-center border-2 border-dashed border-border flex-1 flex flex-col items-center justify-center">
-                  <p className="text-3xl mb-2">🪹</p>
-                  <p className="text-sm text-muted-foreground">Your nest is empty!</p>
-                  <p className="text-xs text-muted-foreground mt-1">Drag investments here →</p>
+                <div className="bg-card/50 rounded-3xl p-6 text-center border-2 border-dashed border-border flex-1 flex flex-col items-center justify-center gap-2">
+                  <Inbox className="w-8 h-8 text-muted-foreground/50" />
+                  <p className="text-sm text-muted-foreground" style={nunito}>Your nest is empty!</p>
+                  <p className="text-xs text-muted-foreground" style={nunito}>Drag investments here</p>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -471,24 +428,19 @@ const Panel = () => {
 
             {/* RIGHT: Scouted */}
             <DropZone id="scouted">
-              <h2 className="text-sm font-bold text-foreground uppercase tracking-wide mb-3">Scouted 🔭</h2>
+              <h2 className="text-sm font-bold text-foreground uppercase tracking-wide mb-3" style={nunito}>Scouted</h2>
               <div className="space-y-2">
                 {suggestions.map((inv) => (
-                  <DraggableCard key={inv.id} inv={inv} zone="scouted" onClick={() => addInvestment(inv)} onAsk={() => { setCoachInitQ(`Explícame de forma sencilla qué es ${inv.name} y si me conviene según mi perfil`); setCoachOpen(true); }} />
+                  <DraggableCard key={inv.id} inv={inv} zone="scouted" onClick={() => addInvestment(inv)} onAsk={() => { setCoachInitQ(`Explain briefly what ${inv.name} is and whether it fits my profile`); setCoachOpen(true); }} />
                 ))}
               </div>
             </DropZone>
           </div>
         </div>
 
-        {/* Drag Overlay */}
         <DragOverlay>
           {draggedItem ? (
-            draggedItem.zone === "nest" ? (
-              <NestCard inv={draggedItem.inv} overlay />
-            ) : (
-              <ScoutedCard inv={draggedItem.inv} overlay />
-            )
+            draggedItem.zone === "nest" ? <NestCard inv={draggedItem.inv} overlay /> : <ScoutedCard inv={draggedItem.inv} overlay />
           ) : null}
         </DragOverlay>
       </DndContext>
@@ -496,22 +448,30 @@ const Panel = () => {
       {/* Bottom Actions */}
       <div className="px-5 pb-6 pt-3 bg-gradient-to-t from-background via-background to-transparent">
         <motion.button
-          className={`w-full py-4 rounded-3xl text-base font-bold shadow-lg transition-all flex items-center justify-center gap-2 ${
-            activePortfolio.length > 0 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground cursor-not-allowed"
-          }`}
+          className="w-full py-4 rounded-3xl text-base shadow-lg transition-all flex items-center justify-center gap-2 text-white"
+          style={{
+            ...nunito,
+            fontWeight: 900,
+            backgroundColor: activePortfolio.length > 0 ? CELESTE : undefined,
+            opacity: activePortfolio.length === 0 ? 0.4 : 1,
+            cursor: activePortfolio.length === 0 ? "not-allowed" : "pointer",
+            background: activePortfolio.length === 0 ? "hsl(var(--muted))" : CELESTE,
+            color: activePortfolio.length === 0 ? "hsl(var(--muted-foreground))" : "white",
+          }}
           onClick={activePortfolio.length > 0 ? handleSimulate : undefined}
           whileHover={activePortfolio.length > 0 ? { scale: 1.02 } : {}}
           whileTap={activePortfolio.length > 0 ? { scale: 0.97 } : {}}
         >
-          ⏩ Simular 1 año
+          <FastForward className="w-4 h-4" />
+          Simulate 1 Year
         </motion.button>
         {activePortfolio.length === 0 && (
-          <p className="text-[10px] text-muted-foreground text-center mt-2">
-            Añade inversiones a tu nido para simular el paso del tiempo
+          <p className="text-[10px] text-muted-foreground text-center mt-2" style={nunito}>
+            Add investments to your nest to simulate
           </p>
         )}
       </div>
-      {/* Time Simulation */}
+
       <AnimatePresence>
         {simulationOpen && (
           <TimeSimulation
@@ -524,6 +484,8 @@ const Panel = () => {
       </AnimatePresence>
     </motion.div>
   );
+
+  function handleSimSell(id: string) { removeInvestment(id); }
 };
 
 export default Panel;

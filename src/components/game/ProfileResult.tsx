@@ -6,23 +6,22 @@ interface Props {
   onContinue: () => void;
 }
 
-const profileData: Record<RiskProfile, { emoji: string; title: string; desc: string }> = {
+const profileData: Record<RiskProfile, { title: string; desc: string }> = {
   conservative: {
-    emoji: "🛡️",
     title: "You are Conservative",
     desc: "You prefer safety and steady, predictable growth.",
   },
   balanced: {
-    emoji: "🌿",
     title: "You are Balanced",
     desc: "You prefer steady growth with moderate risk.",
   },
   growth: {
-    emoji: "🌳",
     title: "You are a Grower",
     desc: "You're comfortable with risk for bigger rewards.",
   },
 };
+
+const nunito = { fontFamily: "'Nunito', sans-serif" };
 
 const ProfileResult = ({ profile, onContinue }: Props) => {
   const data = profileData[profile];
@@ -34,35 +33,37 @@ const ProfileResult = ({ profile, onContinue }: Props) => {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
     >
-      <motion.span
-        className="text-7xl"
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
+      <motion.img
+        src="/grow.png"
+        alt="profile"
+        className="object-contain"
+        style={{ width: 200, marginBottom: -40 }}
+        initial={{ scale: 0.8, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
         transition={{ type: "spring", stiffness: 200, damping: 12, delay: 0.2 }}
-      >
-        {data.emoji}
-      </motion.span>
+      />
 
       <motion.div
         className="text-center"
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.5 }}
+        transition={{ delay: 0.3 }}
       >
-        <h2 className="text-4xl font-serif text-foreground">{data.title}</h2>
-        <p className="text-lg text-muted-foreground mt-3 max-w-xs">{data.desc}</p>
+        <h2 className="text-4xl text-foreground" style={{ ...nunito, fontWeight: 900 }}>{data.title}</h2>
+        <p className="text-lg text-muted-foreground mt-3 max-w-xs" style={{ ...nunito, fontWeight: 600 }}>{data.desc}</p>
       </motion.div>
 
       <motion.button
-        className="bg-primary text-primary-foreground px-10 py-4 rounded-4xl text-lg font-medium shadow-lg"
+        className="text-white px-10 py-4 rounded-4xl text-lg shadow-lg"
+        style={{ backgroundColor: "#5BB8F5", ...nunito, fontWeight: 700 }}
         onClick={onContinue}
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.8 }}
+        transition={{ delay: 0.6 }}
         whileHover={{ scale: 1.03 }}
         whileTap={{ scale: 0.97 }}
       >
-        Continue to Your Garden
+        Start Building Your Nest
       </motion.button>
     </motion.div>
   );
