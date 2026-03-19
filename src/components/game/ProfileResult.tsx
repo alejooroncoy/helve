@@ -6,18 +6,21 @@ interface Props {
   onContinue: () => void;
 }
 
-const profileData: Record<RiskProfile, { title: string; desc: string }> = {
+const profileData: Record<RiskProfile, { title: string; desc: string; stat: string }> = {
   conservative: {
-    title: "You are Conservative",
-    desc: "You prefer safety and steady, predictable growth.",
+    title: "¡Tu pajarito es un Guardián Prudente! 🛡️",
+    desc: "Como el 20% de los principiantes, prefieres la seguridad ante todo. Tu pajarito crecerá lento pero seguro, siempre con comida en el comedero.",
+    stat: "20%",
   },
   balanced: {
-    title: "You are Balanced",
-    desc: "You prefer steady growth with moderate risk.",
+    title: "¡Tu pajarito es un Explorador Equilibrado! 🌿",
+    desc: "Como el 65% de los principiantes, buscas crecer a buen ritmo pero prefieres tener siempre un refugio seguro para las tormentas.",
+    stat: "65%",
   },
   growth: {
-    title: "You are a Grower",
-    desc: "You're comfortable with risk for bigger rewards.",
+    title: "¡Tu pajarito es un Águila Audaz! 🦅",
+    desc: "Como el 15% de los principiantes, no le temes al riesgo. Tu pajarito volará alto buscando la Fruta Dorada, aunque a veces las tormentas lo sacudan.",
+    stat: "15%",
   },
 };
 
