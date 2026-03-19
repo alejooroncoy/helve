@@ -184,6 +184,11 @@ function NestCard({ inv, overlay, onSell, onAsk, onInfo, allocation, onAllocatio
       {/* Allocation slider */}
       {!overlay && onAllocationChange && (
         <div className="mt-2.5 px-1" onClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-[10px] text-muted-foreground" style={nunito}>0%</span>
+            <span className="text-[10px] font-bold" style={{ ...nunito, color: CELESTE }}>{pct}% → CHF {chfAmount}</span>
+            <span className="text-[10px] text-muted-foreground" style={nunito}>{maxSlider}%</span>
+          </div>
           <Slider
             value={[pct]}
             min={0}
