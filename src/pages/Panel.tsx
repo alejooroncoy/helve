@@ -706,12 +706,30 @@ const Panel = () => {
   }, 0);
   const avgReturn =
     enrichedPortfolio.length && totalAllocated > 0
-      ? (enrichedPortfolio.reduce((s, i) => s + i.annualReturn * (allocations[i.id] ?? 0), 0) / totalAllocated).toFixed(
-          1,
-        )
+      ? (enrichedPortfolio.reduce((s, i) => s + i.annualReturn * (allocations[i.id] ?? 0), 0) / totalAllocated).toFixed(1)
       : enrichedPortfolio.length
         ? (enrichedPortfolio.reduce((s, i) => s + i.annualReturn, 0) / enrichedPortfolio.length).toFixed(1)
         : "0.0";
+
+  // Per-nest stats for tab badges
+  const getNestStats = useCallback((nest: NestPortfolio) => {
+    const portfolio = (nest.portfolio || []).map(enrichInvestment);
+    const allocs = nest.allocations || {};
+    const totalAlloc = portfolio.reduce((s, i) => s + (allocs[i.id] ?? 0), 0);
+    const risk = portfolio.length
+      ? Math.round(
+          totalAlloc > 0
+            ? (portfolio.reduce((s, i) => s + i.riskLevel * (allocs[i.id] ?? 0), 0) / totalAlloc) * 10
+            : (portfolio.reduce((s, i) => s + i.riskLevel, 0) / portfolio.length) * 10,
+        )
+      : 0;
+    const ret = portfolio.length && totalAlloc > 0
+      ? (portfolio.reduce((s, i) => s + i.annualReturn * (allocs[i.id] ?? 0), 0) / totalAlloc).toFixed(1)
+      : portfolio.length
+        ? (portfolio.reduce((s, i) => s + i.annualReturn, 0) / portfolio.length).toFixed(1)
+        : "0";
+    return { risk, ret, count: portfolio.length };
+  }, [enrichInvestment]);
 
   const executeBuy = useCallback(
     (inv: Investment) => {
