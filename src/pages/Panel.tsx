@@ -286,7 +286,7 @@ function BuyConfirmDialog({ inv, onConfirm, onCancel, t }: { inv: Investment; on
             {getCategoryIcon(inv.id)}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold text-foreground" style={nunito}>{inv.emoji} {displayName}</p>
+            <p className="text-sm font-bold text-foreground" style={nunito}>{displayName}</p>
             <div className="flex items-center gap-2 mt-0.5">
               <span className="text-xs" style={{ ...nunito, color: getRiskBarColor(inv.riskLevel), fontWeight: 700 }}>{t("panel.riskLabel")} {inv.riskLevel}/10</span>
               <span className="text-xs" style={{ ...nunito, color, fontWeight: 700 }}>{inv.annualReturn}%{t("common.perYear")}</span>
