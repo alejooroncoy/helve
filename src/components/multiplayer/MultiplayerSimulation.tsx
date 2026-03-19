@@ -31,7 +31,8 @@ const BTN_HOLD  = { bg: "#60a5fa18", border: "#60a5fa", color: "#60a5fa" };
 const BTN_BUY   = { bg: "#a78bfa18", border: "#a78bfa", color: "#a78bfa" };
 
 const STEP_INTERVAL = 300;
-const EVENT_TIMER = 8;
+const READING_TIME = 3; // seconds to read the event before countdown starts
+const EVENT_TIMER = 5;  // seconds to decide once countdown begins
 const NUM_EVENTS = 5;
 
 function generateEventMonths(total: number, count: number): number[] {
@@ -69,8 +70,11 @@ const MultiplayerSimulation = ({ mp }: Props) => {
   const [categoryHistories, setCategoryHistories] = useState<Record<string, number[]>>({});
   const [paused, setPaused] = useState(false);
   const [activeEvent, setActiveEvent] = useState<MarketEventType | null>(null);
+  const [eventPhase, setEventPhase] = useState<"reading" | "deciding">("reading");
+  const [readingTimer, setReadingTimer] = useState(READING_TIME);
   const [eventTimer, setEventTimer] = useState(EVENT_TIMER);
   const [eventDecided, setEventDecided] = useState(false);
+  const readingRef = useRef<number | null>(null);
   const [eventsTriggered, setEventsTriggered] = useState<number[]>([]);
   const [eventHistory, setEventHistory] = useState<{ event: MarketEventType; decision: string; month: number }[]>([]);
   const [finished, setFinished] = useState(false);
@@ -133,6 +137,8 @@ const MultiplayerSimulation = ({ mp }: Props) => {
         if (eventIdx >= 0 && !eventsTriggered.includes(next)) {
           setPaused(true);
           setActiveEvent(pickedEvents[eventIdx]);
+          setEventPhase("reading");
+          setReadingTimer(READING_TIME);
           setEventTimer(EVENT_TIMER);
           setEventDecided(false);
           setEventsTriggered(prev => [...prev, next]);
@@ -165,8 +171,25 @@ const MultiplayerSimulation = ({ mp }: Props) => {
     }
   }, [currentMonth]);
 
+  // Phase 1: reading countdown (no buttons shown)
   useEffect(() => {
-    if (!activeEvent || eventDecided) return;
+    if (!activeEvent || eventDecided || eventPhase !== "reading") return;
+    readingRef.current = window.setInterval(() => {
+      setReadingTimer(prev => {
+        if (prev <= 1) {
+          clearInterval(readingRef.current!);
+          setEventPhase("deciding");
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => { if (readingRef.current) clearInterval(readingRef.current); };
+  }, [activeEvent, eventDecided, eventPhase]);
+
+  // Phase 2: decision countdown (buttons shown)
+  useEffect(() => {
+    if (!activeEvent || eventDecided || eventPhase !== "deciding") return;
     timerRef.current = window.setInterval(() => {
       setEventTimer(prev => {
         if (prev <= 1) { handleEventDecision("hold"); return 0; }
@@ -174,7 +197,7 @@ const MultiplayerSimulation = ({ mp }: Props) => {
       });
     }, 1000);
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [activeEvent, eventDecided]);
+  }, [activeEvent, eventDecided, eventPhase]);
 
   const handleEventDecision = useCallback((decision: "sell" | "hold" | "buy") => {
     if (!activeEvent || eventDecided) return;
@@ -396,46 +419,63 @@ const MultiplayerSimulation = ({ mp }: Props) => {
                 <p className="text-sm text-muted-foreground" style={nunito}>{t(activeEvent.description)}</p>
               </div>
 
-              {/* Timer */}
-              <div className="flex items-center gap-2 mb-5">
-                <Timer className="w-4 h-4 flex-shrink-0" style={{ color: CELESTE }} />
-                <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: "hsl(var(--muted))" }}>
-                  <motion.div className="h-full rounded-full" style={{
-                    width: `${(eventTimer / EVENT_TIMER) * 100}%`,
-                    backgroundColor: CELESTE,
-                  }} />
+              {/* Phase 1: reading — show reading countdown, no buttons */}
+              {eventPhase === "reading" && (
+                <div className="text-center py-2">
+                  <p className="text-xs text-muted-foreground mb-3" style={nunito}>
+                    {readingTimer}s
+                  </p>
+                  <div className="w-full h-1.5 rounded-full overflow-hidden" style={{ background: "hsl(var(--muted))" }}>
+                    <motion.div className="h-full rounded-full"
+                      style={{ width: `${(readingTimer / READING_TIME) * 100}%`, backgroundColor: CELESTE }}
+                      transition={{ duration: 0.4 }} />
+                  </div>
                 </div>
-                <span className="text-sm font-black tabular-nums w-6 text-right" style={{ ...nunito, color: CELESTE }}>
-                  {eventTimer}s
-                </span>
-              </div>
+              )}
 
-              {/* 3 decision buttons */}
-              <div className="flex flex-col gap-2">
-                <motion.button
-                  className="w-full py-3 rounded-2xl font-black text-sm flex items-center justify-center gap-2 border-2"
-                  style={{ ...nunito, backgroundColor: BTN_SELL.bg, borderColor: BTN_SELL.border, color: BTN_SELL.color }}
-                  onClick={() => handleEventDecision("sell")} whileTap={{ scale: 0.97 }}>
-                  <ArrowDownFromLine className="w-4 h-4" />
-                  {t("multiplayer.sell")}
-                </motion.button>
-                <div className="grid grid-cols-2 gap-2">
-                  <motion.button
-                    className="py-3 rounded-2xl font-black text-sm flex items-center justify-center gap-2 border-2"
-                    style={{ ...nunito, backgroundColor: BTN_HOLD.bg, borderColor: BTN_HOLD.border, color: BTN_HOLD.color }}
-                    onClick={() => handleEventDecision("hold")} whileTap={{ scale: 0.97 }}>
-                    <Shield className="w-4 h-4" />
-                    {t("multiplayer.hold")}
-                  </motion.button>
-                  <motion.button
-                    className="py-3 rounded-2xl font-black text-sm flex items-center justify-center gap-2 border-2"
-                    style={{ ...nunito, backgroundColor: BTN_BUY.bg, borderColor: BTN_BUY.border, color: BTN_BUY.color }}
-                    onClick={() => handleEventDecision("buy")} whileTap={{ scale: 0.97 }}>
-                    <ShoppingCart className="w-4 h-4" />
-                    {t("multiplayer.buy")}
-                  </motion.button>
-                </div>
-              </div>
+              {/* Phase 2: deciding — show timer + buttons */}
+              {eventPhase === "deciding" && (
+                <>
+                  <div className="flex items-center gap-2 mb-5">
+                    <Timer className="w-4 h-4 flex-shrink-0" style={{ color: CELESTE }} />
+                    <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: "hsl(var(--muted))" }}>
+                      <motion.div className="h-full rounded-full" style={{
+                        width: `${(eventTimer / EVENT_TIMER) * 100}%`,
+                        backgroundColor: CELESTE,
+                      }} />
+                    </div>
+                    <span className="text-sm font-black tabular-nums w-6 text-right" style={{ ...nunito, color: CELESTE }}>
+                      {eventTimer}s
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <motion.button
+                      className="w-full py-3 rounded-2xl font-black text-sm flex items-center justify-center gap-2 border-2"
+                      style={{ ...nunito, backgroundColor: BTN_SELL.bg, borderColor: BTN_SELL.border, color: BTN_SELL.color }}
+                      onClick={() => handleEventDecision("sell")} whileTap={{ scale: 0.97 }}>
+                      <ArrowDownFromLine className="w-4 h-4" />
+                      {t("multiplayer.sell")}
+                    </motion.button>
+                    <div className="grid grid-cols-2 gap-2">
+                      <motion.button
+                        className="py-3 rounded-2xl font-black text-sm flex items-center justify-center gap-2 border-2"
+                        style={{ ...nunito, backgroundColor: BTN_HOLD.bg, borderColor: BTN_HOLD.border, color: BTN_HOLD.color }}
+                        onClick={() => handleEventDecision("hold")} whileTap={{ scale: 0.97 }}>
+                        <Shield className="w-4 h-4" />
+                        {t("multiplayer.hold")}
+                      </motion.button>
+                      <motion.button
+                        className="py-3 rounded-2xl font-black text-sm flex items-center justify-center gap-2 border-2"
+                        style={{ ...nunito, backgroundColor: BTN_BUY.bg, borderColor: BTN_BUY.border, color: BTN_BUY.color }}
+                        onClick={() => handleEventDecision("buy")} whileTap={{ scale: 0.97 }}>
+                        <ShoppingCart className="w-4 h-4" />
+                        {t("multiplayer.buy")}
+                      </motion.button>
+                    </div>
+                  </div>
+                </>
+              )}
             </motion.div>
           </motion.div>
         )}
