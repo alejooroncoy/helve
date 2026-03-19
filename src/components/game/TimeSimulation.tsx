@@ -94,38 +94,34 @@ const ACTION_COLORS = {
   buy: PRIMARY_COLOR,
 };
 
-const timeLabels = [
-  "Hoy",
-  "1 mes",
-  "2 meses",
-  "3 meses",
-  "6 meses",
-  "9 meses",
-  "1 ano",
-  "1.5 anos",
-  "2 anos",
-  "3 anos",
-  "5 anos",
+const timeLabelKeys = [
+  "today", "1m", "2m", "3m", "6m", "9m", "1y", "1.5y", "2y", "3y", "5y",
 ];
 const timeMonths = [0, 1, 2, 3, 6, 9, 12, 18, 24, 36, 60];
 
-const birdMessages = {
-  positive: [
-    "Tu nido brilla!",
-    "Los huevos estan calentitos!",
-    "Buen vuelo! Vas por buen camino.",
-  ],
-  negative: [
-    "Aguanta! Las tormentas pasan.",
-    "Los pajaros fuertes resisten el viento.",
-    "No todo vuelo es suave, pero sigues volando!",
-  ],
-  neutral: [
-    "Tranquilo, tu nido crece despacio pero seguro.",
-    "Paciencia. El tiempo es tu amigo.",
-    "Paso a paso se construye el mejor nido.",
-  ],
-};
+function getTimeLabels(t: (key: string) => string) {
+  return timeLabelKeys.map((key) => t(`timeSim.timeLabels.${key}`));
+}
+
+function getBirdMessages(t: (key: string) => string) {
+  return {
+    positive: [
+      t("birdMessages.positive.0"),
+      t("birdMessages.positive.1"),
+      t("birdMessages.positive.2"),
+    ],
+    negative: [
+      t("birdMessages.negative.0"),
+      t("birdMessages.negative.1"),
+      t("birdMessages.negative.2"),
+    ],
+    neutral: [
+      t("birdMessages.neutral.0"),
+      t("birdMessages.neutral.1"),
+      t("birdMessages.neutral.2"),
+    ],
+  };
+}
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
@@ -511,7 +507,8 @@ export default function TimeSimulation({
     return indices;
   }, [initialMonths]);
   const filteredMonths = filteredIndices.map((index) => timeMonths[index]);
-  const filteredLabels = filteredIndices.map((index) => timeLabels[index]);
+  const localizedTimeLabels = useMemo(() => getTimeLabels(t), [t]);
+  const filteredLabels = filteredIndices.map((index) => localizedTimeLabels[index]);
   const totalSteps = filteredMonths.length - 1;
 
   const aiEventPlan = useMemo(
@@ -654,7 +651,6 @@ export default function TimeSimulation({
 
     const scheduledEvent = aiEventMap[nextStep];
     if (scheduledEvent) {
-      // Fetch in background — simulation keeps playing
       void ensureScenario(scheduledEvent, newValue).then((scenario) => {
         if (!scenario) return;
         setPlaying(false);
@@ -662,9 +658,7 @@ export default function TimeSimulation({
         setAiScenario(scenario);
         setShowAIEvent(true);
         setBirdMsg(
-          i18n.language === "es"
-            ? `${scheduledEvent.investmentName} está moviéndose fuerte...`
-            : `${scheduledEvent.investmentName} is moving sharply...`,
+          t("timeSim.movingSharp", { name: scheduledEvent.investmentName }),
         );
       });
     }
@@ -672,7 +666,8 @@ export default function TimeSimulation({
     const previousValue = data[data.length - 1]?.value || startBalance;
     const stepReturn = previousValue > 0 ? newValue / previousValue - 1 : 0;
     const msgType = stepReturn > 0.02 ? "positive" : stepReturn < -0.02 ? "negative" : "neutral";
-    setBirdMsg(pickRandom(birdMessages[msgType]));
+    const localBirdMsgs = getBirdMessages(t);
+    setBirdMsg(pickRandom(localBirdMsgs[msgType]));
     setCurrentStep(nextStep);
   }, [
     currentStep,
@@ -683,7 +678,7 @@ export default function TimeSimulation({
     filteredMonths,
     filteredLabels,
     aiEventMap,
-    i18n.language,
+    t,
     ensureScenario,
     data,
   ]);
@@ -760,20 +755,12 @@ export default function TimeSimulation({
 
   const periodLabel =
     initialMonths <= 3
-      ? i18n.language === "es"
-        ? "3 meses"
-        : "3 months"
+      ? t("timeSim.periods.3m")
       : initialMonths <= 6
-        ? i18n.language === "es"
-          ? "6 meses"
-          : "6 months"
+        ? t("timeSim.periods.6m")
         : initialMonths === 12
-          ? i18n.language === "es"
-            ? "1 año"
-            : "1 year"
-          : i18n.language === "es"
-            ? "5 años"
-            : "5 years";
+          ? t("timeSim.periods.1y")
+          : t("timeSim.periods.5y");
 
   return (
     <motion.div
@@ -840,7 +827,7 @@ export default function TimeSimulation({
                 </motion.p>
               </AnimatePresence>
               <p className="text-[10px] text-muted-foreground" style={nunito}>
-                {i18n.language === "es" ? "desde" : "from"} CHF {startBalance}
+                {t("timeSim.from")} CHF {startBalance}
               </p>
             </div>
           </div>
@@ -940,10 +927,10 @@ export default function TimeSimulation({
                 const snap = categorySnapshots.find((s) => s.id === activeAIEvent.investmentId);
                 if (!snap) return null;
                 const dirLabel = activeAIEvent.direction === "drop"
-                  ? (i18n.language === "es" ? "Caída" : "Drop")
+                  ? t("timeSim.dirDrop")
                   : activeAIEvent.direction === "surge"
-                    ? (i18n.language === "es" ? "Subida" : "Surge")
-                    : (i18n.language === "es" ? "Tensión" : "Volatile");
+                    ? t("timeSim.dirSurge")
+                    : t("timeSim.dirVolatile");
                 const stepIdx = activeAIEvent.step;
                 const tLabel = filteredLabels[stepIdx] || "";
                 const marker: EventMarker = {
@@ -1017,12 +1004,8 @@ export default function TimeSimulation({
                 }}
               >
                 {aiFeedback.isGood
-                  ? i18n.language === "es"
-                    ? "Buena decisión"
-                    : "Great call"
-                  : i18n.language === "es"
-                    ? "No te preocupes"
-                    : "Don't worry"}
+                  ? t("timeSim.goodDecision")
+                  : t("timeSim.badDecision")}
               </h3>
               <p className="text-sm text-muted-foreground mb-3 leading-relaxed" style={nunito}>
                 {aiFeedback.text}
@@ -1042,7 +1025,7 @@ export default function TimeSimulation({
                 style={{ ...nunito, backgroundColor: PRIMARY_COLOR, color: "hsl(var(--primary-foreground))" }}
                 whileTap={{ scale: 0.97 }}
               >
-                {i18n.language === "es" ? "Continuar" : "Continue"}
+                {t("timeSim.continue")}
               </motion.button>
             </motion.div>
           </motion.div>
