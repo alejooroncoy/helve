@@ -6,23 +6,22 @@ import type { Investment } from "@/game/types";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
+interface CoachAction {
+  type: "add" | "remove";
+  investmentId: string;
+}
+
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/coach-chat`;
 const TTS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/coach-tts`;
 
-/* ---- Streaming helper ---- */
-async function streamChat({
+/* ---- Chat helper (JSON, not streaming) ---- */
+async function chatWithTools({
   messages,
   portfolio,
-  onDelta,
-  onDone,
-  onError,
 }: {
   messages: Msg[];
   portfolio?: Investment[];
-  onDelta: (t: string) => void;
-  onDone: () => void;
-  onError: (msg: string) => void;
-}) {
+}): Promise<{ text: string; actions: CoachAction[] }> {
   const resp = await fetch(CHAT_URL, {
     method: "POST",
     headers: {
@@ -34,39 +33,11 @@ async function streamChat({
 
   if (!resp.ok) {
     const err = await resp.json().catch(() => ({ error: "Error de conexión" }));
-    onError(err.error || "Error del coach");
-    return;
+    throw new Error(err.error || "Error del coach");
   }
-  if (!resp.body) { onError("Sin respuesta"); return; }
 
-  const reader = resp.body.getReader();
-  const decoder = new TextDecoder();
-  let buf = "";
-
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    buf += decoder.decode(value, { stream: true });
-
-    let idx: number;
-    while ((idx = buf.indexOf("\n")) !== -1) {
-      let line = buf.slice(0, idx);
-      buf = buf.slice(idx + 1);
-      if (line.endsWith("\r")) line = line.slice(0, -1);
-      if (!line.startsWith("data: ")) continue;
-      const json = line.slice(6).trim();
-      if (json === "[DONE]") { onDone(); return; }
-      try {
-        const parsed = JSON.parse(json);
-        const content = parsed.choices?.[0]?.delta?.content;
-        if (content) onDelta(content);
-      } catch {
-        buf = line + "\n" + buf;
-        break;
-      }
-    }
-  }
-  onDone();
+  const data = await resp.json();
+  return { text: data.text || "", actions: data.actions || [] };
 }
 
 /* ---- Visual card parsers ---- */
@@ -335,9 +306,11 @@ function MicButton({ onTranscript, disabled }: { onTranscript: (text: string) =>
 interface CoachChatProps {
   onClose: () => void;
   portfolio?: Investment[];
+  onAddInvestment?: (investmentId: string) => void;
+  onRemoveInvestment?: (investmentId: string) => void;
 }
 
-export default function CoachChat({ onClose, portfolio }: CoachChatProps) {
+export default function CoachChat({ onClose, portfolio, onAddInvestment, onRemoveInvestment }: CoachChatProps) {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -382,33 +355,28 @@ export default function CoachChat({ onClose, portfolio }: CoachChatProps) {
     setMessages((prev) => [...prev, userMsg]);
     setLoading(true);
 
-    let assistantSoFar = "";
     const allMessages = [...messages, userMsg];
 
-    const upsert = (chunk: string) => {
-      assistantSoFar += chunk;
-      setMessages((prev) => {
-        const last = prev[prev.length - 1];
-        if (last?.role === "assistant") {
-          return prev.map((m, i) => (i === prev.length - 1 ? { ...m, content: assistantSoFar } : m));
-        }
-        return [...prev, { role: "assistant", content: assistantSoFar }];
-      });
-    };
-
     try {
-      await streamChat({
+      const { text: responseText, actions } = await chatWithTools({
         messages: allMessages,
         portfolio,
-        onDelta: upsert,
-        onDone: () => setLoading(false),
-        onError: (msg) => {
-          setMessages((prev) => [...prev, { role: "assistant", content: `⚠️ ${msg}` }]);
-          setLoading(false);
-        },
       });
-    } catch {
-      setMessages((prev) => [...prev, { role: "assistant", content: "⚠️ Error de conexión" }]);
+
+      // Execute actions
+      for (const action of actions) {
+        if (action.type === "add" && onAddInvestment) {
+          onAddInvestment(action.investmentId);
+        } else if (action.type === "remove" && onRemoveInvestment) {
+          onRemoveInvestment(action.investmentId);
+        }
+      }
+
+      setMessages((prev) => [...prev, { role: "assistant", content: responseText }]);
+    } catch (e) {
+      const errorMsg = e instanceof Error ? e.message : "Error de conexión";
+      setMessages((prev) => [...prev, { role: "assistant", content: `⚠️ ${errorMsg}` }]);
+    } finally {
       setLoading(false);
     }
   };
