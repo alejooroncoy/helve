@@ -592,17 +592,22 @@ const Panel = () => {
     });
   }, [loadProgress]);
 
-  // When nests load, select first or create default
+  // When nests load, select first or create default. Balance is global from first nest.
   useEffect(() => {
     if (nestsLoading) return;
     if (nests.length > 0) {
+      // Use first nest's balance as the global balance
+      setBalance(nests[0].balance);
       if (!activeNestId || !nests.find((n) => n.id === activeNestId)) {
         switchToNest(nests[0]);
       }
     } else {
       // Auto-create first nest
       createNest(t("panel.myNest")).then((nest) => {
-        if (nest) switchToNest(nest);
+        if (nest) {
+          setBalance(nest.balance);
+          switchToNest(nest);
+        }
       });
     }
   }, [nests, nestsLoading]);
