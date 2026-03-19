@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { PortfolioSlot, Investment } from "@/game/types";
-import { simulateRealGrowth } from "@/game/types";
+import { useMonthlyPrices } from "@/hooks/useMarketData";
 
 interface Props {
   portfolio: PortfolioSlot[];
@@ -22,76 +22,103 @@ const periods: Period[] = [
   { label: "5 años", months: 60, key: "5y" },
 ];
 
-function simulateMonthly(
-  types: PortfolioSlot[],
-  stormChoice: "stay" | "sell" | null,
+// Map game investment IDs to DB instrument IDs
+const investmentToDbId: Record<string, string> = {
+  "ch-bond-aaa": "ch-bond-aaa",
+  "global-bond": "global-bond-agg",
+  "ch-govt-10y": "ch-govt-10y",
+  "smi-index": "smi-index",
+  "eurostoxx50": "eurostoxx50",
+  "gold-chf": "gold-chf",
+  "nestle": "nesn-ch",
+  "novartis": "novn-ch",
+  "djia-index": "djia-index",
+  "dax-index": "dax-index",
+  "apple": "aapl-us",
+  "microsoft": "msft-us",
+  "nvidia": "nvda-us",
+  "logitech": "logn-ch",
+  "ubs": "ubsg-ch",
+  "amazon": "amzn-us",
+  "green-energy": "smi-index", // fallback
+};
+
+/**
+ * Simulate portfolio using real historical monthly prices from DB.
+ * Takes the LAST N months of real data and computes equal-weighted portfolio performance.
+ */
+function simulateFromRealData(
+  prices: Record<string, { date: string; price: number }[]>,
+  investmentIds: string[],
   months: number
-): { values: number[]; labels: string[] } {
-  if (types.length === 0) return { values: [100], labels: ["Inicio"] };
+): { values: number[]; labels: string[]; dates: string[] } {
+  const dbIds = investmentIds.map(id => investmentToDbId[id] || id);
 
-  const getMonthlyReturn = (type: PortfolioSlot): number => {
-    switch (type) {
-      case "safe": return 0.025 / 12;
-      case "balanced": return 0.062 / 12;
-      case "growth": return 0.094 / 12;
-    }
-  };
+  // Find instruments with available price data
+  const available = dbIds.filter(id => prices[id] && prices[id].length > months);
 
-  const getMonthlyVol = (type: PortfolioSlot): number => {
-    switch (type) {
-      case "safe": return 0.03 / Math.sqrt(12);
-      case "balanced": return 0.15 / Math.sqrt(12);
-      case "growth": return 0.22 / Math.sqrt(12);
-    }
-  };
+  if (available.length === 0) {
+    // Fallback: no data
+    return { values: [100], labels: ["Inicio"], dates: [] };
+  }
 
-  const avgReturn = types.reduce((s, t) => s + getMonthlyReturn(t), 0) / types.length;
-  const avgVol = types.reduce((s, t) => s + getMonthlyVol(t), 0) / types.length;
+  // Use the last N months of data for each instrument
+  const series: number[][] = available.map(id => {
+    const data = prices[id]!;
+    const slice = data.slice(-months - 1); // need months+1 points for months returns
+    const basePrice = slice[0].price;
+    return slice.map(p => (basePrice > 0 ? (p.price / basePrice) * 100 : 100));
+  });
 
-  const seed = types.reduce((s, t) => s + (t === "safe" ? 1 : t === "balanced" ? 3 : 7), 0);
+  // Equal-weighted portfolio: average of all normalized series
+  const len = Math.min(...series.map(s => s.length));
+  const values: number[] = [];
+  const labels: string[] = [];
+  const dates: string[] = [];
 
-  let value = 100;
-  const values = [100];
-  const labels = ["Inicio"];
+  const refData = prices[available[0]]!;
+  const refSlice = refData.slice(-months - 1);
 
-  const crashMonth = Math.floor(months * 0.6);
+  for (let i = 0; i < len; i++) {
+    const avg = series.reduce((sum, s) => sum + (s[i] ?? 100), 0) / series.length;
+    values.push(Math.round(avg * 10) / 10);
 
-  for (let m = 1; m <= months; m++) {
-    const noise = Math.sin(seed * 1000 + m * 137) * 0.5;
-    let ret = avgReturn + avgVol * noise;
+    const date = refSlice[i]?.date || "";
+    dates.push(date);
 
-    // Simulate a dip mid-way
-    if (m === crashMonth) {
-      ret = -avgVol * 2.5;
-      if (stormChoice === "sell") {
-        ret = -avgVol * 1.5;
-      }
-    }
-
-    if (stormChoice === "sell" && m > crashMonth) {
-      ret = 0.025 / 12;
-    }
-
-    value = value * (1 + ret);
-    values.push(Math.round(value * 10) / 10);
-
-    if (months <= 6) {
-      labels.push(`M${m}`);
+    if (i === 0) {
+      labels.push("Inicio");
+    } else if (months <= 6) {
+      labels.push(`M${i}`);
     } else if (months <= 12) {
-      labels.push(m % 2 === 0 ? `M${m}` : "");
+      labels.push(i % 2 === 0 ? `M${i}` : "");
     } else {
-      labels.push(m % 12 === 0 ? `A${m / 12}` : "");
+      labels.push(i % 12 === 0 ? `A${Math.floor(i / 12)}` : "");
     }
   }
 
-  return { values, labels };
+  return { values, labels, dates };
 }
 
 const SimulationScreen = ({ portfolio, investments, stormChoice, onContinue }: Props) => {
   const [selectedPeriod, setSelectedPeriod] = useState<Period>(periods[2]);
   const [simulated, setSimulated] = useState(false);
 
-  const sim = simulateMonthly(portfolio, stormChoice, selectedPeriod.months);
+  // Get DB IDs for all investments
+  const dbIds = useMemo(
+    () => investments.map(inv => investmentToDbId[inv.id] || inv.id).filter(Boolean),
+    [investments]
+  );
+
+  const { prices, loading } = useMonthlyPrices(dbIds);
+
+  const sim = useMemo(() => {
+    if (loading || Object.keys(prices).length === 0) {
+      return { values: [100], labels: ["Inicio"], dates: [] };
+    }
+    return simulateFromRealData(prices, investments.map(i => i.id), selectedPeriod.months);
+  }, [prices, loading, investments, selectedPeriod.months]);
+
   const finalValue = sim.values[sim.values.length - 1];
   const change = Math.round((finalValue - 100) * 10) / 10;
   const isPositive = change >= 0;
@@ -113,12 +140,17 @@ const SimulationScreen = ({ portfolio, investments, stormChoice, onContinue }: P
   const chartWidth = 320;
 
   const points = sim.values.map((v, i) => {
-    const x = (i / (sim.values.length - 1)) * chartWidth;
+    const x = (i / Math.max(sim.values.length - 1, 1)) * chartWidth;
     const y = chartHeight - ((v - minVal) / range) * (chartHeight - 20);
     return `${x},${y}`;
   }).join(" ");
 
   const areaPoints = `0,${chartHeight} ${points} ${chartWidth},${chartHeight}`;
+
+  // Date range label
+  const dateRange = sim.dates.length > 1
+    ? `${sim.dates[0]} → ${sim.dates[sim.dates.length - 1]}`
+    : "";
 
   return (
     <motion.div
@@ -130,12 +162,12 @@ const SimulationScreen = ({ portfolio, investments, stormChoice, onContinue }: P
       {/* Header */}
       <div className="px-5 pt-8 pb-4">
         <h2 className="text-2xl text-foreground" style={{ ...nunito, fontWeight: 800 }}>
-          {simulated ? "📊 Resultados" : "⏳ ¿Cuánto tiempo quieres simular?"}
+          {simulated ? "📊 Resultados Reales" : "⏳ ¿Cuánto tiempo quieres simular?"}
         </h2>
         <p className="text-sm text-muted-foreground mt-1" style={nunito}>
           {simulated
-            ? `Simulación de ${selectedPeriod.label} con tu portafolio`
-            : "Escoge el periodo y mira cómo crece tu inversión"
+            ? `Data histórica real de los últimos ${selectedPeriod.label}`
+            : "Basado en datos reales del mercado (2006–2026)"
           }
         </p>
       </div>
@@ -193,10 +225,16 @@ const SimulationScreen = ({ portfolio, investments, stormChoice, onContinue }: P
                 </div>
               </div>
 
+              {/* Date range */}
+              {dateRange && (
+                <p className="text-[10px] text-muted-foreground text-center mb-2" style={nunito}>
+                  📅 {dateRange}
+                </p>
+              )}
+
               {/* Chart */}
               <div className="rounded-2xl bg-card border-2 p-4 overflow-hidden" style={{ borderColor: "hsl(var(--border))" }}>
                 <svg viewBox={`-10 -10 ${chartWidth + 20} ${chartHeight + 30}`} className="w-full" style={{ height: chartHeight + 40 }}>
-                  {/* Grid lines */}
                   {[0, 0.25, 0.5, 0.75, 1].map((pct) => {
                     const y = chartHeight - pct * (chartHeight - 20);
                     const val = Math.round(minVal + pct * range);
@@ -219,7 +257,6 @@ const SimulationScreen = ({ portfolio, investments, stormChoice, onContinue }: P
                     strokeDasharray="4,4"
                   />
 
-                  {/* Area fill */}
                   <motion.polygon
                     points={areaPoints}
                     fill={isPositive ? "#22c55e15" : "#ef444415"}
@@ -228,7 +265,6 @@ const SimulationScreen = ({ portfolio, investments, stormChoice, onContinue }: P
                     transition={{ delay: 0.3 }}
                   />
 
-                  {/* Line */}
                   <motion.polyline
                     points={points}
                     fill="none"
@@ -241,7 +277,6 @@ const SimulationScreen = ({ portfolio, investments, stormChoice, onContinue }: P
                     transition={{ duration: 1.5, ease: "easeOut" }}
                   />
 
-                  {/* End dot */}
                   <motion.circle
                     cx={chartWidth}
                     cy={chartHeight - ((finalValue - minVal) / range) * (chartHeight - 20)}
@@ -276,7 +311,6 @@ const SimulationScreen = ({ portfolio, investments, stormChoice, onContinue }: P
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              {/* Bird mascot */}
               <motion.img
                 src="/perspectiva2.png"
                 alt="Helve"
@@ -288,15 +322,14 @@ const SimulationScreen = ({ portfolio, investments, stormChoice, onContinue }: P
 
               <div className="text-center px-8">
                 <p className="text-lg text-foreground" style={{ ...nunito, fontWeight: 700 }}>
-                  Vamos a ver cómo le va a tu portafolio en{" "}
+                  Vamos a ver cómo le fue a tu portafolio en los últimos{" "}
                   <span style={{ color: CELESTE }}>{selectedPeriod.label}</span>
                 </p>
                 <p className="text-sm text-muted-foreground mt-2" style={nunito}>
-                  Recuerda: los mercados suben y bajan. Lo importante es el largo plazo.
+                  {loading ? "Cargando datos reales del mercado..." : "Datos reales de bolsas y bonos suizos, europeos y americanos"}
                 </p>
               </div>
 
-              {/* Mini portfolio summary */}
               <div className="flex gap-2 flex-wrap justify-center px-4">
                 {investments.map((inv) => (
                   <span key={inv.id} className="text-xs px-3 py-1.5 rounded-full bg-card border" style={nunito}>
@@ -317,8 +350,9 @@ const SimulationScreen = ({ portfolio, investments, stormChoice, onContinue }: P
             className="w-full py-4 rounded-2xl tracking-widest text-sm text-white"
             style={{ ...nunito, backgroundColor: CELESTE, fontWeight: 900 }}
             whileTap={{ scale: 0.97 }}
+            disabled={loading}
           >
-            🚀 SIMULAR {selectedPeriod.label.toUpperCase()}
+            {loading ? "CARGANDO DATA REAL..." : `🚀 SIMULAR ${selectedPeriod.label.toUpperCase()}`}
           </motion.button>
         ) : (
           <div className="space-y-3">

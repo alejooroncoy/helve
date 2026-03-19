@@ -1,8 +1,9 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ArrowRightLeft, TrendingUp, Shield, Zap, Info } from "lucide-react";
+import { ArrowRightLeft, TrendingUp, Shield, Zap } from "lucide-react";
 import type { Investment, PortfolioSlot, RiskProfile } from "@/game/types";
 import { availableInvestments } from "@/game/types";
+import { useInstrumentStats } from "@/hooks/useMarketData";
 
 interface Props {
   profile: RiskProfile;
@@ -12,10 +13,31 @@ interface Props {
 const CELESTE = "#5BB8F5";
 const nunito = { fontFamily: "'Nunito', sans-serif" };
 
+// Map our Investment IDs to DB instrument IDs
+const investmentToDbId: Record<string, string> = {
+  "ch-bond-aaa": "ch-bond-aaa",
+  "global-bond": "global-bond-agg",
+  "ch-govt-10y": "ch-govt-10y",
+  "smi-index": "smi-index",
+  "eurostoxx50": "eurostoxx50",
+  "gold-chf": "gold-chf",
+  "nestle": "nesn-ch",
+  "novartis": "novn-ch",
+  "djia-index": "djia-index",
+  "dax-index": "dax-index",
+  "apple": "aapl-us",
+  "microsoft": "msft-us",
+  "nvidia": "nvda-us",
+  "logitech": "logn-ch",
+  "ubs": "ubsg-ch",
+  "amazon": "amzn-us",
+};
+
+const allDbIds = Object.values(investmentToDbId);
+
 function getRecommended(profile: RiskProfile): Investment[] {
   const all = availableInvestments;
   if (profile === "conservative") {
-    // 2 safe + 1 balanced
     return [
       all.find(i => i.id === "ch-bond-aaa")!,
       all.find(i => i.id === "global-bond")!,
@@ -23,14 +45,12 @@ function getRecommended(profile: RiskProfile): Investment[] {
     ];
   }
   if (profile === "growth") {
-    // 1 balanced + 2 growth
     return [
       all.find(i => i.id === "smi-index")!,
       all.find(i => i.id === "apple")!,
       all.find(i => i.id === "nvidia")!,
     ];
   }
-  // balanced
   return [
     all.find(i => i.id === "ch-bond-aaa")!,
     all.find(i => i.id === "smi-index")!,
@@ -72,19 +92,46 @@ const PortfolioBuilder = ({ profile, onComplete }: Props) => {
   const recommended = useMemo(() => getRecommended(profile), [profile]);
   const [portfolio, setPortfolio] = useState<Investment[]>(recommended);
   const [swapSlot, setSwapSlot] = useState<number | null>(null);
-  const [showInfo, setShowInfo] = useState<string | null>(null);
+
+  // Fetch real stats from DB
+  const { stats, loading } = useInstrumentStats(allDbIds);
+
+  // Enrich investments with real data when stats load
+  const enriched = useMemo(() => {
+    return portfolio.map(inv => {
+      const dbId = investmentToDbId[inv.id];
+      const real = dbId ? stats[dbId] : null;
+      if (real) {
+        return {
+          ...inv,
+          annualReturn: real.avgAnnualReturn,
+          riskLevel: real.riskLevel,
+        };
+      }
+      return inv;
+    });
+  }, [portfolio, stats]);
 
   const alternatives = useMemo(() => {
     const ids = new Set(portfolio.map(i => i.id));
-    return availableInvestments.filter(i => !ids.has(i.id));
-  }, [portfolio]);
+    return availableInvestments
+      .filter(i => !ids.has(i.id))
+      .map(inv => {
+        const dbId = investmentToDbId[inv.id];
+        const real = dbId ? stats[dbId] : null;
+        if (real) {
+          return { ...inv, annualReturn: real.avgAnnualReturn, riskLevel: real.riskLevel };
+        }
+        return inv;
+      });
+  }, [portfolio, stats]);
 
-  const avgRisk = portfolio.length
-    ? Math.round(portfolio.reduce((s, i) => s + i.riskLevel, 0) / portfolio.length * 10) / 10
+  const avgRisk = enriched.length
+    ? Math.round(enriched.reduce((s, i) => s + i.riskLevel, 0) / enriched.length * 10) / 10
     : 0;
 
-  const avgReturn = portfolio.length
-    ? Math.round(portfolio.reduce((s, i) => s + i.annualReturn, 0) / portfolio.length * 10) / 10
+  const avgReturn = enriched.length
+    ? Math.round(enriched.reduce((s, i) => s + i.annualReturn, 0) / enriched.length * 10) / 10
     : 0;
 
   const handleSwap = (newInv: Investment) => {
@@ -94,8 +141,8 @@ const PortfolioBuilder = ({ profile, onComplete }: Props) => {
   };
 
   const handleSimulate = () => {
-    const slots: PortfolioSlot[] = portfolio.map(i => i.type);
-    onComplete(slots, portfolio);
+    const slots: PortfolioSlot[] = enriched.map(i => i.type);
+    onComplete(slots, enriched);
   };
 
   const p = profileLabels[profile];
@@ -120,18 +167,18 @@ const PortfolioBuilder = ({ profile, onComplete }: Props) => {
         {/* Risk/Return summary */}
         <div className="flex gap-3">
           <div className="flex-1 rounded-2xl p-3 border-2" style={{ borderColor: getRiskColor(avgRisk) }}>
-            <p className="text-xs text-muted-foreground" style={nunito}>Riesgo promedio</p>
+            <p className="text-xs text-muted-foreground" style={nunito}>Riesgo real</p>
             <p className="text-2xl" style={{ ...nunito, fontWeight: 800, color: getRiskColor(avgRisk) }}>
-              {avgRisk}<span className="text-sm">/10</span>
+              {loading ? "..." : avgRisk}<span className="text-sm">/10</span>
             </p>
             <p className="text-xs" style={{ ...nunito, color: getRiskColor(avgRisk) }}>{getRiskLabel(avgRisk)}</p>
           </div>
           <div className="flex-1 rounded-2xl p-3 border-2" style={{ borderColor: CELESTE }}>
-            <p className="text-xs text-muted-foreground" style={nunito}>Retorno anual est.</p>
+            <p className="text-xs text-muted-foreground" style={nunito}>Retorno real anual</p>
             <p className="text-2xl" style={{ ...nunito, fontWeight: 800, color: CELESTE }}>
-              {avgReturn}<span className="text-sm">%</span>
+              {loading ? "..." : avgReturn}<span className="text-sm">%</span>
             </p>
-            <p className="text-xs text-muted-foreground" style={nunito}>promedio</p>
+            <p className="text-xs text-muted-foreground" style={nunito}>CAGR 2006–2026</p>
           </div>
         </div>
       </div>
@@ -146,63 +193,80 @@ const PortfolioBuilder = ({ profile, onComplete }: Props) => {
       {/* Portfolio cards */}
       <div className="px-5 space-y-3 flex-1">
         <AnimatePresence mode="popLayout">
-          {portfolio.map((inv, idx) => (
-            <motion.div
-              key={inv.id}
-              className="rounded-2xl border-2 p-4 relative overflow-hidden"
-              style={{ borderColor: "hsl(var(--border))", backgroundColor: "hsl(var(--card))" }}
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              transition={{ delay: idx * 0.08 }}
-              layout
-            >
-              <div className="flex items-start gap-3">
-                <span className="text-2xl mt-0.5">{inv.emoji}</span>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="text-foreground truncate" style={{ ...nunito, fontWeight: 700 }}>
-                      {inv.name}
-                    </p>
-                    {inv.flag && <span className="text-sm">{inv.flag}</span>}
-                  </div>
-                  <div className="flex items-center gap-3 mt-1">
-                    <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full"
-                      style={{ backgroundColor: getRiskColor(inv.riskLevel) + "20", color: getRiskColor(inv.riskLevel) }}>
-                      {getTypeIcon(inv.type)} {getTypeLabel(inv.type)}
-                    </span>
-                    {inv.tag && (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">{inv.tag}</span>
+          {enriched.map((inv, idx) => {
+            const dbId = investmentToDbId[inv.id];
+            const real = dbId ? stats[dbId] : null;
+            return (
+              <motion.div
+                key={inv.id}
+                className="rounded-2xl border-2 p-4 relative overflow-hidden"
+                style={{ borderColor: "hsl(var(--border))", backgroundColor: "hsl(var(--card))" }}
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                transition={{ delay: idx * 0.08 }}
+                layout
+              >
+                <div className="flex items-start gap-3">
+                  <span className="text-2xl mt-0.5">{inv.emoji}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="text-foreground truncate" style={{ ...nunito, fontWeight: 700 }}>
+                        {inv.name}
+                      </p>
+                      {inv.flag && <span className="text-sm">{inv.flag}</span>}
+                    </div>
+                    <div className="flex items-center gap-3 mt-1">
+                      <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full"
+                        style={{ backgroundColor: getRiskColor(inv.riskLevel) + "20", color: getRiskColor(inv.riskLevel) }}>
+                        {getTypeIcon(inv.type)} {getTypeLabel(inv.type)}
+                      </span>
+                      {inv.tag && (
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">{inv.tag}</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-4 mt-2">
+                      <div>
+                        <span className="text-xs text-muted-foreground">Riesgo </span>
+                        <span className="text-sm" style={{ ...nunito, fontWeight: 700, color: getRiskColor(inv.riskLevel) }}>
+                          {inv.riskLevel}/10
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-xs text-muted-foreground">Retorno </span>
+                        <span className="text-sm" style={{ ...nunito, fontWeight: 700, color: CELESTE }}>
+                          {inv.annualReturn}%
+                        </span>
+                      </div>
+                      {real && (
+                        <div>
+                          <span className="text-xs text-muted-foreground">Vol. </span>
+                          <span className="text-sm" style={{ ...nunito, fontWeight: 700, color: "hsl(var(--muted-foreground))" }}>
+                            {real.volatility}%
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    {real && (
+                      <p className="text-[10px] text-muted-foreground mt-1" style={nunito}>
+                        Total 2006–2026: {real.totalReturn > 0 ? "+" : ""}{real.totalReturn}%
+                      </p>
                     )}
                   </div>
-                  <div className="flex items-center gap-4 mt-2">
-                    <div>
-                      <span className="text-xs text-muted-foreground">Riesgo </span>
-                      <span className="text-sm" style={{ ...nunito, fontWeight: 700, color: getRiskColor(inv.riskLevel) }}>
-                        {inv.riskLevel}/10
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-xs text-muted-foreground">Retorno </span>
-                      <span className="text-sm" style={{ ...nunito, fontWeight: 700, color: CELESTE }}>
-                        {inv.annualReturn}%
-                      </span>
-                    </div>
-                  </div>
+                  <button
+                    onClick={() => setSwapSlot(swapSlot === idx ? null : idx)}
+                    className="p-2 rounded-xl transition-colors"
+                    style={{
+                      backgroundColor: swapSlot === idx ? CELESTE + "20" : "transparent",
+                      color: swapSlot === idx ? CELESTE : "hsl(var(--muted-foreground))",
+                    }}
+                  >
+                    <ArrowRightLeft size={18} />
+                  </button>
                 </div>
-                <button
-                  onClick={() => setSwapSlot(swapSlot === idx ? null : idx)}
-                  className="p-2 rounded-xl transition-colors"
-                  style={{
-                    backgroundColor: swapSlot === idx ? CELESTE + "20" : "transparent",
-                    color: swapSlot === idx ? CELESTE : "hsl(var(--muted-foreground))",
-                  }}
-                >
-                  <ArrowRightLeft size={18} />
-                </button>
-              </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            );
+          })}
         </AnimatePresence>
       </div>
 
@@ -255,8 +319,9 @@ const PortfolioBuilder = ({ profile, onComplete }: Props) => {
           className="w-full py-4 rounded-2xl tracking-widest text-sm text-white"
           style={{ ...nunito, backgroundColor: CELESTE, fontWeight: 900 }}
           whileTap={{ scale: 0.97 }}
+          disabled={loading}
         >
-          SIMULAR MI PORTAFOLIO
+          {loading ? "CARGANDO DATA REAL..." : "SIMULAR MI PORTAFOLIO"}
         </motion.button>
       </div>
     </motion.div>
