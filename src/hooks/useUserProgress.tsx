@@ -8,6 +8,7 @@ export interface UserProgress {
   risk_scores: number[];
   risk_profile: RiskProfile;
   portfolio: Investment[];
+  allocations: Record<string, number>; // investmentId -> percentage (0-100)
   game_step: string;
   storm_choice: string | null;
   simulation_result: number;
