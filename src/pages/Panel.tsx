@@ -116,10 +116,12 @@ function DraggableCard({
   inv,
   zone,
   onClick,
+  onAsk,
 }: {
   inv: Investment;
   zone: "scouted" | "nest";
   onClick: () => void;
+  onAsk?: () => void;
 }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `${zone}-${inv.id}`,
@@ -137,7 +139,7 @@ function DraggableCard({
       {zone === "nest" ? (
         <NestCard inv={inv} />
       ) : (
-        <ScoutedCard inv={inv} />
+        <ScoutedCard inv={inv} onAsk={onAsk} />
       )}
     </div>
   );
@@ -179,7 +181,7 @@ function NestCard({ inv, overlay }: { inv: Investment; overlay?: boolean }) {
   );
 }
 
-function ScoutedCard({ inv, overlay }: { inv: Investment; overlay?: boolean }) {
+function ScoutedCard({ inv, overlay, onAsk }: { inv: Investment; overlay?: boolean; onAsk?: () => void }) {
   return (
     <div className={`bg-card rounded-2xl p-3.5 shadow-sm border-2 border-dashed border-border ${overlay ? "shadow-lg ring-2 ring-primary/30 -rotate-2 border-primary/40" : "hover:border-primary/40"} cursor-grab active:cursor-grabbing`}>
       <div className="flex items-center gap-3">
@@ -192,7 +194,18 @@ function ScoutedCard({ inv, overlay }: { inv: Investment; overlay?: boolean }) {
             {riskWord(inv.riskLevel)} · Earns ~{inv.annualReturn}% per year
           </p>
         </div>
-        {!overlay && <span className="text-primary text-base font-bold">+</span>}
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          {!overlay && onAsk && (
+            <span
+              onClick={(e) => { e.stopPropagation(); e.preventDefault(); onAsk(); }}
+              onPointerDown={(e) => e.stopPropagation()}
+              className="w-7 h-7 rounded-full bg-accent/10 text-accent flex items-center justify-center text-xs font-bold cursor-pointer hover:bg-accent/20 transition-colors"
+            >
+              ?
+            </span>
+          )}
+          {!overlay && <span className="text-primary text-base font-bold">+</span>}
+        </div>
       </div>
       {/* Visual risk meter */}
       <div className="mt-2.5 flex items-center gap-2">
@@ -251,6 +264,7 @@ const Panel = () => {
   );
   const [draggedItem, setDraggedItem] = useState<{ inv: Investment; zone: string } | null>(null);
   const [coachOpen, setCoachOpen] = useState(false);
+  const [coachInitQ, setCoachInitQ] = useState<string | undefined>(undefined);
   const [simulationOpen, setSimulationOpen] = useState(false);
   const isMobile = useIsMobile();
 
@@ -460,7 +474,7 @@ const Panel = () => {
               <h2 className="text-sm font-bold text-foreground uppercase tracking-wide mb-3">Scouted 🔭</h2>
               <div className="space-y-2">
                 {suggestions.map((inv) => (
-                  <DraggableCard key={inv.id} inv={inv} zone="scouted" onClick={() => addInvestment(inv)} />
+                  <DraggableCard key={inv.id} inv={inv} zone="scouted" onClick={() => addInvestment(inv)} onAsk={() => { setCoachInitQ(`Explícame de forma sencilla qué es ${inv.name} y si me conviene según mi perfil`); setCoachOpen(true); }} />
                 ))}
               </div>
             </DropZone>
