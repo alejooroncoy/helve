@@ -181,7 +181,7 @@ function NestCard({ inv, overlay }: { inv: Investment; overlay?: boolean }) {
   );
 }
 
-function ScoutedCard({ inv, overlay }: { inv: Investment; overlay?: boolean }) {
+function ScoutedCard({ inv, overlay, onAsk }: { inv: Investment; overlay?: boolean; onAsk?: () => void }) {
   return (
     <div className={`bg-card rounded-2xl p-3.5 shadow-sm border-2 border-dashed border-border ${overlay ? "shadow-lg ring-2 ring-primary/30 -rotate-2 border-primary/40" : "hover:border-primary/40"} cursor-grab active:cursor-grabbing`}>
       <div className="flex items-center gap-3">
@@ -194,7 +194,18 @@ function ScoutedCard({ inv, overlay }: { inv: Investment; overlay?: boolean }) {
             {riskWord(inv.riskLevel)} · Earns ~{inv.annualReturn}% per year
           </p>
         </div>
-        {!overlay && <span className="text-primary text-base font-bold">+</span>}
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          {!overlay && onAsk && (
+            <span
+              onClick={(e) => { e.stopPropagation(); e.preventDefault(); onAsk(); }}
+              onPointerDown={(e) => e.stopPropagation()}
+              className="w-7 h-7 rounded-full bg-accent/10 text-accent flex items-center justify-center text-xs font-bold cursor-pointer hover:bg-accent/20 transition-colors"
+            >
+              ?
+            </span>
+          )}
+          {!overlay && <span className="text-primary text-base font-bold">+</span>}
+        </div>
       </div>
       {/* Visual risk meter */}
       <div className="mt-2.5 flex items-center gap-2">
