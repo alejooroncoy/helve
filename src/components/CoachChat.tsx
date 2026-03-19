@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Send, Volume2, VolumeX, TrendingUp, TrendingDown, Lightbulb, ArrowRightLeft } from "lucide-react";
+import { X, Send, Volume2, VolumeX, TrendingUp, TrendingDown, Lightbulb, ArrowRightLeft, Mic, MicOff } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import type { Investment } from "@/game/types";
 
@@ -260,6 +260,60 @@ async function playTTS(text: string): Promise<HTMLAudioElement | null> {
   return audio;
 }
 
+/* ---- Microphone Button (Web Speech API) ---- */
+function MicButton({ onTranscript, disabled }: { onTranscript: (text: string) => void; disabled: boolean }) {
+  const [listening, setListening] = useState(false);
+  const recognitionRef = useRef<any>(null);
+
+  const toggle = useCallback(() => {
+    if (listening) {
+      recognitionRef.current?.stop();
+      setListening(false);
+      return;
+    }
+
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("Tu navegador no soporta reconocimiento de voz. Prueba con Chrome.");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = "es-ES";
+    recognition.interimResults = false;
+    recognition.continuous = false;
+    recognitionRef.current = recognition;
+
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      onTranscript(transcript);
+      setListening(false);
+    };
+
+    recognition.onerror = () => setListening(false);
+    recognition.onend = () => setListening(false);
+
+    recognition.start();
+    setListening(true);
+  }, [listening, onTranscript]);
+
+  return (
+    <motion.button
+      type="button"
+      onClick={toggle}
+      disabled={disabled}
+      whileTap={{ scale: 0.9 }}
+      className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition-colors disabled:opacity-40 ${
+        listening
+          ? "bg-destructive text-destructive-foreground animate-pulse"
+          : "bg-muted text-muted-foreground hover:text-primary hover:bg-primary/10"
+      }`}
+    >
+      {listening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+    </motion.button>
+  );
+}
+
 /* ---- Main Component ---- */
 interface CoachChatProps {
   onClose: () => void;
@@ -465,10 +519,11 @@ export default function CoachChat({ onClose, portfolio }: CoachChatProps) {
           onSubmit={(e) => { e.preventDefault(); send(); }}
           className="flex items-center gap-2"
         >
+          <MicButton onTranscript={(t) => setInput((prev) => prev + t)} disabled={loading} />
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Pregunta algo..."
+            placeholder="Escribe o usa el micrófono..."
             className="flex-1 bg-muted rounded-2xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30"
             disabled={loading}
           />
