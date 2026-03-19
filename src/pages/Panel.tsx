@@ -1131,35 +1131,8 @@ const Panel = () => {
                   >
                     {t("panel.buy")}
                   </h2>
-                  {/* Mobile: horizontal scroll */}
-                  <div
-                    className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide items-stretch md:hidden"
-                    style={{ scrollSnapType: "x mandatory", touchAction: "pan-x" }}
-                  >
-                    {suggestions.map((inv) => (
-                      <div
-                        key={inv.id}
-                        className="flex-shrink-0 flex"
-                        style={{ width: 170, minWidth: 160, scrollSnapAlign: "start" }}
-                      >
-                        <DraggableCard
-                          inv={inv}
-                          zone="scouted"
-                          onClick={() => tryBuyInvestment(inv)}
-                          t={t}
-                          isMobile={isMobile}
-                          onAsk={() => {
-                            setCoachInitQ(
-                              `Explica brevemente qué es ${t(`allocation.classes.${inv.id}`)} y si encaja con mi perfil`,
-                            );
-                            setCoachOpen(true);
-                          }}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                  {/* Desktop */}
-                  <div className="hidden min-h-0 flex-1 overflow-y-auto pr-1 md:flex md:flex-col gap-2">
+                  {/* Cards list */}
+                  <div className="flex flex-col gap-2">
                     {suggestions.map((inv) => (
                       <div key={inv.id} className="w-full">
                         <DraggableCard
