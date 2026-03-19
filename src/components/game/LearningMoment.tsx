@@ -48,9 +48,9 @@ const LearningMoment = ({ allocation, profile, stormChoice, result, onContinue }
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -30 }}
     >
-      <motion.span className="text-6xl mb-6" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", delay: 0.2 }}>
-        {insight.emoji}
-      </motion.span>
+      <motion.div className="w-16 h-16 mb-6 rounded-2xl bg-primary/10 flex items-center justify-center" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", delay: 0.2 }}>
+        <TrendingUp className="w-8 h-8 text-primary" />
+      </motion.div>
 
       <h2 className="text-xl text-foreground text-center mb-4" style={{ ...nunito, fontWeight: 800 }}>
         {t("learning.title")}
