@@ -252,6 +252,7 @@ const es = {
     simulate: "Simular",
     addToSimulate: "Agrega categorías a tu nido para simular",
     nestFull: "¡Tu nido está lleno! Quita una categoría para hacer espacio.",
+    noCapital: "¡No te queda capital! Vende una categoría para recuperar algo de capital antes de comprar.",
     riskyBuy: "¡Agregado! Cuidado, esta es arriesgada. Tu nido tiembla un poco...",
     safeBuy: "¡Agregado! Una categoría muy segura para tu nido.",
     normalBuy: "¡Agregado! Buen ojo, esa categoría se ve prometedora.",
