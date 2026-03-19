@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
-import { AlertTriangle, CheckCircle, Info } from "lucide-react";
+import { AlertTriangle, CheckCircle, RotateCcw } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import type { RiskProfile, AssetClass, AssetAllocation } from "@/game/types";
 import {
@@ -22,11 +22,14 @@ const CLASS_COLORS: Record<AssetClass, string> = {
   bonds: "hsl(210, 60%, 55%)",
   equity: "hsl(145, 58%, 36%)",
   gold: "hsl(38, 92%, 50%)",
-  realEstate: "hsl(25, 70%, 50%)",
-  alternatives: "hsl(280, 60%, 55%)",
+  fx: "hsl(200, 70%, 50%)",
+  swissStocks: "hsl(0, 72%, 51%)",
+  usStocks: "hsl(220, 70%, 50%)",
+  crypto: "hsl(270, 60%, 55%)",
+  cleanEnergy: "hsl(150, 60%, 45%)",
 };
 
-function DonutChart({ allocation }: { allocation: AssetAllocation }) {
+function DonutChart({ allocation, t }: { allocation: AssetAllocation; t: any }) {
   const r = 60;
   const cx = 80;
   const cy = 80;
@@ -35,7 +38,7 @@ function DonutChart({ allocation }: { allocation: AssetAllocation }) {
   let offset = 0;
 
   return (
-    <svg viewBox="0 0 160 160" className="w-40 h-40 mx-auto">
+    <svg viewBox="0 0 160 160" className="w-36 h-36 mx-auto">
       {entries.map((c) => {
         const pct = allocation[c.key] / 100;
         const dash = pct * circ;
@@ -45,23 +48,21 @@ function DonutChart({ allocation }: { allocation: AssetAllocation }) {
         return (
           <circle
             key={c.key}
-            cx={cx}
-            cy={cy}
-            r={r}
+            cx={cx} cy={cy} r={r}
             fill="none"
             stroke={CLASS_COLORS[c.key]}
-            strokeWidth={22}
+            strokeWidth={20}
             strokeDasharray={`${dash} ${gap}`}
             strokeDashoffset={-currentOffset}
             style={{ transition: "all 0.4s ease" }}
           />
         );
       })}
-      <circle cx={cx} cy={cy} r={48} fill="hsl(var(--background))" />
-      <text x={cx} y={cy - 4} textAnchor="middle" fontSize={11} fill="hsl(var(--muted-foreground))" style={nunito}>
-        Risk
+      <circle cx={cx} cy={cy} r={49} fill="hsl(var(--background))" />
+      <text x={cx} y={cy - 2} textAnchor="middle" fontSize={10} fill="hsl(var(--muted-foreground))" style={nunito}>
+        {t("portfolio.risk")}
       </text>
-      <text x={cx} y={cy + 14} textAnchor="middle" fontSize={20} fontWeight={800} fill="hsl(var(--foreground))" style={nunito}>
+      <text x={cx} y={cy + 13} textAnchor="middle" fontSize={18} fontWeight={800} fill="hsl(var(--foreground))" style={nunito}>
         {getAllocationRiskScore(allocation).toFixed(1)}
       </text>
     </svg>
@@ -83,18 +84,14 @@ const AssetAllocationBuilder = ({ profile, onComplete }: Props) => {
   const recommended = RECOMMENDED_ALLOCATIONS[profile];
   const [alloc, setAlloc] = useState<AssetAllocation>({ ...recommended });
 
-  const total = alloc.bonds + alloc.equity + alloc.gold + alloc.realEstate + alloc.alternatives;
+  const total = ASSET_CLASSES.reduce((s, c) => s + alloc[c.key], 0);
   const remaining = 100 - total;
   const alignment = useMemo(() => getAlignment(profile, alloc), [profile, alloc]);
-  const riskScore = useMemo(() => getAllocationRiskScore(alloc), [alloc]);
 
   const handleSlider = (key: AssetClass, value: number) => {
     const current = alloc[key];
-    const diff = value - current;
     const otherTotal = total - current;
-    if (otherTotal + value > 100) {
-      value = 100 - otherTotal;
-    }
+    if (otherTotal + value > 100) value = 100 - otherTotal;
     setAlloc(prev => ({ ...prev, [key]: Math.max(0, Math.min(value, 100)) }));
   };
 
@@ -110,8 +107,8 @@ const AssetAllocationBuilder = ({ profile, onComplete }: Props) => {
       exit={{ opacity: 0, x: -40 }}
     >
       {/* Header */}
-      <div className="px-5 pt-8 pb-3">
-        <div className="flex items-center gap-3 mb-3">
+      <div className="px-5 pt-8 pb-2">
+        <div className="flex items-center gap-3 mb-2">
           <span className="text-3xl">{pLabel.emoji}</span>
           <div>
             <h2 className="text-xl text-foreground" style={{ ...nunito, fontWeight: 800 }}>{pLabel.name}</h2>
@@ -121,55 +118,46 @@ const AssetAllocationBuilder = ({ profile, onComplete }: Props) => {
       </div>
 
       {/* Donut + Legend */}
-      <div className="px-5 pb-3">
-        <DonutChart allocation={alloc} />
-        <div className="flex flex-wrap justify-center gap-3 mt-3">
-          {ASSET_CLASSES.map(c => (
-            alloc[c.key] > 0 && (
-              <div key={c.key} className="flex items-center gap-1.5">
-                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: CLASS_COLORS[c.key] }} />
-                <span className="text-xs text-muted-foreground" style={nunito}>
-                  {c.emoji} {t(`allocation.classes.${c.key}`)} {alloc[c.key]}%
-                </span>
-              </div>
-            )
+      <div className="px-5 pb-2">
+        <DonutChart allocation={alloc} t={t} />
+        <div className="flex flex-wrap justify-center gap-2 mt-2">
+          {ASSET_CLASSES.filter(c => alloc[c.key] > 0).map(c => (
+            <div key={c.key} className="flex items-center gap-1">
+              <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: CLASS_COLORS[c.key] }} />
+              <span className="text-[10px] text-muted-foreground" style={nunito}>
+                {c.emoji} {t(`allocation.classes.${c.key}`)} {alloc[c.key]}%
+              </span>
+            </div>
           ))}
         </div>
       </div>
 
       {/* Sliders */}
-      <div className="px-5 flex-1 space-y-4 pb-2">
+      <div className="px-5 flex-1 space-y-3 pb-2 overflow-y-auto">
         <div className="flex items-center justify-between">
           <p className="text-xs tracking-widest text-muted-foreground" style={{ ...nunito, fontWeight: 700 }}>
             {t("allocation.title")}
           </p>
-          <button
-            onClick={handleReset}
-            className="text-[10px] text-primary underline"
-            style={nunito}
-          >
-            {t("allocation.reset")}
+          <button onClick={handleReset} className="flex items-center gap-1 text-[10px] text-primary" style={nunito}>
+            <RotateCcw className="w-3 h-3" /> {t("allocation.reset")}
           </button>
         </div>
 
         {ASSET_CLASSES.map((c) => (
-          <div key={c.key} className="space-y-1.5">
+          <div key={c.key} className="space-y-1">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="text-lg">{c.emoji}</span>
+                <span className="text-base">{c.emoji}</span>
                 <div>
                   <span className="text-sm font-bold text-foreground" style={nunito}>
                     {t(`allocation.classes.${c.key}`)}
                   </span>
-                  <p className="text-[10px] text-muted-foreground" style={nunito}>
+                  <p className="text-[9px] text-muted-foreground leading-tight" style={nunito}>
                     {t(`allocation.classDesc.${c.key}`)}
                   </p>
                 </div>
               </div>
-              <span
-                className="text-lg font-black min-w-[3ch] text-right"
-                style={{ ...nunito, color: CLASS_COLORS[c.key] }}
-              >
+              <span className="text-base font-black min-w-[3ch] text-right" style={{ ...nunito, color: CLASS_COLORS[c.key] }}>
                 {alloc[c.key]}%
               </span>
             </div>
@@ -179,27 +167,24 @@ const AssetAllocationBuilder = ({ profile, onComplete }: Props) => {
               max={100}
               step={5}
               className="w-full"
-              style={{ "--slider-color": CLASS_COLORS[c.key] } as React.CSSProperties}
             />
           </div>
         ))}
 
-        {/* Remaining indicator */}
+        {/* Remaining */}
         {remaining !== 0 && (
           <motion.div
-            className="text-center py-2 rounded-xl"
+            className="text-center py-1.5 rounded-xl text-sm font-bold"
             style={{
-              backgroundColor: remaining < 0 ? "hsl(var(--destructive) / 0.1)" : "hsl(var(--accent) / 0.3)",
+              ...nunito,
+              backgroundColor: remaining < 0 ? "hsl(var(--destructive) / 0.1)" : "hsl(var(--accent) / 0.2)",
               color: remaining < 0 ? "hsl(var(--destructive))" : "hsl(var(--accent-foreground))",
             }}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }}
           >
-            <span className="text-sm font-bold" style={nunito}>
-              {remaining > 0
-                ? t("allocation.remaining", { pct: remaining })
-                : t("allocation.over", { pct: Math.abs(remaining) })}
-            </span>
+            {remaining > 0
+              ? t("allocation.remaining", { pct: remaining })
+              : t("allocation.over", { pct: Math.abs(remaining) })}
           </motion.div>
         )}
       </div>
@@ -207,31 +192,22 @@ const AssetAllocationBuilder = ({ profile, onComplete }: Props) => {
       {/* Alignment feedback */}
       <AnimatePresence>
         {total === 100 && (
-          <motion.div
-            className="px-5 pb-3"
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-          >
+          <motion.div className="px-5 pb-2" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}>
             <div
-              className="rounded-2xl p-4 flex items-start gap-3"
+              className="rounded-2xl p-3 flex items-start gap-2"
               style={{
-                backgroundColor: alignment === "aligned"
-                  ? "hsl(var(--primary) / 0.1)"
-                  : "hsl(38, 92%, 50%, 0.1)",
+                backgroundColor: alignment === "aligned" ? "hsl(var(--primary) / 0.1)" : "hsl(38, 92%, 50%, 0.1)",
                 border: `2px solid ${alignment === "aligned" ? "hsl(var(--primary))" : "hsl(38, 92%, 50%)"}`,
               }}
             >
-              {alignment === "aligned" ? (
-                <CheckCircle className="w-5 h-5 mt-0.5 flex-shrink-0" style={{ color: "hsl(var(--primary))" }} />
-              ) : (
-                <AlertTriangle className="w-5 h-5 mt-0.5 flex-shrink-0" style={{ color: "hsl(38, 92%, 50%)" }} />
-              )}
+              {alignment === "aligned"
+                ? <CheckCircle className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: "hsl(var(--primary))" }} />
+                : <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: "hsl(38, 92%, 50%)" }} />}
               <div>
-                <p className="text-sm font-bold text-foreground" style={nunito}>
+                <p className="text-xs font-bold text-foreground" style={nunito}>
                   {t(`allocation.feedback.${alignment}.title`)}
                 </p>
-                <p className="text-xs text-muted-foreground mt-1" style={nunito}>
+                <p className="text-[10px] text-muted-foreground mt-0.5" style={nunito}>
                   {t(`allocation.feedback.${alignment}.desc`, { profile: pLabel.name })}
                 </p>
               </div>
@@ -241,22 +217,19 @@ const AssetAllocationBuilder = ({ profile, onComplete }: Props) => {
       </AnimatePresence>
 
       {/* CTA */}
-      <div className="px-5 py-6">
+      <div className="px-5 py-5">
         <motion.button
           onClick={() => total === 100 && onComplete(alloc)}
           className="w-full py-4 rounded-2xl tracking-widest text-sm"
           style={{
-            ...nunito,
-            fontWeight: 900,
+            ...nunito, fontWeight: 900,
             backgroundColor: total === 100 ? "hsl(var(--primary))" : "hsl(var(--muted))",
             color: total === 100 ? "hsl(var(--primary-foreground))" : "hsl(var(--muted-foreground))",
             cursor: total === 100 ? "pointer" : "not-allowed",
           }}
           whileTap={total === 100 ? { scale: 0.97 } : {}}
         >
-          {total !== 100
-            ? t("allocation.mustEqual100")
-            : t("portfolio.simulate")}
+          {total !== 100 ? t("allocation.mustEqual100") : t("portfolio.simulate")}
         </motion.button>
       </div>
     </motion.div>
