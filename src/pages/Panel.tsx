@@ -474,7 +474,7 @@ const Panel = () => {
               <h2 className="text-sm font-bold text-foreground uppercase tracking-wide mb-3">Scouted 🔭</h2>
               <div className="space-y-2">
                 {suggestions.map((inv) => (
-                  <DraggableCard key={inv.id} inv={inv} zone="scouted" onClick={() => addInvestment(inv)} />
+                  <DraggableCard key={inv.id} inv={inv} zone="scouted" onClick={() => addInvestment(inv)} onAsk={() => { setCoachInitQ(`Explícame de forma sencilla qué es ${inv.name} y si me conviene según mi perfil`); setCoachOpen(true); }} />
                 ))}
               </div>
             </DropZone>
