@@ -233,6 +233,39 @@ export type Database = {
           },
         ]
       }
+      user_portfolios: {
+        Row: {
+          allocations: Json
+          balance: number
+          created_at: string
+          id: string
+          name: string
+          order_index: number
+          portfolio: Json
+          user_id: string
+        }
+        Insert: {
+          allocations?: Json
+          balance?: number
+          created_at?: string
+          id?: string
+          name?: string
+          order_index?: number
+          portfolio?: Json
+          user_id: string
+        }
+        Update: {
+          allocations?: Json
+          balance?: number
+          created_at?: string
+          id?: string
+          name?: string
+          order_index?: number
+          portfolio?: Json
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_progress: {
         Row: {
           allocations: Json | null
