@@ -540,7 +540,7 @@ const Panel = () => {
     if (!over) return;
     const data = active.data.current as { inv: Investment; zone: string };
     const dropTarget = over.id as string;
-    if (data.zone === "scouted" && dropTarget === "nest") addInvestment(data.inv);
+    if (data.zone === "scouted" && dropTarget === "nest") tryBuyInvestment(data.inv);
     if (data.zone === "nest" && dropTarget === "scouted") removeInvestment(data.inv.id);
   };
 
@@ -586,7 +586,7 @@ const Panel = () => {
                   </motion.button>
                 </DrawerTrigger>
                 <DrawerContent className="h-[80vh] p-0">
-                  <CoachChat onClose={() => { setCoachOpen(false); setCoachInitQ(undefined); }} portfolio={enrichedPortfolio} onAddInvestment={(id) => { const inv = enrichedAvailable.find(i => i.id === id); if (inv) addInvestment(inv); }} onRemoveInvestment={(id) => removeInvestment(id)} initialQuestion={coachInitQ} />
+                  <CoachChat onClose={() => { setCoachOpen(false); setCoachInitQ(undefined); }} portfolio={enrichedPortfolio} onAddInvestment={(id) => { const inv = enrichedAvailable.find(i => i.id === id); if (inv) tryBuyInvestment(inv); }} onRemoveInvestment={(id) => removeInvestment(id)} initialQuestion={coachInitQ} />
                 </DrawerContent>
               </Drawer>
             ) : (
@@ -600,7 +600,7 @@ const Panel = () => {
                   </motion.button>
                 </PopoverTrigger>
                 <PopoverContent side="bottom" align="end" className="w-[380px] h-[500px] p-0 rounded-2xl overflow-hidden">
-                  <CoachChat onClose={() => { setCoachOpen(false); setCoachInitQ(undefined); }} portfolio={enrichedPortfolio} onAddInvestment={(id) => { const inv = enrichedAvailable.find(i => i.id === id); if (inv) addInvestment(inv); }} onRemoveInvestment={(id) => removeInvestment(id)} initialQuestion={coachInitQ} />
+                  <CoachChat onClose={() => { setCoachOpen(false); setCoachInitQ(undefined); }} portfolio={enrichedPortfolio} onAddInvestment={(id) => { const inv = enrichedAvailable.find(i => i.id === id); if (inv) tryBuyInvestment(inv); }} onRemoveInvestment={(id) => removeInvestment(id)} initialQuestion={coachInitQ} />
                 </PopoverContent>
               </Popover>
             )}
@@ -687,7 +687,7 @@ const Panel = () => {
             <h2 className="text-sm font-bold text-foreground uppercase tracking-wide mb-3 mt-4" style={nunito}>🛒 Comprar</h2>
             <VirtualScoutedList
               suggestions={suggestions}
-              onBuy={addInvestment}
+              onBuy={tryBuyInvestment}
               onAsk={(inv) => { setCoachInitQ(`Explica brevemente qué es ${inv.name} y si encaja con mi perfil`); setCoachOpen(true); }}
             />
           </DropZone>
