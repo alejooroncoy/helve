@@ -6,33 +6,121 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const allIds = [
-  "ch-bond-aaa","global-bond","ch-govt-10y",
-  "smi-index","eurostoxx50","gold-chf","nestle","novartis","green-energy",
-  "djia-index","dax-index","apple","microsoft","nvidia","logitech","ubs","amazon",
-];
+type InvestmentBucket = "SAFE" | "BALANCED" | "GROWTH";
 
-const investmentNames: Record<string, string> = {
-  "ch-bond-aaa": "Swiss Bond AAA-BBB",
-  "global-bond": "Bloomberg Global Bond Index",
-  "ch-govt-10y": "Swiss Government Bond 10Y",
-  "smi-index": "SMI Index (Swiss Market)",
-  "eurostoxx50": "EuroStoxx 50",
-  "gold-chf": "Gold (CHF)",
-  "nestle": "Nestlé S.A.",
-  "novartis": "Novartis AG",
-  "green-energy": "Green Energy Fund",
-  "djia-index": "Dow Jones Industrial",
-  "dax-index": "DAX (Total Return)",
-  "apple": "Apple Inc.",
-  "microsoft": "Microsoft Corp.",
-  "nvidia": "NVIDIA Corp.",
-  "logitech": "Logitech International",
-  "ubs": "UBS Group AG",
-  "amazon": "Amazon.com Inc.",
+type InvestmentMeta = {
+  appId: string;
+  dbId?: string;
+  name: string;
+  emoji: string;
+  bucket: InvestmentBucket;
+  defaultRisk: number;
+  defaultReturn: number;
+  note?: string;
 };
 
-const systemPrompt = `Eres Helve 🐦, un coach de inversión amigable para principiantes absolutos que nunca han invertido.
+type LiveInstrumentStats = {
+  riskLevel: number;
+  annualReturn: number;
+};
+
+const investmentCatalog: InvestmentMeta[] = [
+  { appId: "ch-bond-aaa", dbId: "ch-bond-aaa", name: "Swiss Bond AAA-BBB", emoji: "🏦", bucket: "SAFE", defaultRisk: 2, defaultReturn: 1.8 },
+  { appId: "global-bond", dbId: "global-bond-agg", name: "Bloomberg Global Bond Index", emoji: "🌐", bucket: "SAFE", defaultRisk: 2, defaultReturn: 1.3 },
+  {
+    appId: "ch-govt-10y",
+    dbId: "ch-govt-10y",
+    name: "Swiss Government Bond 10Y",
+    emoji: "🏛️",
+    bucket: "SAFE",
+    defaultRisk: 10,
+    defaultReturn: -10.6,
+    note: 'OJO: esto representa el yield/rendimiento del bono a 10 años, no un bono defensivo tradicional. No lo confundas con Swiss Bond AAA-BBB.',
+  },
+  { appId: "smi-index", dbId: "smi-index", name: "SMI Index (Swiss Market)", emoji: "📊", bucket: "BALANCED", defaultRisk: 4, defaultReturn: 2.8 },
+  { appId: "eurostoxx50", dbId: "eurostoxx50", name: "EuroStoxx 50", emoji: "🇪🇺", bucket: "BALANCED", defaultRisk: 5, defaultReturn: 2.4 },
+  { appId: "gold-chf", dbId: "gold-chf", name: "Gold (CHF)", emoji: "🥇", bucket: "BALANCED", defaultRisk: 5, defaultReturn: 8.6 },
+  { appId: "nestle", dbId: "nesn-ch", name: "Nestlé S.A.", emoji: "🍫", bucket: "BALANCED", defaultRisk: 4, defaultReturn: 3.6 },
+  { appId: "novartis", dbId: "novn-ch", name: "Novartis AG", emoji: "💊", bucket: "BALANCED", defaultRisk: 5, defaultReturn: 3.9 },
+  { appId: "green-energy", name: "Green Energy Fund", emoji: "🌱", bucket: "BALANCED", defaultRisk: 5, defaultReturn: 5.2 },
+  { appId: "djia-index", dbId: "djia-index", name: "Dow Jones Industrial", emoji: "🗽", bucket: "GROWTH", defaultRisk: 5, defaultReturn: 7.8 },
+  { appId: "dax-index", dbId: "dax-index", name: "DAX (Total Return)", emoji: "📈", bucket: "GROWTH", defaultRisk: 5, defaultReturn: 7.6 },
+  { appId: "apple", dbId: "aapl-us", name: "Apple Inc.", emoji: "🍎", bucket: "GROWTH", defaultRisk: 7, defaultReturn: 26.2 },
+  { appId: "microsoft", dbId: "msft-us", name: "Microsoft Corp.", emoji: "💻", bucket: "GROWTH", defaultRisk: 6, defaultReturn: 14.4 },
+  { appId: "nvidia", dbId: "nvda-us", name: "NVIDIA Corp.", emoji: "🎮", bucket: "GROWTH", defaultRisk: 8, defaultReturn: 35.9 },
+  { appId: "logitech", dbId: "logn-ch", name: "Logitech International", emoji: "🖱️", bucket: "GROWTH", defaultRisk: 7, defaultReturn: 5.2 },
+  { appId: "ubs", dbId: "ubsg-ch", name: "UBS Group AG", emoji: "🏦", bucket: "GROWTH", defaultRisk: 7, defaultReturn: -3.2 },
+  { appId: "amazon", dbId: "amzn-us", name: "Amazon.com Inc.", emoji: "📦", bucket: "GROWTH", defaultRisk: 7, defaultReturn: 26.1 },
+];
+
+const allIds = investmentCatalog.map(({ appId }) => appId);
+const investmentNames = Object.fromEntries(
+  investmentCatalog.map(({ appId, name }) => [appId, name]),
+) as Record<string, string>;
+
+async function fetchInstrumentStats(): Promise<Record<string, LiveInstrumentStats>> {
+  const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+  const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY");
+  const dbIds = investmentCatalog.flatMap(({ dbId }) => (dbId ? [dbId] : []));
+
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY || dbIds.length === 0) {
+    return {};
+  }
+
+  try {
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_instrument_stats`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+      },
+      body: JSON.stringify({ p_instrument_ids: dbIds }),
+    });
+
+    if (!response.ok) {
+      console.error("Failed to load live instrument stats for coach:", response.status, await response.text());
+      return {};
+    }
+
+    const rows = await response.json();
+    return Object.fromEntries(
+      (rows || []).map((row: any) => [row.instrument_id, {
+        riskLevel: Number(row.risk_level),
+        annualReturn: Number(row.cagr),
+      }]),
+    ) as Record<string, LiveInstrumentStats>;
+  } catch (error) {
+    console.error("Failed to load live instrument stats for coach:", error);
+    return {};
+  }
+}
+
+function formatPercentage(value: number): string {
+  const rounded = Math.round(value * 10) / 10;
+  return Number.isInteger(rounded) ? rounded.toFixed(0) : rounded.toFixed(1);
+}
+
+function buildInstrumentSection(statsByDbId: Record<string, LiveInstrumentStats>): string {
+  const buckets: InvestmentBucket[] = ["SAFE", "BALANCED", "GROWTH"];
+
+  return buckets.map((bucket) => {
+    const lines = investmentCatalog
+      .filter((item) => item.bucket === bucket)
+      .map((item) => {
+        const live = item.dbId ? statsByDbId[item.dbId] : undefined;
+        const riskLevel = live?.riskLevel ?? item.defaultRisk;
+        const annualReturn = live?.annualReturn ?? item.defaultReturn;
+        const note = item.note ? ` ${item.note}` : "";
+        return `- ${item.emoji} ${item.name} (id: "${item.appId}"): Riesgo ${riskLevel}/10, ~${formatPercentage(annualReturn)}% anual.${note}`;
+      });
+
+    return `${bucket}:\n${lines.join("\n")}`;
+  }).join("\n\n");
+}
+
+function buildSystemPrompt(statsByDbId: Record<string, LiveInstrumentStats>): string {
+  return `Eres Helve 🐦, un coach de inversión amigable para principiantes absolutos que nunca han invertido.
 
 ## TU PERSONALIDAD
 - Hablas como un amigo sabio, nunca como un banco o asesor formal
@@ -43,28 +131,12 @@ const systemPrompt = `Eres Helve 🐦, un coach de inversión amigable para prin
 ## CONOCIMIENTO DE MERCADO
 Instrumentos disponibles (usa EXACTAMENTE estos IDs):
 
-SAFE:
-- 🏦 Swiss Bond AAA-BBB (id: "ch-bond-aaa"): Riesgo 1/10, ~2.8% anual
-- 🌐 Bloomberg Global Bond Index (id: "global-bond"): Riesgo 2/10, ~3.1% anual
-- 🏛️ Swiss Government Bond 10Y (id: "ch-govt-10y"): Riesgo 1/10, ~1.5% anual
+${buildInstrumentSection(statsByDbId)}
 
-BALANCED:
-- 📊 SMI Index - Swiss Market (id: "smi-index"): Riesgo 5/10, ~6.2% anual
-- 🇪🇺 EuroStoxx 50 (id: "eurostoxx50"): Riesgo 5/10, ~5.8% anual
-- 🥇 Gold CHF (id: "gold-chf"): Riesgo 4/10, ~7.1% anual
-- 🍫 Nestlé S.A. (id: "nestle"): Riesgo 4/10, ~5.5% anual
-- 💊 Novartis AG (id: "novartis"): Riesgo 5/10, ~6.8% anual
-- 🌱 Green Energy Fund (id: "green-energy"): Riesgo 5/10, ~5.2% anual
-
-GROWTH:
-- 🗽 Dow Jones Industrial (id: "djia-index"): Riesgo 6/10, ~9.4% anual
-- 📈 DAX Total Return (id: "dax-index"): Riesgo 6/10, ~8.7% anual
-- 🍎 Apple Inc. (id: "apple"): Riesgo 7/10, ~28.5% anual
-- 💻 Microsoft Corp. (id: "microsoft"): Riesgo 7/10, ~24.2% anual
-- 🎮 NVIDIA Corp. (id: "nvidia"): Riesgo 9/10, ~45% anual
-- 🖱️ Logitech International (id: "logitech"): Riesgo 7/10, ~14.8% anual
-- 🏦 UBS Group AG (id: "ubs"): Riesgo 7/10, ~8.2% anual
-- 📦 Amazon.com Inc. (id: "amazon"): Riesgo 8/10, ~31% anual
+## REGLA CRÍTICA DE CONSISTENCIA
+- "Swiss Bond AAA-BBB" (id: "ch-bond-aaa") y "Swiss Government Bond 10Y" (id: "ch-govt-10y") NO son lo mismo.
+- Nunca describas "ch-govt-10y" como un bono defensivo tradicional; trátalo como una serie de yield/rendimiento.
+- Si el usuario pregunta por algo que ya está en su nido, prioriza SIEMPRE el contexto del portafolio actual antes que la lista general.
 
 ## HERRAMIENTAS (TOOLS)
 - **add_investment**: Añadir una inversión al nido. Úsala cuando el usuario EXPLÍCITAMENTE pida invertir/añadir algo.
@@ -118,6 +190,7 @@ contenido: [1 línea corta]
 - NUNCA des consejos financieros específicos ("compra X"). Siempre di "podrías considerar"
 - Usa emojis con moderación (1-2 por mensaje máximo)
 - Para comparaciones, SIEMPRE separa nombre | riesgo | retorno con |`;
+}
 
 const tools = [
   {
