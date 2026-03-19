@@ -145,12 +145,11 @@ function DraggableCard({
   );
 }
 
-function NestCard({ inv, overlay, onSell, onAsk, onInfo, allocation, onAllocationChange, maxAllocation, balance }: { inv: Investment; overlay?: boolean; onSell?: () => void; onAsk?: () => void; onInfo?: () => void; allocation?: number; onAllocationChange?: (pct: number) => void; maxAllocation?: number; balance?: number }) {
+function NestCard({ inv, overlay, onSell, onAsk, onInfo, allocation, balance }: { inv: Investment; overlay?: boolean; onSell?: () => void; onAsk?: () => void; onInfo?: () => void; allocation?: number; balance?: number }) {
   const [expanded, setExpanded] = useState(false);
   const { t } = useTranslation();
   const pct = allocation ?? 25;
   const chfAmount = balance ? Math.round(balance * pct / 100) : 0;
-  const maxSlider = Math.min(100, pct + (maxAllocation ?? 100));
 
   return (
     <div className={`bg-card rounded-2xl p-3.5 shadow-sm ${overlay ? "shadow-lg rotate-2" : ""} cursor-grab active:cursor-grabbing`} style={overlay ? { boxShadow: `0 0 0 2px ${CELESTE}40` } : {}}>
@@ -180,20 +179,6 @@ function NestCard({ inv, overlay, onSell, onAsk, onInfo, allocation, onAllocatio
           </div>
         )}
       </div>
-
-      {/* Allocation slider */}
-      {!overlay && onAllocationChange && (
-        <div className="mt-2 px-1" onClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
-          <Slider
-            value={[pct]}
-            min={0}
-            max={maxSlider}
-            step={1}
-            onValueChange={([v]) => onAllocationChange(v)}
-            className="w-full"
-          />
-        </div>
-      )}
 
       {inv.tag && (
         <div className="mt-2 flex items-center gap-1.5">
