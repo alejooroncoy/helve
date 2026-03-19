@@ -135,7 +135,7 @@ function getSuggestions(profile: string, active: Investment[]): Investment[] {
   });
 
   scored.sort((a, b) => b.score - a.score);
-  return scored.slice(0, Math.max(slotsLeft + 1, 4)).map((s) => s.inv);
+  return scored.map((s) => s.inv);
 }
 
 const tagDescriptions: Record<string, string> = {
