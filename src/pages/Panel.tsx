@@ -667,9 +667,9 @@ const Panel = () => {
           {/* Scouted — horizontal scroll */}
           <DropZone id="scouted">
             <h2 className="text-sm font-bold text-foreground uppercase tracking-wide mb-3 mt-4" style={nunito}>🛒 Comprar</h2>
-            <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide" style={{ scrollSnapType: "x mandatory" }}>
+            <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide items-stretch" style={{ scrollSnapType: "x mandatory" }}>
               {suggestions.map((inv) => (
-                <div key={inv.id} className="flex-shrink-0" style={{ width: 190, scrollSnapAlign: "start" }}>
+                <div key={inv.id} className="flex-shrink-0 flex" style={{ width: 190, scrollSnapAlign: "start" }}>
                   <DraggableCard inv={inv} zone="scouted" onClick={() => tryBuyInvestment(inv)} onAsk={() => { setCoachInitQ(`Explica brevemente qué es ${inv.name} y si encaja con mi perfil`); setCoachOpen(true); }} />
                 </div>
               ))}
