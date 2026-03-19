@@ -443,10 +443,10 @@ function DropZone({ id, children, isOver }: { id: string; children: React.ReactN
   return (
     <div
       ref={setNodeRef}
-      className="flex-1 min-w-0 rounded-3xl transition-all duration-200 p-1 -m-1 flex flex-col"
+      className="flex-1 min-w-0 min-h-0 rounded-3xl transition-all duration-200 p-1 -m-1 flex flex-col"
       style={active ? { backgroundColor: `${CELESTE}08`, outline: `2px dashed ${CELESTE}40` } : {}}
     >
-      <ScrollArea>{children}</ScrollArea>
+      {children}
     </div>
   );
 }
@@ -1054,10 +1054,10 @@ const Panel = () => {
 
       {/* DnD Content */}
       <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-        <div className="flex-1 px-5 pb-4">
-          <div className="flex flex-col md:flex-row gap-4">
+        <div className="flex-1 min-h-0 px-5 pb-4 flex flex-col">
+          <div className="flex flex-col md:flex-row gap-4 flex-1 min-h-0">
             {/* My Nest */}
-            <div className="flex-1 md:pr-2">
+            <div className="flex-1 min-h-0 md:pr-2 flex flex-col">
               <DropZone id="nest">
                 <div className="flex items-center justify-between mb-3">
                   <h2 className="text-sm font-bold text-foreground uppercase tracking-wide" style={nunito}>
@@ -1119,7 +1119,7 @@ const Panel = () => {
             </div>
 
             {/* Add categories */}
-            <div className="md:w-[280px] lg:w-[320px] md:flex-shrink-0 md:overflow-y-auto md:border-l md:border-border md:pl-4 flex flex-col">
+            <div className="md:w-[280px] lg:w-[320px] md:flex-shrink-0 min-h-0 md:border-l md:border-border md:pl-4 flex flex-col">
               <DropZone id="scouted">
                 <h2
                   className="text-sm font-bold text-foreground uppercase tracking-wide mb-3 md:mt-0 mt-4"
@@ -1155,25 +1155,27 @@ const Panel = () => {
                   ))}
                 </div>
                 {/* Desktop */}
-                <div className="hidden md:flex md:flex-col gap-2">
-                  {suggestions.map((inv) => (
-                    <div key={inv.id} className="w-full">
-                      <DraggableCard
-                        inv={inv}
-                        zone="scouted"
-                        onClick={() => tryBuyInvestment(inv)}
-                        t={t}
-                        isMobile={isMobile}
-                        onAsk={() => {
-                          setCoachInitQ(
-                            `Explica brevemente qué es ${t(`allocation.classes.${inv.id}`)} y si encaja con mi perfil`,
-                          );
-                          setCoachOpen(true);
-                        }}
-                      />
-                    </div>
-                  ))}
-                </div>
+                <ScrollArea className="hidden md:block flex-1 min-h-0">
+                  <div className="flex flex-col gap-2 pr-2">
+                    {suggestions.map((inv) => (
+                      <div key={inv.id} className="w-full">
+                        <DraggableCard
+                          inv={inv}
+                          zone="scouted"
+                          onClick={() => tryBuyInvestment(inv)}
+                          t={t}
+                          isMobile={isMobile}
+                          onAsk={() => {
+                            setCoachInitQ(
+                              `Explica brevemente qué es ${t(`allocation.classes.${inv.id}`)} y si encaja con mi perfil`,
+                            );
+                            setCoachOpen(true);
+                          }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
               </DropZone>
             </div>
           </div>
