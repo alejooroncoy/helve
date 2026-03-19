@@ -943,15 +943,8 @@ export default function TimeSimulation({
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.8, opacity: 0 }}
               transition={{ type: "spring", damping: 20 }}
-              className="bg-card rounded-3xl p-6 shadow-xl max-w-sm w-full text-center"
+              className="bg-card rounded-3xl p-5 shadow-xl max-w-sm w-full text-center max-h-[85vh] overflow-y-auto"
             >
-              <div
-                className="w-12 h-12 rounded-full mx-auto mb-3 flex items-center justify-center"
-                style={{ backgroundColor: PRIMARY_SOFT }}
-              >
-                <AlertTriangle className="w-6 h-6" style={{ color: PRIMARY_COLOR }} />
-              </div>
-
               <div className="mb-3 flex items-center justify-center gap-2 flex-wrap">
                 <span
                   className="rounded-full px-3 py-1 text-[11px] font-semibold"
@@ -967,12 +960,23 @@ export default function TimeSimulation({
                 </span>
               </div>
 
-              <h2 className="text-lg font-bold text-foreground mb-1" style={nunito}>
+              <h2 className="text-base font-bold text-foreground mb-1" style={nunito}>
                 {aiScenario.title}
               </h2>
-              <p className="text-sm text-muted-foreground mb-5" style={nunito}>
+              <p className="text-xs text-muted-foreground mb-3 leading-relaxed" style={nunito}>
                 {aiScenario.description}
               </p>
+
+              {/* Category sparkline in modal */}
+              {(() => {
+                const snap = categorySnapshots.find((s) => s.id === activeAIEvent.investmentId);
+                if (!snap) return null;
+                return (
+                  <div className="mb-4 rounded-2xl bg-background/60 p-3">
+                    <TimeSimulationCategoryCharts items={[snap]} detail />
+                  </div>
+                );
+              })()}
 
               <div className="space-y-2.5">
                 {aiScenario.options.map((option) => {
