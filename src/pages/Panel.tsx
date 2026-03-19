@@ -382,8 +382,8 @@ const Panel = () => {
       <div className="px-5 pt-6 pb-3">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs text-muted-foreground font-medium tracking-wide uppercase" style={nunito}>My Nest</p>
-            <h1 className="text-2xl text-foreground mt-0.5" style={{ ...nunito, fontWeight: 900 }}>Dashboard</h1>
+            <p className="text-xs text-muted-foreground font-medium tracking-wide uppercase" style={nunito}>Mi Nido</p>
+            <h1 className="text-2xl text-foreground mt-0.5" style={{ ...nunito, fontWeight: 900 }}>Panel</h1>
           </div>
           <div className="flex items-center gap-2">
             <motion.button
