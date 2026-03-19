@@ -308,12 +308,14 @@ interface CoachChatProps {
   portfolio?: Investment[];
   onAddInvestment?: (investmentId: string) => void;
   onRemoveInvestment?: (investmentId: string) => void;
+  initialQuestion?: string;
 }
 
-export default function CoachChat({ onClose, portfolio, onAddInvestment, onRemoveInvestment }: CoachChatProps) {
+export default function CoachChat({ onClose, portfolio, onAddInvestment, onRemoveInvestment, initialQuestion }: CoachChatProps) {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [initSent, setInitSent] = useState(false);
   const [playingIdx, setPlayingIdx] = useState<number | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
