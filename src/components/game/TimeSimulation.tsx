@@ -819,14 +819,11 @@ export default function TimeSimulation({
         </div>
       </div>
 
-      <div className="px-5 flex-1 min-h-0 space-y-3">
-        {showCategorySnapshots && (
-          <TimeSimulationCategoryCharts
-            title={t("timeSim.categorySnapshots")}
-            subtitle={t("timeSim.categorySnapshotsHint")}
-            riskLabel={(level) => t("timeSim.riskLabel", { level })}
-            items={categorySnapshots}
-          />
+      <div className="px-5 flex-1 min-h-0 space-y-3 overflow-y-auto">
+        {showCategorySnapshots && categorySnapshots.length > 0 && (
+          <div className="bg-card rounded-3xl p-4 shadow-sm">
+            <TimeSimulationCategoryCharts items={categorySnapshots} />
+          </div>
         )}
 
         <div className="bg-card rounded-3xl p-4 shadow-sm h-full flex flex-col min-h-0">
