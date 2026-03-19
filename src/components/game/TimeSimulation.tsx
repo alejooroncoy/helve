@@ -134,7 +134,7 @@ function computeRealMultipliers(
   });
 }
 
-export default function TimeSimulation({ portfolio, initialMonths = 12, onClose, onSellInvestment, onAskCoach }: TimeSimulationProps) {
+export default function TimeSimulation({ portfolio, initialMonths = 12, initialBalance = 1000, onClose, onComplete, onSellInvestment, onAskCoach }: TimeSimulationProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [data, setData] = useState<TimePoint[]>([]);
