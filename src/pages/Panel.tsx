@@ -171,7 +171,7 @@ function NestCard({ inv, overlay }: { inv: Investment; overlay?: boolean }) {
         <div className="flex-1 min-w-0">
           <p className="text-sm font-bold text-foreground truncate" style={nunito}>{inv.name}</p>
           <p className="text-[11px] text-muted-foreground mt-0.5" style={nunito}>
-            {riskWord(inv.riskLevel)} · Earns ~{inv.annualReturn}% per year
+            {riskWord(inv.riskLevel)} · ~{inv.annualReturn}%/año
           </p>
         </div>
         {!overlay && (
