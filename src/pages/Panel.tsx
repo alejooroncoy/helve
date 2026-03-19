@@ -25,9 +25,10 @@ import {
 } from "@dnd-kit/core";
 import type { Investment } from "@/game/types";
 import { availableInvestments } from "@/game/types";
+import { Slider } from "@/components/ui/slider";
 import {
   LogOut, X, AlertTriangle, Inbox, Shield, TrendingUp, BarChart2,
-  Building2, Leaf, Globe, Landmark, Zap, FastForward, MessageCircle, DollarSign, Info,
+  Building2, Leaf, Globe, Landmark, Zap, FastForward, MessageCircle, DollarSign, Info, Wallet,
 } from "lucide-react";
 
 const nunito = { fontFamily: "'Nunito', sans-serif" };
