@@ -322,9 +322,21 @@ const Panel = () => {
       if (p) {
         setProfile(p.risk_profile);
         if (p.portfolio && p.portfolio.length > 0) setActivePortfolio(p.portfolio);
+        if (p.simulation_result && p.simulation_result > 0) setBalance(p.simulation_result);
       }
     });
   }, [loadProgress]);
+
+  const handleSimulationComplete = useCallback((finalBalance: number, gainPct: number) => {
+    setBalance(finalBalance);
+    setLastSimGain(gainPct);
+    saveProgress({ simulation_result: finalBalance });
+    if (gainPct > 0) {
+      setMascotMessage(`¡Genial! Tu nido creció ${gainPct.toFixed(1)}% 🎉`);
+    } else {
+      setMascotMessage(`Tu nido bajó ${Math.abs(gainPct).toFixed(1)}%, pero aprendiste 💪`);
+    }
+  }, [saveProgress]);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
   const suggestions = useMemo(() => getSuggestions(profile, enrichedPortfolio), [profile, enrichedPortfolio]);
