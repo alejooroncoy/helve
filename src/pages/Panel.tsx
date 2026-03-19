@@ -792,12 +792,12 @@ const Panel = () => {
   );
 
   const handleBuyConfirm = useCallback(
-    (dontShowAgain: boolean) => {
+    (dontShowAgain: boolean, pct: number) => {
       if (dontShowAgain) {
         setSkipBuyDialog(true);
         localStorage.setItem("helve_skip_buy_dialog", "1");
       }
-      if (buyDialogInv) executeBuy(buyDialogInv);
+      if (buyDialogInv) executeBuy(buyDialogInv, pct);
       setBuyDialogInv(null);
     },
     [buyDialogInv, executeBuy],
