@@ -121,7 +121,7 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, onClose,
     }
 
     const nextStep = currentStep + 1;
-    const monthsDiff = timeMonths[nextStep] - timeMonths[currentStep];
+    const monthsDiff = filteredMonths[nextStep] - filteredMonths[currentStep];
 
     // Should an event happen? (40% chance per step)
     const eventHappens = Math.random() < 0.4 && nextStep > 1;
