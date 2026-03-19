@@ -166,7 +166,7 @@ const MultiplayerResults = ({ mp }: Props) => {
         <motion.button
           className="w-full py-3 rounded-3xl bg-card text-foreground font-bold text-sm border border-border flex items-center justify-center gap-2"
           style={nunito}
-          onClick={() => navigate("/panel")}
+           onClick={() => navigate("/panel")}
           whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
         >
           <ArrowLeft className="w-4 h-4" />
