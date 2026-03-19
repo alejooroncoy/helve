@@ -122,9 +122,10 @@ function getSuggestions(profile: string, active: Investment[]): Investment[] {
 
 /* ---- Draggable investment card ---- */
 function DraggableCard({
-  inv, zone, onClick, onAsk, onSell, onInfo,
+  inv, zone, onClick, onAsk, onSell, onInfo, allocation, onAllocationChange, maxAllocation, balance,
 }: {
   inv: Investment; zone: "scouted" | "nest"; onClick: () => void; onAsk?: () => void; onSell?: () => void; onInfo?: () => void;
+  allocation?: number; onAllocationChange?: (pct: number) => void; maxAllocation?: number; balance?: number;
 }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `${zone}-${inv.id}`,
@@ -139,7 +140,7 @@ function DraggableCard({
       onClick={zone === "scouted" ? onClick : undefined}
       className={`touch-none select-none transition-all h-full w-full ${isDragging ? "opacity-30 scale-95" : ""}`}
     >
-      {zone === "nest" ? <NestCard inv={inv} onSell={onSell} onAsk={onAsk} onInfo={onInfo} /> : <ScoutedCard inv={inv} onAsk={onAsk} />}
+      {zone === "nest" ? <NestCard inv={inv} onSell={onSell} onAsk={onAsk} onInfo={onInfo} allocation={allocation} onAllocationChange={onAllocationChange} maxAllocation={maxAllocation} balance={balance} /> : <ScoutedCard inv={inv} onAsk={onAsk} />}
     </div>
   );
 }
