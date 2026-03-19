@@ -115,7 +115,7 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, onClose,
 
   // Advance one step
   const advanceStep = useCallback(() => {
-    if (currentStep >= timeMonths.length - 1) {
+    if (currentStep >= totalSteps) {
       setPlaying(false);
       return;
     }
