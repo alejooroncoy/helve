@@ -8,6 +8,7 @@ import { Drawer, DrawerTrigger, DrawerContent } from "@/components/ui/drawer";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserProgress } from "@/hooks/useUserProgress";
+import { useUserPortfolios, type NestPortfolio } from "@/hooks/useUserPortfolios";
 import CoachChat from "@/components/CoachChat";
 import TimeSimulation from "@/components/game/TimeSimulation";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
@@ -30,6 +31,7 @@ import { availableInvestments } from "@/game/types";
 import {
   LogOut, X, AlertTriangle, Inbox, Shield, TrendingUp, BarChart2,
   Building2, Leaf, Globe, Landmark, Zap, FastForward, MessageCircle, DollarSign, Info, Wallet, GripVertical,
+  Plus, Trash2, Pencil,
 } from "lucide-react";
 
 const nunito = { fontFamily: "'Nunito', sans-serif" };
@@ -313,7 +315,9 @@ const Panel = () => {
   const navigate = useNavigate();
   const { signOut } = useAuth();
   const { loadProgress, saveProgress } = useUserProgress();
+  const { nests, loading: nestsLoading, createNest, updateNest, deleteNest } = useUserPortfolios();
   const { t } = useTranslation();
+  const [activeNestId, setActiveNestId] = useState<string | null>(null);
   const [activePortfolio, setActivePortfolio] = useState<Investment[]>([]);
   const [allocations, setAllocations] = useState<Record<string, number>>({});
   const [profile, setProfile] = useState("balanced");
@@ -326,6 +330,8 @@ const Panel = () => {
   const [coachInitQ, setCoachInitQ] = useState<string | undefined>(undefined);
   const [simulationOpen, setSimulationOpen] = useState(false);
   const [simMonths, setSimMonths] = useState(12);
+  const [renamingNest, setRenamingNest] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState("");
   const isMobile = useIsMobile();
 
   const { stats, loading: statsLoading } = useInstrumentStats(allDbIds);
@@ -344,45 +350,76 @@ const Panel = () => {
   const enrichedPortfolio = useMemo(() => activePortfolio.map(enrichInvestment), [activePortfolio, enrichInvestment]);
   const enrichedAvailable = useMemo(() => availableInvestments.map(enrichInvestment), [enrichInvestment]);
 
+  // Load profile from user_progress
   useEffect(() => {
     loadProgress().then((p) => {
-      if (p) {
-        setProfile(p.risk_profile);
-        if (p.portfolio && p.portfolio.length > 0) {
-          setActivePortfolio(p.portfolio);
-          if (p.allocations && Object.keys(p.allocations).length > 0) {
-            setAllocations(p.allocations);
-          } else {
-            const evenPct = Math.floor(100 / p.portfolio.length);
-            const allocs: Record<string, number> = {};
-            p.portfolio.forEach(inv => { allocs[inv.id] = evenPct; });
-            setAllocations(allocs);
-            saveProgress({ allocations: allocs });
-          }
-        } else {
-          // Default: pick 3 suggested categories
-          const defaults = getSuggestions(p.risk_profile, []).slice(0, 3);
-          if (defaults.length > 0) {
-            setActivePortfolio(defaults);
-            const evenPct = Math.floor(100 / defaults.length);
-            const allocs: Record<string, number> = {};
-            defaults.forEach(inv => { allocs[inv.id] = evenPct; });
-            setAllocations(allocs);
-            saveProgress({ portfolio: defaults, allocations: allocs });
-          }
-        }
-        if (p.simulation_result && p.simulation_result > 0) setBalance(p.simulation_result);
-      }
+      if (p) setProfile(p.risk_profile);
     });
-  }, [loadProgress, saveProgress]);
+  }, [loadProgress]);
+
+  // When nests load, select first or create default
+  useEffect(() => {
+    if (nestsLoading) return;
+    if (nests.length > 0) {
+      if (!activeNestId || !nests.find(n => n.id === activeNestId)) {
+        switchToNest(nests[0]);
+      }
+    } else {
+      // Auto-create first nest
+      createNest(t("panel.myNest")).then((nest) => {
+        if (nest) switchToNest(nest);
+      });
+    }
+  }, [nests, nestsLoading]);
+
+  const switchToNest = useCallback((nest: NestPortfolio) => {
+    setActiveNestId(nest.id);
+    setActivePortfolio(nest.portfolio);
+    setAllocations(nest.allocations);
+    setBalance(nest.balance);
+    setLastSimGain(null);
+  }, []);
+
+  // Sync when activeNestId changes from tabs
+  const handleTabClick = useCallback((nest: NestPortfolio) => {
+    switchToNest(nest);
+  }, [switchToNest]);
+
+  const handleCreateNest = useCallback(async () => {
+    if (nests.length >= 4) { mascotToast(t("panel.maxNests")); return; }
+    const name = t("panel.nestTab", { n: nests.length + 1 });
+    const nest = await createNest(name);
+    if (nest) switchToNest(nest);
+  }, [nests.length, createNest, switchToNest, t]);
+
+  const handleDeleteNest = useCallback(async (nestId: string) => {
+    if (nests.length <= 1) return; // keep at least 1
+    await deleteNest(nestId);
+    if (activeNestId === nestId) {
+      const remaining = nests.filter(n => n.id !== nestId);
+      if (remaining.length > 0) switchToNest(remaining[0]);
+    }
+  }, [nests, activeNestId, deleteNest, switchToNest]);
+
+  const handleRenameNest = useCallback(async (nestId: string, newName: string) => {
+    if (!newName.trim()) return;
+    await updateNest(nestId, { name: newName.trim() });
+    setRenamingNest(null);
+  }, [updateNest]);
+
+  // Save helpers that persist to the active nest
+  const saveNestData = useCallback((patch: Partial<Pick<NestPortfolio, "portfolio" | "allocations" | "balance">>) => {
+    if (!activeNestId) return;
+    updateNest(activeNestId, patch);
+  }, [activeNestId, updateNest]);
 
   const handleSimulationComplete = useCallback((finalBalance: number, gainPct: number) => {
     setBalance(finalBalance);
     setLastSimGain(gainPct);
-    saveProgress({ simulation_result: finalBalance });
+    saveNestData({ balance: finalBalance });
     if (gainPct > 0) mascotToast(t("panel.nestGrew", { pct: gainPct.toFixed(1) }));
     else mascotToast(t("panel.nestDropped", { pct: Math.abs(gainPct).toFixed(1) }));
-  }, [saveProgress, t]);
+  }, [saveNestData, t]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -422,12 +459,12 @@ const Panel = () => {
     const newAllocations = { ...allocations, [inv.id]: newAlloc };
     setActivePortfolio(next);
     setAllocations(newAllocations);
-    saveProgress({ portfolio: next, allocations: newAllocations });
+    saveNestData({ portfolio: next, allocations: newAllocations });
     const newRisk = Math.round(next.reduce((s, i) => s + i.riskLevel, 0) / next.length * 10);
     if (newRisk > 70) mascotToast(t("panel.riskyBuy"));
     else if (newRisk < 20) mascotToast(t("panel.safeBuy"));
     else mascotToast(t("panel.normalBuy"));
-  }, [activePortfolio, allocations, saveProgress, t]);
+  }, [activePortfolio, allocations, saveNestData, t]);
 
   const tryBuyInvestment = useCallback((inv: Investment) => {
     if (activePortfolio.length >= 4) { mascotToast(t("panel.nestFull")); return; }
@@ -449,7 +486,7 @@ const Panel = () => {
       const newAllocations = { ...allocations };
       delete newAllocations[id];
       setAllocations(newAllocations);
-      saveProgress({ portfolio: next, allocations: newAllocations });
+      saveNestData({ portfolio: next, allocations: newAllocations });
       return next;
     });
     if (removed) {
@@ -472,13 +509,13 @@ const Panel = () => {
       delete newAllocations[removeId];
       newAllocations[addId] = removedAlloc;
       setAllocations(newAllocations);
-      saveProgress({ portfolio: next, allocations: newAllocations });
+      saveNestData({ portfolio: next, allocations: newAllocations });
       return next;
     });
     const removeName = t(`allocation.classes.${removeId}`, { defaultValue: toRemove?.name || removeId });
     const addName = t(`allocation.classes.${addId}`, { defaultValue: toAdd.name });
     mascotToast(t("panel.swapMsg", { removed: removeName, added: addName }));
-  }, [activePortfolio, enrichedAvailable, allocations, saveProgress, t]);
+  }, [activePortfolio, enrichedAvailable, allocations, saveNestData, t]);
 
   const handleDragStart = (event: DragStartEvent) => {
     setDraggedItem(event.active.data.current as { inv: Investment; zone: string });
@@ -495,7 +532,7 @@ const Panel = () => {
   };
 
   const handleSimulate = () => {
-    saveProgress({ portfolio: activePortfolio });
+    saveNestData({ portfolio: activePortfolio });
     setSimulationOpen(true);
   };
 
@@ -517,10 +554,9 @@ const Panel = () => {
   return (
     <motion.div className="min-h-screen bg-background flex flex-col overflow-y-auto" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
       {/* Header */}
-      <div className="px-5 pt-6 pb-3">
+      <div className="px-5 pt-6 pb-2">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs text-muted-foreground font-medium tracking-wide uppercase" style={nunito}>{t("panel.myNest")}</p>
             <h1 className="text-2xl text-foreground mt-0.5" style={{ ...nunito, fontWeight: 900 }}>{t("panel.panelTitle")}</h1>
           </div>
           <div className="flex items-center gap-2">
@@ -555,6 +591,73 @@ const Panel = () => {
         </div>
       </div>
 
+      {/* Nest Tabs */}
+      <div className="px-5 pb-3">
+        <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-1">
+          {nests.map((nest) => (
+            <div key={nest.id} className="flex-shrink-0 relative group">
+              {renamingNest === nest.id ? (
+                <form
+                  onSubmit={(e) => { e.preventDefault(); handleRenameNest(nest.id, renameValue); }}
+                  className="flex items-center"
+                >
+                  <input
+                    autoFocus
+                    value={renameValue}
+                    onChange={(e) => setRenameValue(e.target.value)}
+                    onBlur={() => handleRenameNest(nest.id, renameValue)}
+                    className="text-xs font-bold px-3 py-2 rounded-2xl bg-card border-2 outline-none w-24"
+                    style={{ ...nunito, borderColor: CELESTE }}
+                  />
+                </form>
+              ) : (
+                <button
+                  onClick={() => handleTabClick(nest)}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-2xl text-xs font-bold transition-all border-2"
+                  style={{
+                    ...nunito,
+                    borderColor: activeNestId === nest.id ? CELESTE : "hsl(var(--border))",
+                    backgroundColor: activeNestId === nest.id ? CELESTE + "15" : "hsl(var(--card))",
+                    color: activeNestId === nest.id ? CELESTE : "hsl(var(--muted-foreground))",
+                  }}
+                >
+                  <span>{nest.name}</span>
+                  {activeNestId === nest.id && (
+                    <span className="flex items-center gap-0.5 ml-1">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setRenamingNest(nest.id); setRenameValue(nest.name); }}
+                        className="p-0.5 rounded hover:bg-black/10 transition-colors"
+                      >
+                        <Pencil className="w-3 h-3" />
+                      </button>
+                      {nests.length > 1 && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleDeleteNest(nest.id); }}
+                          className="p-0.5 rounded hover:bg-destructive/20 text-destructive/70 hover:text-destructive transition-colors"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      )}
+                    </span>
+                  )}
+                </button>
+              )}
+            </div>
+          ))}
+          {nests.length < 4 && (
+            <motion.button
+              onClick={handleCreateNest}
+              className="flex-shrink-0 w-8 h-8 rounded-full border-2 border-dashed flex items-center justify-center transition-colors"
+              style={{ borderColor: "hsl(var(--border))", color: "hsl(var(--muted-foreground))" }}
+              whileHover={{ scale: 1.1, borderColor: CELESTE }}
+              whileTap={{ scale: 0.9 }}
+            >
+              <Plus className="w-4 h-4" />
+            </motion.button>
+          )}
+        </div>
+      </div>
+
       {/* Stats */}
       <div className="px-5 pb-3">
         <div className="grid grid-cols-3 gap-3">
@@ -580,7 +683,7 @@ const Panel = () => {
             <div className="flex-1 md:pr-2">
               <DropZone id="nest">
                 <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-sm font-bold text-foreground uppercase tracking-wide" style={nunito}>{t("panel.myNest")}</h2>
+                  <h2 className="text-sm font-bold text-foreground uppercase tracking-wide" style={nunito}>{nests.find(n => n.id === activeNestId)?.name || t("panel.myNest")}</h2>
                   <span className="text-xs text-muted-foreground" style={nunito}>{enrichedPortfolio.length}/4</span>
                 </div>
                 {enrichedPortfolio.length === 0 ? (

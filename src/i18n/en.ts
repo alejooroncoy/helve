@@ -267,6 +267,12 @@ const en = {
     totalAllocated: "Allocated",
     adjustAllocation: "Drag to adjust %",
     maxAllocation: "Max allocation reached (100%)",
+    newNest: "New Nest",
+    nestTab: "Nest {{n}}",
+    deleteNest: "Delete nest",
+    deleteNestConfirm: "Delete this nest and all its investments?",
+    maxNests: "You can have up to 4 nests",
+    renameNest: "Rename",
   },
 
   // Time simulation
