@@ -306,6 +306,8 @@ function MicButton({ onTranscript, disabled }: { onTranscript: (text: string) =>
 interface CoachChatProps {
   onClose: () => void;
   portfolio?: Investment[];
+  onAddInvestment?: (investmentId: string) => void;
+  onRemoveInvestment?: (investmentId: string) => void;
 }
 
 export default function CoachChat({ onClose, portfolio }: CoachChatProps) {
