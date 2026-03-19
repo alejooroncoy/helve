@@ -55,7 +55,7 @@ const RiskScreen = ({ questionIndex, onAnswer, onBack }: Props) => {
       transition={{ duration: 0.35 }}
       key={`risk-${questionIndex}`}
     >
-      <div className="flex items-center gap-4 px-6 pt-8 pb-2">
+      <div className="flex items-center gap-3 px-6 pt-8 pb-2">
         <button onClick={onBack} className="text-muted-foreground hover:text-foreground transition-colors">
           <ChevronLeft size={28} strokeWidth={2.5} />
         </button>
@@ -68,6 +68,7 @@ const RiskScreen = ({ questionIndex, onAnswer, onBack }: Props) => {
             transition={{ duration: 0.4 }}
           />
         </div>
+        <LanguageSwitcher />
       </div>
 
       <div className="flex items-center gap-2 px-4 pt-2 pb-8">
