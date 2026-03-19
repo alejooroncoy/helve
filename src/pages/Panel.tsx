@@ -24,7 +24,7 @@ import type { Investment } from "@/game/types";
 import { availableInvestments } from "@/game/types";
 import {
   LogOut, X, AlertTriangle, Inbox, Shield, TrendingUp, BarChart2,
-  Building2, Leaf, Globe, Landmark, Zap, FastForward,
+  Building2, Leaf, Globe, Landmark, Zap, FastForward, MessageCircle, DollarSign, Info,
 } from "lucide-react";
 
 const nunito = { fontFamily: "'Nunito', sans-serif" };
@@ -153,9 +153,9 @@ const tagDescriptions: Record<string, string> = {
 
 /* ---- Draggable investment card ---- */
 function DraggableCard({
-  inv, zone, onClick, onAsk,
+  inv, zone, onClick, onAsk, onSell, onInfo,
 }: {
-  inv: Investment; zone: "scouted" | "nest"; onClick: () => void; onAsk?: () => void;
+  inv: Investment; zone: "scouted" | "nest"; onClick: () => void; onAsk?: () => void; onSell?: () => void; onInfo?: () => void;
 }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `${zone}-${inv.id}`,
@@ -167,22 +167,24 @@ function DraggableCard({
       ref={setNodeRef}
       {...listeners}
       {...attributes}
-      onClick={onClick}
+      onClick={zone === "scouted" ? onClick : undefined}
       className={`touch-none select-none transition-all ${isDragging ? "opacity-30 scale-95" : ""}`}
     >
-      {zone === "nest" ? <NestCard inv={inv} /> : <ScoutedCard inv={inv} onAsk={onAsk} />}
+      {zone === "nest" ? <NestCard inv={inv} onSell={onSell} onAsk={onAsk} onInfo={onInfo} /> : <ScoutedCard inv={inv} onAsk={onAsk} />}
     </div>
   );
 }
 
-function NestCard({ inv, overlay }: { inv: Investment; overlay?: boolean }) {
+function NestCard({ inv, overlay, onSell, onAsk, onInfo }: { inv: Investment; overlay?: boolean; onSell?: () => void; onAsk?: () => void; onInfo?: () => void }) {
+  const [expanded, setExpanded] = useState(false);
+
   return (
     <div className={`bg-card rounded-2xl p-3.5 shadow-sm ${overlay ? "shadow-lg rotate-2" : ""} cursor-grab active:cursor-grabbing`} style={overlay ? { boxShadow: `0 0 0 2px ${CELESTE}40` } : {}}>
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${CELESTE}18`, color: CELESTE }}>
           {getInvestmentIcon(inv)}
         </div>
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0" onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }} onPointerDown={(e) => e.stopPropagation()}>
           <div className="flex items-center gap-1.5 flex-wrap">
             <p className="text-sm font-bold text-foreground" style={nunito}>{inv.name}</p>
             {inv.flag && <span className="text-xs">{inv.flag}</span>}
@@ -197,11 +199,18 @@ function NestCard({ inv, overlay }: { inv: Investment; overlay?: boolean }) {
           </div>
         </div>
         {!overlay && (
-          <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-            <X className="w-3 h-3 text-muted-foreground" />
+          <div
+            className="w-7 h-7 rounded-full bg-muted flex items-center justify-center flex-shrink-0 cursor-pointer"
+            onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
+            onPointerDown={(e) => e.stopPropagation()}
+          >
+            <motion.div animate={{ rotate: expanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
+              <Info className="w-3.5 h-3.5 text-muted-foreground" />
+            </motion.div>
           </div>
         )}
       </div>
+
       {inv.tag && (
         <div className="mt-2 flex items-center gap-1.5">
           <span className="text-[10px] font-bold bg-accent/15 text-accent px-2 py-0.5 rounded-full" style={nunito}>
@@ -212,6 +221,51 @@ function NestCard({ inv, overlay }: { inv: Investment; overlay?: boolean }) {
           )}
         </div>
       )}
+
+      {/* Expandable actions */}
+      <AnimatePresence>
+        {expanded && !overlay && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="overflow-hidden"
+          >
+            <div className="flex gap-2 mt-3 pt-3 border-t border-border">
+              <motion.button
+                onClick={(e) => { e.stopPropagation(); onSell?.(); }}
+                onPointerDown={(e) => e.stopPropagation()}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold bg-destructive/10 text-destructive transition-colors"
+                style={nunito}
+                whileTap={{ scale: 0.95 }}
+              >
+                <DollarSign className="w-3.5 h-3.5" />
+                Vender
+              </motion.button>
+              <motion.button
+                onClick={(e) => { e.stopPropagation(); onAsk?.(); }}
+                onPointerDown={(e) => e.stopPropagation()}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold transition-colors"
+                style={{ ...nunito, backgroundColor: `${CELESTE}15`, color: CELESTE }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <MessageCircle className="w-3.5 h-3.5" />
+                Preguntar
+              </motion.button>
+              <motion.button
+                onClick={(e) => { e.stopPropagation(); onInfo?.(); }}
+                onPointerDown={(e) => e.stopPropagation()}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold bg-muted text-muted-foreground transition-colors"
+                style={nunito}
+                whileTap={{ scale: 0.95 }}
+              >
+                <BarChart2 className="w-3.5 h-3.5" />
+                Detalle
+              </motion.button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -353,7 +407,7 @@ const Panel = () => {
 
   const addInvestment = (inv: Investment) => {
     if (activePortfolio.length >= 4) {
-      setMascotMessage("Your nest is full! Remove one egg to make room.");
+      setMascotMessage("🪺 ¡Tu nido está lleno! Vende un huevo para hacer espacio.");
       return;
     }
     if (activePortfolio.find((i) => i.id === inv.id)) return;
@@ -361,18 +415,23 @@ const Panel = () => {
     setActivePortfolio(next);
     saveProgress({ portfolio: next });
     const newRisk = Math.round(next.reduce((s, i) => s + i.riskLevel, 0) / next.length * 10);
-    if (newRisk > 70) setMascotMessage("Careful! High risk ahead. Maybe add something steadier?");
-    else if (newRisk < 20) setMascotMessage("Very safe nest! Cozy and steady.");
-    else setMascotMessage("Great pick! Your portfolio is looking strong.");
+    if (newRisk > 70) setMascotMessage("🦉 ¡Cuidado! Compraste algo arriesgado. Tu nido tiembla un poco...");
+    else if (newRisk < 20) setMascotMessage("🦉 ¡Buena compra! Un huevito muy seguro para tu nido.");
+    else setMascotMessage("🦉 ¡Comprado! Buen ojo, ese huevo se ve prometedor.");
   };
 
   const removeInvestment = (id: string) => {
+    const sold = activePortfolio.find(i => i.id === id);
     setActivePortfolio((prev) => {
       const next = prev.filter((i) => i.id !== id);
       saveProgress({ portfolio: next });
       return next;
     });
-    setMascotMessage("Investment removed. Pick a new one from Scouted.");
+    if (sold) {
+      setMascotMessage(`🦉 ¡Vendiste ${sold.name}! A veces soltar un huevo es la mejor decisión.`);
+    } else {
+      setMascotMessage("🦉 Huevo vendido. Tu nido se siente más ligero.");
+    }
   };
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -469,6 +528,28 @@ const Panel = () => {
           ))}
         </div>
       </div>
+      {/* Mascot message */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={mascotMessage}
+          className="px-5 pb-3 flex items-start gap-2"
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 10 }}
+          transition={{ duration: 0.3 }}
+        >
+          <motion.img
+            src="/perspectiva1.png"
+            alt="Búho"
+            className="w-8 h-8 rounded-full flex-shrink-0 shadow-sm"
+            animate={{ rotate: [0, -5, 5, -3, 0] }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+          />
+          <div className="bg-card rounded-2xl rounded-tl-sm px-3 py-2 shadow-sm flex-1">
+            <p className="text-xs text-foreground leading-relaxed" style={nunito}>{mascotMessage}</p>
+          </div>
+        </motion.div>
+      </AnimatePresence>
 
       {/* DnD Content */}
       <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
@@ -483,14 +564,21 @@ const Panel = () => {
               <div className="bg-card/50 rounded-3xl p-5 text-center border-2 border-dashed border-border flex flex-col items-center justify-center gap-2">
                 <Inbox className="w-8 h-8 text-muted-foreground/50" />
                 <p className="text-sm text-muted-foreground" style={nunito}>¡Tu nido está vacío!</p>
-                <p className="text-xs text-muted-foreground" style={nunito}>Toca una inversión para agregarla</p>
+                <p className="text-xs text-muted-foreground" style={nunito}>Compra tu primera inversión tocándola abajo 👇</p>
               </div>
             ) : (
               <div className="space-y-2">
                 <AnimatePresence>
                   {enrichedPortfolio.map((inv) => (
                     <motion.div key={inv.id} initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }} layout>
-                      <DraggableCard inv={inv} zone="nest" onClick={() => removeInvestment(inv.id)} />
+                      <DraggableCard
+                        inv={inv}
+                        zone="nest"
+                        onClick={() => {}}
+                        onSell={() => removeInvestment(inv.id)}
+                        onAsk={() => { setCoachInitQ(`Tengo ${inv.name} en mi nido. ¿Es buena inversión? ¿Debería venderla o mantenerla?`); setCoachOpen(true); }}
+                        onInfo={() => { setCoachInitQ(`Dame un análisis detallado de ${inv.name}: riesgo, retorno histórico, y perspectiva futura.`); setCoachOpen(true); }}
+                      />
                     </motion.div>
                   ))}
                 </AnimatePresence>
@@ -500,7 +588,7 @@ const Panel = () => {
 
           {/* Scouted — horizontal scroll on mobile */}
           <DropZone id="scouted">
-            <h2 className="text-sm font-bold text-foreground uppercase tracking-wide mb-3 mt-4" style={nunito}>Explorar</h2>
+            <h2 className="text-sm font-bold text-foreground uppercase tracking-wide mb-3 mt-4" style={nunito}>🛒 Comprar</h2>
             <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide" style={{ scrollSnapType: "x mandatory" }}>
               {suggestions.map((inv) => (
                 <div key={inv.id} className="flex-shrink-0" style={{ width: 200, scrollSnapAlign: "start" }}>
