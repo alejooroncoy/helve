@@ -827,7 +827,7 @@ const Panel = () => {
 
   return (
     <motion.div
-      className="min-h-screen bg-background flex flex-col overflow-y-auto"
+      className="h-screen bg-background flex flex-col overflow-hidden"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
     >
@@ -1054,7 +1054,7 @@ const Panel = () => {
 
       {/* DnD Content */}
       <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-        <div className="flex-1 min-h-0 px-5 pb-4 flex flex-col">
+        <div className="flex-1 min-h-0 px-5 pb-4 flex flex-col overflow-hidden">
           <div className="flex flex-col md:flex-row gap-4 flex-1 min-h-0">
             {/* My Nest */}
             <div className="flex-1 min-h-0 md:pr-2 flex flex-col">
