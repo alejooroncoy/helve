@@ -331,22 +331,6 @@ const Panel = () => {
         </div>
       </div>
 
-      {/* Mascot */}
-      <div className="px-5 pb-3">
-        <motion.div className="bg-card rounded-3xl p-4 shadow-sm flex items-start gap-3" initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.25 }}>
-          <div className="w-10 h-10 rounded-full bg-primary/10 overflow-hidden flex-shrink-0 border border-primary/20">
-            <img src="/face.png" alt="Mascot" className="w-full h-full object-cover" />
-          </div>
-          <div className="flex-1">
-            <p className="text-[10px] text-primary font-bold uppercase tracking-wider mb-1">Your Flight Guide</p>
-            <AnimatePresence mode="wait">
-              <motion.p key={mascotMessage} className="text-sm text-foreground leading-relaxed" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}>
-                {mascotMessage}
-              </motion.p>
-            </AnimatePresence>
-          </div>
-        </motion.div>
-      </div>
 
       {/* DnD Content */}
       <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
