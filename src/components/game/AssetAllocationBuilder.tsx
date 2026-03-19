@@ -109,7 +109,7 @@ const AssetAllocationBuilder = ({ profile, onComplete }: Props) => {
       {/* Header */}
       <div className="px-5 pt-8 pb-2">
         <div className="flex items-center gap-3 mb-2">
-          <span className="text-3xl">{pLabel.emoji}</span>
+          <div>
           <div>
             <h2 className="text-xl text-foreground" style={{ ...nunito, fontWeight: 800 }}>{pLabel.name}</h2>
             <p className="text-sm text-muted-foreground" style={nunito}>{pLabel.desc}</p>
