@@ -181,13 +181,8 @@ const Hub = () => {
             </div>
             <Lock className="w-5 h-5 flex-shrink-0 text-muted-foreground" />
           </div>
-<<<<<<< HEAD
-        </div>{/* end map card */}
-        </div>{/* end flex flex-col gap-4 */}
-=======
         </div>
-        </div>{/* end cards inner */}
->>>>>>> b0278399d1e14d724f69fbe99df4899b7845ec64
+        </div>
       </div>{/* end centered wrapper */}
 
       {/* Multiplayer onboarding modal */}
