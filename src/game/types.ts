@@ -56,23 +56,9 @@ export function getProfile(score: number): RiskProfile {
   return "growth";
 }
 
+export { simulateRealGrowth } from "./marketData";
+
 export function simulateGrowth(portfolio: PortfolioSlot[], stormChoice: "stay" | "sell" | null): number {
-  const base = 100;
-  let multiplier = 0;
-  for (const slot of portfolio) {
-    if (slot === "safe") multiplier += 0.02;
-    else if (slot === "balanced") multiplier += 0.05;
-    else multiplier += 0.09;
-  }
-  multiplier /= portfolio.length || 1;
-
-  // 5 year compound
-  let value = base * Math.pow(1 + multiplier, 5);
-
-  // Storm penalty
-  if (stormChoice === "sell") {
-    value = base * Math.pow(1 + multiplier * 0.3, 5);
-  }
-
-  return Math.round(value);
+  const { finalValue } = (await import("./marketData")).simulateRealGrowth(portfolio, stormChoice, 5);
+  return finalValue;
 }
