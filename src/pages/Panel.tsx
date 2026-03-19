@@ -589,7 +589,7 @@ const Panel = () => {
                   </motion.button>
                 </DrawerTrigger>
                 <DrawerContent className="h-[80vh] p-0">
-                  <CoachChat onClose={() => { setCoachOpen(false); setCoachInitQ(undefined); }} portfolio={enrichedPortfolio} onAddInvestment={(id) => { const inv = enrichedAvailable.find(i => i.id === id); if (inv) tryBuyInvestment(inv); }} onRemoveInvestment={(id) => removeInvestment(id)} initialQuestion={coachInitQ} />
+                  <CoachChat onClose={() => { setCoachOpen(false); setCoachInitQ(undefined); }} portfolio={enrichedPortfolio} onAddInvestment={(id) => { const inv = enrichedAvailable.find(i => i.id === id); if (inv) tryBuyInvestment(inv); }} onRemoveInvestment={(id) => removeInvestment(id)} initialQuestion={coachInitQ} onSwapAccepted={handleSwapFromCoach} />
                 </DrawerContent>
               </Drawer>
             ) : (
