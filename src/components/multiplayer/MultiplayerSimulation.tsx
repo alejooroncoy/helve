@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import { useMonthlyPrices } from "@/hooks/useMarketData";
 import { Timer, TrendingUp, TrendingDown, Users, AlertTriangle, Check, BarChart2, ShoppingCart, Shield, ArrowDownFromLine } from "lucide-react";
-import type { AssetClass, MarketEvent as MarketEventType } from "@/game/types";
+import type { MarketEvent as MarketEventType } from "@/game/types";
 import { ASSET_CLASSES, MARKET_EVENTS_POOL, ALL_ASSET_DB_IDS } from "@/game/types";
 import type { useMultiplayer } from "@/hooks/useMultiplayer";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
@@ -12,42 +12,40 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 const nunito = { fontFamily: "'Nunito', sans-serif" };
 const INITIAL_BALANCE = 1000;
 const TOTAL_MONTHS = 36;
+const MONTHS_PER_TICK = 3;          // advance 3 months per tick → visible jumps
+const TOTAL_TICKS = TOTAL_MONTHS / MONTHS_PER_TICK; // 12 ticks
 const CELESTE = "#5BB8F5";
 
-// Neutral palette — no red, yellow, or green
 const CAT_COLORS: Record<string, string> = {
-  bonds:       "#60a5fa", // blue
-  equity:      "#22d3ee", // cyan
-  gold:        "#fb923c", // orange
-  fx:          "#38bdf8", // sky
-  swissStocks: "#f472b6", // pink
-  usStocks:    "#818cf8", // indigo
-  crypto:      "#a78bfa", // purple
-  cleanEnergy: "#2dd4bf", // teal
+  bonds:       "#60a5fa",
+  equity:      "#22d3ee",
+  gold:        "#fb923c",
+  fx:          "#38bdf8",
+  swissStocks: "#f472b6",
+  usStocks:    "#818cf8",
+  crypto:      "#a78bfa",
+  cleanEnergy: "#2dd4bf",
 };
 
-const BTN_SELL  = { bg: "#fb923c18", border: "#fb923c", color: "#fb923c" };
-const BTN_HOLD  = { bg: "#60a5fa18", border: "#60a5fa", color: "#60a5fa" };
-const BTN_BUY   = { bg: "#a78bfa18", border: "#a78bfa", color: "#a78bfa" };
+const BTN_SELL = { bg: "#fb923c18", border: "#fb923c", color: "#fb923c" };
+const BTN_HOLD = { bg: "#60a5fa18", border: "#60a5fa", color: "#60a5fa" };
+const BTN_BUY  = { bg: "#a78bfa18", border: "#a78bfa", color: "#a78bfa" };
 
-const STEP_INTERVAL = 300;
-const READING_TIME = 3; // seconds to read the event before countdown starts
-const EVENT_TIMER = 5;  // seconds to decide once countdown begins
+const STEP_INTERVAL = 400;
+const READING_TIME = 3;
+const EVENT_TIMER = 5;
 const NUM_EVENTS = 5;
 
-function generateEventMonths(total: number, count: number): number[] {
-  const spacing = Math.floor(total / (count + 1));
+function generateEventTicks(totalTicks: number, count: number): number[] {
+  const spacing = Math.floor(totalTicks / (count + 1));
   return Array.from({ length: count }, (_, i) => spacing * (i + 1));
 }
 
 function pickEvents(count: number): MarketEventType[] {
-  const shuffled = [...MARKET_EVENTS_POOL].sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, count);
+  return [...MARKET_EVENTS_POOL].sort(() => Math.random() - 0.5).slice(0, count);
 }
 
-interface Props {
-  mp: ReturnType<typeof useMultiplayer>;
-}
+interface Props { mp: ReturnType<typeof useMultiplayer>; }
 
 const MultiplayerSimulation = ({ mp }: Props) => {
   const { t } = useTranslation();
@@ -65,25 +63,7 @@ const MultiplayerSimulation = ({ mp }: Props) => {
 
   const { prices, loading: pricesLoading } = useMonthlyPrices(dbIds);
 
-  const [currentMonth, setCurrentMonth] = useState(0);
-  const [balance, setBalance] = useState(INITIAL_BALANCE);
-  const [categoryHistories, setCategoryHistories] = useState<Record<string, number[]>>({});
-  const [paused, setPaused] = useState(false);
-  const [activeEvent, setActiveEvent] = useState<MarketEventType | null>(null);
-  const [eventPhase, setEventPhase] = useState<"reading" | "deciding">("reading");
-  const [readingTimer, setReadingTimer] = useState(READING_TIME);
-  const [eventTimer, setEventTimer] = useState(EVENT_TIMER);
-  const [eventDecided, setEventDecided] = useState(false);
-  const readingRef = useRef<number | null>(null);
-  const [eventsTriggered, setEventsTriggered] = useState<number[]>([]);
-  const [eventHistory, setEventHistory] = useState<{ event: MarketEventType; decision: string; month: number }[]>([]);
-  const [finished, setFinished] = useState(false);
-  const intervalRef = useRef<number | null>(null);
-  const timerRef = useRef<number | null>(null);
-
-  const eventMonths = useMemo(() => generateEventMonths(TOTAL_MONTHS, NUM_EVENTS), []);
-  const pickedEvents = useMemo(() => pickEvents(NUM_EVENTS), []);
-
+  // Per-category monthly multipliers (real price data)
   const categoryMultipliers = useMemo(() => {
     if (!prices || Object.keys(prices).length === 0) return {} as Record<string, number[]>;
     const result: Record<string, number[]> = {};
@@ -114,64 +94,115 @@ const MultiplayerSimulation = ({ mp }: Props) => {
     return result;
   }, [prices, myCategories]);
 
-  const multipliers = useMemo(() => {
-    const keys = Object.keys(categoryMultipliers);
-    if (keys.length === 0) return [];
-    return Array.from({ length: TOTAL_MONTHS }, (_, m) => {
-      const vals = keys.map(k => categoryMultipliers[k][m] ?? 1);
-      return vals.reduce((s, v) => s + v, 0) / vals.length;
-    });
-  }, [categoryMultipliers]);
+  // Current tick (each tick = MONTHS_PER_TICK months)
+  const [currentTick, setCurrentTick] = useState(0);
 
+  // Each category's actual CHF allocation (starts at 1000/N each)
+  const [categoryAllocations, setCategoryAllocations] = useState<Record<string, number>>({});
+  // History of allocations per tick for charts
+  const [categoryHistories, setCategoryHistories] = useState<Record<string, number[]>>({});
+
+  const [paused, setPaused] = useState(false);
+  const [activeEvent, setActiveEvent] = useState<MarketEventType | null>(null);
+  const [eventPhase, setEventPhase] = useState<"reading" | "deciding">("reading");
+  const [readingTimer, setReadingTimer] = useState(READING_TIME);
+  const [eventTimer, setEventTimer] = useState(EVENT_TIMER);
+  const [eventDecided, setEventDecided] = useState(false);
+  const [eventsTriggered, setEventsTriggered] = useState<number[]>([]);
+  const [eventHistory, setEventHistory] = useState<{ event: MarketEventType; decision: string; tick: number }[]>([]);
+  const [finished, setFinished] = useState(false);
+  const intervalRef = useRef<number | null>(null);
+  const timerRef = useRef<number | null>(null);
+  const readingRef = useRef<number | null>(null);
+
+  const eventTicks = useMemo(() => generateEventTicks(TOTAL_TICKS, NUM_EVENTS), []);
+  const pickedEvents = useMemo(() => pickEvents(NUM_EVENTS), []);
+
+  // Initialize category allocations when data ready
   useEffect(() => {
-    if (pricesLoading || paused || activeEvent || finished || multipliers.length === 0) return;
+    if (myCategories.length === 0 || Object.keys(categoryMultipliers).length === 0) return;
+    const share = INITIAL_BALANCE / myCategories.length;
+    const init: Record<string, number> = {};
+    const initHist: Record<string, number[]> = {};
+    for (const key of myCategories) {
+      init[key] = share;
+      initHist[key] = [share];
+    }
+    setCategoryAllocations(init);
+    setCategoryHistories(initHist);
+  }, [Object.keys(categoryMultipliers).join(",")]);
+
+  // Advance simulation
+  useEffect(() => {
+    if (pricesLoading || paused || activeEvent || finished || Object.keys(categoryMultipliers).length === 0) return;
     intervalRef.current = window.setInterval(() => {
-      setCurrentMonth(prev => {
+      setCurrentTick(prev => {
         const next = prev + 1;
-        if (next >= TOTAL_MONTHS) {
+        if (next >= TOTAL_TICKS) {
           clearInterval(intervalRef.current!);
           setFinished(true);
           return prev;
         }
-        const eventIdx = eventMonths.indexOf(next);
-        if (eventIdx >= 0 && !eventsTriggered.includes(next)) {
+        // Check if this tick has an event
+        if (eventTicks.includes(next) && !eventsTriggered.includes(next)) {
           setPaused(true);
-          setActiveEvent(pickedEvents[eventIdx]);
+          const idx = eventTicks.indexOf(next);
+          setActiveEvent(pickedEvents[idx]);
           setEventPhase("reading");
           setReadingTimer(READING_TIME);
           setEventTimer(EVENT_TIMER);
           setEventDecided(false);
-          setEventsTriggered(prev => [...prev, next]);
+          setEventsTriggered(e => [...e, next]);
         }
         return next;
       });
     }, STEP_INTERVAL);
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
-  }, [pricesLoading, paused, activeEvent, finished, multipliers, eventsTriggered, eventMonths, pickedEvents]);
+  }, [pricesLoading, paused, activeEvent, finished, categoryMultipliers, eventsTriggered, eventTicks, pickedEvents]);
 
+  // Update category allocations each tick (compound MONTHS_PER_TICK months of real returns)
   useEffect(() => {
-    if (currentMonth > 0 && multipliers[currentMonth - 1]) {
-      setBalance(prev => prev * multipliers[currentMonth - 1]);
-      setCategoryHistories(prev => {
-        const next = { ...prev };
-        for (const key of myCategories) {
-          const mult = categoryMultipliers[key]?.[currentMonth - 1] ?? 1;
-          const last = (prev[key] ?? [INITIAL_BALANCE]);
-          const prevVal = last[last.length - 1] ?? INITIAL_BALANCE;
-          next[key] = [...last, prevVal * mult];
+    if (currentTick === 0 || Object.keys(categoryMultipliers).length === 0) return;
+    const monthStart = (currentTick - 1) * MONTHS_PER_TICK;
+    const monthEnd = Math.min(currentTick * MONTHS_PER_TICK, TOTAL_MONTHS);
+
+    setCategoryAllocations(prev => {
+      const share = INITIAL_BALANCE / myCategories.length;
+      const next: Record<string, number> = {};
+      for (const key of myCategories) {
+        let val = prev[key] ?? share;
+        for (let m = monthStart; m < monthEnd; m++) {
+          val *= categoryMultipliers[key]?.[m] ?? 1;
         }
-        return next;
+        next[key] = val;
+      }
+      // Update histories inside the setter so we have the new values
+      setCategoryHistories(prevH => {
+        const nextH = { ...prevH };
+        for (const key of myCategories) {
+          nextH[key] = [...(prevH[key] ?? [share]), next[key]];
+        }
+        return nextH;
       });
-    }
-  }, [currentMonth, multipliers]);
+      return next;
+    });
+  }, [currentTick]);
 
+  // Total balance = sum of all category allocations
+  const balance = useMemo(() => {
+    const vals = Object.values(categoryAllocations);
+    if (vals.length === 0) return INITIAL_BALANCE;
+    return vals.reduce((s, v) => s + v, 0);
+  }, [categoryAllocations]);
+
+  // Sync balance to DB every 3 ticks
   useEffect(() => {
-    if (currentMonth > 0 && currentMonth % 6 === 0 && mp.myPlayer) {
+    if (currentTick > 0 && currentTick % 3 === 0 && mp.myPlayer) {
       mp.saveFinalScore(Math.round(balance));
     }
-  }, [currentMonth]);
+  }, [currentTick, balance]);
 
-  // Phase 1: reading countdown (no buttons shown)
+  // Phase 1: reading countdown
   useEffect(() => {
     if (!activeEvent || eventDecided || eventPhase !== "reading") return;
     readingRef.current = window.setInterval(() => {
@@ -187,7 +218,7 @@ const MultiplayerSimulation = ({ mp }: Props) => {
     return () => { if (readingRef.current) clearInterval(readingRef.current); };
   }, [activeEvent, eventDecided, eventPhase]);
 
-  // Phase 2: decision countdown (buttons shown)
+  // Phase 2: decision countdown
   useEffect(() => {
     if (!activeEvent || eventDecided || eventPhase !== "deciding") return;
     timerRef.current = window.setInterval(() => {
@@ -203,51 +234,68 @@ const MultiplayerSimulation = ({ mp }: Props) => {
     if (!activeEvent || eventDecided) return;
     setEventDecided(true);
     if (timerRef.current) clearInterval(timerRef.current);
+    if (readingRef.current) clearInterval(readingRef.current);
 
-    // buy amplifies hold impact (more upside AND more downside)
     const rawImpact = decision === "sell"
       ? activeEvent.sellImpact
       : decision === "buy"
       ? 1 + (activeEvent.holdImpact - 1) * 1.5
       : activeEvent.holdImpact;
 
-    let balanceBefore = 0;
-    let balanceAfter = 0;
-    setBalance(prev => {
-      balanceBefore = prev;
-      balanceAfter = prev * rawImpact;
-      return balanceAfter;
+    // Apply impact to ALL category allocations (keeps charts consistent with balance)
+    let totalBefore = 0;
+    let totalAfter = 0;
+    setCategoryAllocations(prev => {
+      const share = INITIAL_BALANCE / myCategories.length;
+      const next: Record<string, number> = {};
+      for (const key of myCategories) {
+        totalBefore += prev[key] ?? share;
+        next[key] = (prev[key] ?? share) * rawImpact;
+        totalAfter += next[key];
+      }
+      setCategoryHistories(prevH => {
+        const nextH = { ...prevH };
+        for (const key of myCategories) {
+          nextH[key] = [...(prevH[key] ?? [share]), next[key]];
+        }
+        return nextH;
+      });
+      return next;
     });
 
-    setEventHistory(prev => [...prev, { event: activeEvent, decision, month: currentMonth }]);
+    setEventHistory(prev => [...prev, { event: activeEvent, decision, tick: currentTick }]);
+    // Save decision meta (approximate balances)
     mp.saveDecision(eventsTriggered.length - 1, decision, {
       title: activeEvent.title,
       holdImpact: activeEvent.holdImpact,
       sellImpact: activeEvent.sellImpact,
-      balanceBefore: Math.round(balanceBefore),
-      balanceAfter: Math.round(balanceAfter),
+      balanceBefore: Math.round(balance),
+      balanceAfter: Math.round(balance * rawImpact),
     });
 
     setTimeout(() => {
       setActiveEvent(null);
       setPaused(false);
     }, 1200);
-  }, [activeEvent, eventDecided, eventsTriggered, mp, currentMonth]);
+  }, [activeEvent, eventDecided, eventsTriggered, mp, currentTick, balance, myCategories]);
 
+  // Save final score when done
   useEffect(() => {
     if (finished && mp.myPlayer) {
       mp.saveFinalScore(Math.round(balance));
     }
-  }, [finished]);
+  }, [finished, balance]);
 
   const allFinished = mp.players.every(p => p.final_score !== null && p.final_score !== undefined);
   const isHost = user?.id === mp.room?.host_user_id;
   useEffect(() => { if (allFinished && isHost && finished) mp.finishGame(); }, [allFinished, isHost, finished]);
 
-  const yearLabel = Math.floor(currentMonth / 12);
-  const monthLabel = currentMonth % 12;
+  const currentMonth = currentTick * MONTHS_PER_TICK;
+  const yearLabel = Math.floor(currentMonth / 12) + 1;
+  const monthLabel = (currentMonth % 12) + 1;
   const pctChange = ((balance - INITIAL_BALANCE) / INITIAL_BALANCE * 100);
-  const progressPct = (currentMonth / TOTAL_MONTHS) * 100;
+  const progressPct = (currentTick / TOTAL_TICKS) * 100;
+  const sharePerCat = INITIAL_BALANCE / Math.max(myCategories.length, 1);
 
   const sortedPlayers = useMemo(() =>
     [...mp.players].sort((a, b) => (b.balance || INITIAL_BALANCE) - (a.balance || INITIAL_BALANCE)),
@@ -268,7 +316,7 @@ const MultiplayerSimulation = ({ mp }: Props) => {
   return (
     <motion.div className="min-h-screen flex flex-col px-5 py-4" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
 
-      {/* Language switcher centered */}
+      {/* Language switcher */}
       <div className="flex justify-center mb-3">
         <LanguageSwitcher />
       </div>
@@ -277,7 +325,7 @@ const MultiplayerSimulation = ({ mp }: Props) => {
       <div className="text-center mb-3">
         <h1 className="text-lg font-black text-foreground" style={nunito}>{t("multiplayer.simulation")}</h1>
         <p className="text-xs text-muted-foreground" style={nunito}>
-          {t("multiplayer.year")} {yearLabel + 1} · {t("multiplayer.month")} {monthLabel + 1}
+          {t("multiplayer.year")} {yearLabel} · {t("multiplayer.month")} {monthLabel}
         </p>
       </div>
 
@@ -299,19 +347,19 @@ const MultiplayerSimulation = ({ mp }: Props) => {
             : pctChange < -0.5
             ? <TrendingDown className="w-3 h-3" style={{ color: "#94a3b8" }} />
             : null}
-          <span className="text-xs font-bold" style={{ ...nunito, color: pctChange >= 0.5 ? CELESTE : pctChange < -0.5 ? "#94a3b8" : "#94a3b8" }}>
+          <span className="text-xs font-bold" style={{ ...nunito, color: Math.abs(pctChange) < 0.5 ? "#94a3b8" : pctChange >= 0 ? CELESTE : "#94a3b8" }}>
             {pctChange >= 0 ? "+" : ""}{pctChange.toFixed(1)}%
           </span>
         </div>
       </div>
 
-      {/* Per-category charts — all stacked */}
+      {/* Per-category charts — stacked, consistent with balance */}
       <div className="bg-card rounded-2xl p-3 shadow-md mb-3 space-y-3">
         {myCategories.map(key => {
-          const hist = categoryHistories[key];
+          const hist = categoryHistories[key] ?? [sharePerCat];
           const color = CAT_COLORS[key] ?? CELESTE;
-          const last = hist?.[hist.length - 1] ?? INITIAL_BALANCE;
-          const pct = ((last - INITIAL_BALANCE) / INITIAL_BALANCE * 100);
+          const last = hist[hist.length - 1] ?? sharePerCat;
+          const pct = ((last - sharePerCat) / sharePerCat * 100);
 
           return (
             <div key={key}>
@@ -320,10 +368,10 @@ const MultiplayerSimulation = ({ mp }: Props) => {
                   {t(`allocation.classes.${key}`)}
                 </span>
                 <span className="text-[11px] font-bold tabular-nums" style={{ color, ...nunito }}>
-                  {pct >= 0 ? "+" : ""}{pct.toFixed(1)}%
+                  CHF {Math.round(last).toLocaleString()} ({pct >= 0 ? "+" : ""}{pct.toFixed(1)}%)
                 </span>
               </div>
-              {hist && hist.length >= 2 ? (() => {
+              {hist.length >= 2 ? (() => {
                 const min = Math.min(...hist) * 0.97;
                 const max = Math.max(...hist) * 1.03;
                 const range = max - min || 1;
@@ -333,8 +381,7 @@ const MultiplayerSimulation = ({ mp }: Props) => {
                 ).join(" ");
                 return (
                   <svg viewBox="0 0 300 42" className="w-full h-10">
-                    <polyline fill="none" stroke={color} strokeWidth="2"
-                      strokeLinejoin="round" points={points} />
+                    <polyline fill="none" stroke={color} strokeWidth="2" strokeLinejoin="round" points={points} />
                   </svg>
                 );
               })() : (
@@ -353,19 +400,17 @@ const MultiplayerSimulation = ({ mp }: Props) => {
           <Users className="w-3 h-3 text-muted-foreground" />
           <span className="text-xs text-muted-foreground" style={nunito}>{t("multiplayer.leaderboard")}</span>
         </div>
-        <AnimatePresence>
-          {sortedPlayers.map((p, i) => (
-            <motion.div key={p.id} className="flex items-center gap-2 py-1" layout transition={{ type: "spring", stiffness: 300, damping: 30 }}>
-              <span className="text-xs font-black w-4 text-center text-muted-foreground" style={nunito}>{i + 1}</span>
-              <span className="text-xs font-bold flex-1 truncate" style={{ ...nunito, color: p.user_id === user?.id ? CELESTE : "hsl(var(--foreground))" }}>
-                {p.display_name} {p.user_id === user?.id ? `(${t("multiplayer.you")})` : ""}
-              </span>
-              <span className="text-xs font-bold tabular-nums" style={{ ...nunito, color: CELESTE }}>
-                CHF {Math.round(p.balance || INITIAL_BALANCE).toLocaleString()}
-              </span>
-            </motion.div>
-          ))}
-        </AnimatePresence>
+        {sortedPlayers.map((p, i) => (
+          <div key={p.id} className="flex items-center gap-2 py-1">
+            <span className="text-xs font-black w-4 text-center text-muted-foreground" style={nunito}>{i + 1}</span>
+            <span className="text-xs font-bold flex-1 truncate" style={{ ...nunito, color: p.user_id === user?.id ? CELESTE : "hsl(var(--foreground))" }}>
+              {p.display_name} {p.user_id === user?.id ? `(${t("multiplayer.you")})` : ""}
+            </span>
+            <span className="text-xs font-bold tabular-nums" style={{ ...nunito, color: CELESTE }}>
+              CHF {Math.round(p.balance || INITIAL_BALANCE).toLocaleString()}
+            </span>
+          </div>
+        ))}
       </div>
 
       {/* Event history */}
@@ -374,19 +419,17 @@ const MultiplayerSimulation = ({ mp }: Props) => {
           <p className="text-[10px] tracking-widest text-muted-foreground mb-1.5" style={{ ...nunito, fontWeight: 700 }}>
             {t("multiplayer.eventHistory")}
           </p>
-          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+          <div className="flex gap-2 overflow-x-auto pb-1">
             {[...eventHistory].reverse().map((h, i) => {
-              const style = h.decision === "sell" ? BTN_SELL : h.decision === "buy" ? BTN_BUY : BTN_HOLD;
+              const s = h.decision === "sell" ? BTN_SELL : h.decision === "buy" ? BTN_BUY : BTN_HOLD;
               return (
-                <motion.div key={`${h.event.id}-${h.month}`}
-                  className="flex-shrink-0 rounded-xl p-2 border"
-                  style={{ width: 130, backgroundColor: style.bg, borderColor: style.border }}
-                  initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.04 }}>
+                <div key={`${h.event.id}-${h.tick}`} className="flex-shrink-0 rounded-xl p-2 border"
+                  style={{ width: 130, backgroundColor: s.bg, borderColor: s.border }}>
                   <span className="text-[9px] font-bold text-foreground block truncate" style={nunito}>{t(h.event.title)}</span>
-                  <span className="text-[9px] font-bold mt-0.5 block" style={{ ...nunito, color: style.color }}>
-                    {h.decision.charAt(0).toUpperCase() + h.decision.slice(1)} · Y{Math.floor(h.month / 12) + 1}
+                  <span className="text-[9px] font-bold mt-0.5 block" style={{ ...nunito, color: s.color }}>
+                    {h.decision.charAt(0).toUpperCase() + h.decision.slice(1)} · Y{Math.ceil(h.tick * MONTHS_PER_TICK / 12)}
                   </span>
-                </motion.div>
+                </div>
               );
             })}
           </div>
@@ -409,7 +452,6 @@ const MultiplayerSimulation = ({ mp }: Props) => {
             <motion.div className="bg-card rounded-3xl p-6 w-full max-w-sm shadow-2xl"
               initial={{ scale: 0.85, y: 40 }} animate={{ scale: 1, y: 0 }}>
 
-              {/* Event info */}
               <div className="text-center mb-4">
                 <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3"
                   style={{ backgroundColor: `${CELESTE}18` }}>
@@ -419,54 +461,45 @@ const MultiplayerSimulation = ({ mp }: Props) => {
                 <p className="text-sm text-muted-foreground" style={nunito}>{t(activeEvent.description)}</p>
               </div>
 
-              {/* Phase 1: reading — show reading countdown, no buttons */}
+              {/* Phase 1: reading */}
               {eventPhase === "reading" && (
                 <div className="text-center py-2">
-                  <p className="text-xs text-muted-foreground mb-3" style={nunito}>
-                    {readingTimer}s
-                  </p>
+                  <p className="text-xs text-muted-foreground mb-2" style={nunito}>{readingTimer}s</p>
                   <div className="w-full h-1.5 rounded-full overflow-hidden" style={{ background: "hsl(var(--muted))" }}>
                     <motion.div className="h-full rounded-full"
-                      style={{ width: `${(readingTimer / READING_TIME) * 100}%`, backgroundColor: CELESTE }}
-                      transition={{ duration: 0.4 }} />
+                      style={{ width: `${(readingTimer / READING_TIME) * 100}%`, backgroundColor: CELESTE }} />
                   </div>
                 </div>
               )}
 
-              {/* Phase 2: deciding — show timer + buttons */}
+              {/* Phase 2: deciding */}
               {eventPhase === "deciding" && (
                 <>
                   <div className="flex items-center gap-2 mb-5">
                     <Timer className="w-4 h-4 flex-shrink-0" style={{ color: CELESTE }} />
                     <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: "hsl(var(--muted))" }}>
-                      <motion.div className="h-full rounded-full" style={{
-                        width: `${(eventTimer / EVENT_TIMER) * 100}%`,
-                        backgroundColor: CELESTE,
-                      }} />
+                      <motion.div className="h-full rounded-full"
+                        style={{ width: `${(eventTimer / EVENT_TIMER) * 100}%`, backgroundColor: CELESTE }} />
                     </div>
                     <span className="text-sm font-black tabular-nums w-6 text-right" style={{ ...nunito, color: CELESTE }}>
                       {eventTimer}s
                     </span>
                   </div>
-
                   <div className="flex flex-col gap-2">
-                    <motion.button
-                      className="w-full py-3 rounded-2xl font-black text-sm flex items-center justify-center gap-2 border-2"
+                    <motion.button className="w-full py-3 rounded-2xl font-black text-sm flex items-center justify-center gap-2 border-2"
                       style={{ ...nunito, backgroundColor: BTN_SELL.bg, borderColor: BTN_SELL.border, color: BTN_SELL.color }}
                       onClick={() => handleEventDecision("sell")} whileTap={{ scale: 0.97 }}>
                       <ArrowDownFromLine className="w-4 h-4" />
                       {t("multiplayer.sell")}
                     </motion.button>
                     <div className="grid grid-cols-2 gap-2">
-                      <motion.button
-                        className="py-3 rounded-2xl font-black text-sm flex items-center justify-center gap-2 border-2"
+                      <motion.button className="py-3 rounded-2xl font-black text-sm flex items-center justify-center gap-2 border-2"
                         style={{ ...nunito, backgroundColor: BTN_HOLD.bg, borderColor: BTN_HOLD.border, color: BTN_HOLD.color }}
                         onClick={() => handleEventDecision("hold")} whileTap={{ scale: 0.97 }}>
                         <Shield className="w-4 h-4" />
                         {t("multiplayer.hold")}
                       </motion.button>
-                      <motion.button
-                        className="py-3 rounded-2xl font-black text-sm flex items-center justify-center gap-2 border-2"
+                      <motion.button className="py-3 rounded-2xl font-black text-sm flex items-center justify-center gap-2 border-2"
                         style={{ ...nunito, backgroundColor: BTN_BUY.bg, borderColor: BTN_BUY.border, color: BTN_BUY.color }}
                         onClick={() => handleEventDecision("buy")} whileTap={{ scale: 0.97 }}>
                         <ShoppingCart className="w-4 h-4" />
