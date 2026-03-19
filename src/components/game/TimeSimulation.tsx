@@ -809,13 +809,19 @@ export default function TimeSimulation({
               </AnimatePresence>
             </div>
             <div className="text-right">
-              <p
-                className="text-lg font-bold flex items-center gap-1"
-                style={{ ...nunito, color: isPositive ? PRIMARY_COLOR : DANGER_COLOR }}
-              >
-                {isPositive ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
-                {totalGain > 0 ? "+" : ""}{totalGain}%
-              </p>
+              <AnimatePresence mode="wait">
+                <motion.p
+                  key={totalGain}
+                  className="text-lg font-bold flex items-center gap-1"
+                  style={{ ...nunito, color: isPositive ? PRIMARY_COLOR : DANGER_COLOR }}
+                  initial={{ opacity: 0.4, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.35 }}
+                >
+                  {isPositive ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+                  {totalGain > 0 ? "+" : ""}{totalGain}%
+                </motion.p>
+              </AnimatePresence>
               <p className="text-[10px] text-muted-foreground" style={nunito}>
                 {i18n.language === "es" ? "desde" : "from"} CHF {startBalance}
               </p>
