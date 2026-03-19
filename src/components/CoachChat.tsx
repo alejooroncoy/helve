@@ -96,29 +96,29 @@ function StrategyCardUI({ card }: { card: StrategyCard }) {
 function ComparisonCardUI({ card }: { card: ComparisonCard }) {
   const parseOption = (opt: string) => {
     const parts = opt.split("|").map((s) => s.trim());
-    return { name: parts[0] || "", risk: parts[1] || "", ret: parts[2] || "" };
+    return { name: parts[0] || "—", risk: parts[1] || "—", ret: parts[2] || "—" };
   };
   const a = parseOption(card.opción_a);
   const b = parseOption(card.opción_b);
   return (
     <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-card rounded-2xl p-3.5 shadow-sm border border-border mt-2">
-      <div className="flex items-center gap-2 mb-2.5">
-        <ArrowRightLeft className="w-4 h-4 text-accent" />
-        <p className="text-xs font-bold text-foreground uppercase tracking-wide" style={nunito}>Comparison</p>
+      <div className="flex items-center gap-2 mb-2">
+        <ArrowRightLeft className="w-3.5 h-3.5 text-accent" />
+        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide" style={nunito}>vs</p>
       </div>
-      <div className="grid grid-cols-2 gap-2 mb-2.5">
-        <div className="rounded-xl p-2.5 text-center" style={{ backgroundColor: `${CELESTE}10` }}>
-          <p className="text-xs font-bold text-foreground" style={nunito}>{a.name}</p>
-          <p className="text-[10px] text-muted-foreground mt-1" style={nunito}>Risk: {a.risk}</p>
-          <p className="text-[10px] font-bold" style={{ color: CELESTE, ...nunito }}>{a.ret}</p>
+      <div className="grid grid-cols-2 gap-2 mb-2">
+        <div className="rounded-xl p-2 text-center" style={{ backgroundColor: `${CELESTE}10` }}>
+          <p className="text-[11px] font-bold text-foreground truncate" style={nunito}>{a.name}</p>
+          <p className="text-[10px] text-muted-foreground" style={nunito}>{a.risk}</p>
+          <p className="text-[11px] font-bold mt-0.5" style={{ color: CELESTE, ...nunito }}>{a.ret}</p>
         </div>
-        <div className="bg-accent/5 rounded-xl p-2.5 text-center">
-          <p className="text-xs font-bold text-foreground" style={nunito}>{b.name}</p>
-          <p className="text-[10px] text-muted-foreground mt-1" style={nunito}>Risk: {b.risk}</p>
-          <p className="text-[10px] text-accent font-bold" style={nunito}>{b.ret}</p>
+        <div className="bg-accent/5 rounded-xl p-2 text-center">
+          <p className="text-[11px] font-bold text-foreground truncate" style={nunito}>{b.name}</p>
+          <p className="text-[10px] text-muted-foreground" style={nunito}>{b.risk}</p>
+          <p className="text-[11px] text-accent font-bold mt-0.5" style={nunito}>{b.ret}</p>
         </div>
       </div>
-      <p className="text-[11px] text-foreground font-medium bg-muted rounded-lg px-2.5 py-1.5" style={nunito}>
+      <p className="text-[10px] text-foreground font-medium bg-muted rounded-lg px-2 py-1.5" style={nunito}>
         {card.veredicto}
       </p>
     </motion.div>
