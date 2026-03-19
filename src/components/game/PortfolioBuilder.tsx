@@ -68,7 +68,8 @@ const PortfolioBuilder = ({ profile, onComplete }: Props) => {
 
   const enriched = useMemo(() => {
     return portfolio.map(inv => {
-      const dbId = investmentToDbId[inv.id];
+      const dbIds = categoryToDbIds[inv.id];
+      const dbId = dbIds?.[0];
       const real = dbId ? stats[dbId] : null;
       if (real) return { ...inv, annualReturn: real.avgAnnualReturn, riskLevel: real.riskLevel };
       return inv;
