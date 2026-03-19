@@ -720,7 +720,7 @@ const Panel = () => {
             {/* Right: Buy/Scouted — sidebar on desktop, horizontal scroll on mobile */}
             <div className="md:w-[280px] lg:w-[320px] md:flex-shrink-0 md:overflow-y-auto md:border-l md:border-border md:pl-4">
               <DropZone id="scouted">
-                <h2 className="text-sm font-bold text-foreground uppercase tracking-wide mb-3 lg:mt-0 mt-4" style={nunito}>{t("panel.buy")}</h2>
+                <h2 className="text-sm font-bold text-foreground uppercase tracking-wide mb-3 md:mt-0 mt-4" style={nunito}>{t("panel.buy")}</h2>
                 {/* Mobile: horizontal scroll */}
                 <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide items-stretch lg:hidden" style={{ scrollSnapType: "x mandatory" }}>
                   {suggestions.map((inv) => (
