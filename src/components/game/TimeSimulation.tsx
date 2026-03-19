@@ -249,7 +249,7 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, onClose,
         <div className="bg-card rounded-3xl p-4 shadow-sm h-full flex flex-col">
           <div className="flex items-center justify-between mb-2">
             <p className="text-xs font-bold text-foreground">
-              📈 {data.length > 1 ? timeLabels[currentStep] : "Hoy"}
+              📈 {data.length > 1 ? filteredLabels[currentStep] : "Hoy"}
             </p>
             <div className="flex items-center gap-1">
               {currentPortfolio.map((inv) => (
