@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { Trophy, ArrowLeft, RotateCcw, Lightbulb, X, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { Trophy, ArrowLeft, Lightbulb, X, TrendingUp, TrendingDown, Minus, ChevronRight } from "lucide-react";
 import type { useMultiplayer } from "@/hooks/useMultiplayer";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 
@@ -19,12 +19,11 @@ const RANK_COLORS = [
 ];
 const RANK_LABELS = ["1st", "2nd", "3rd", "4th"];
 
-// Neutral palette — not red/green
-const HOLD_COLOR  = "#60a5fa"; // blue
-const SELL_COLOR  = "#fb923c"; // orange
-const GAIN_COLOR  = "#60a5fa"; // blue
-const LOSS_COLOR  = "#fb923c"; // orange
-const FLAT_COLOR  = "#94a3b8"; // slate
+const HOLD_COLOR  = "#60a5fa";
+const SELL_COLOR  = "#fb923c";
+const GAIN_COLOR  = "#60a5fa";
+const LOSS_COLOR  = "#fb923c";
+const FLAT_COLOR  = "#94a3b8";
 
 interface DecisionMeta {
   title?: string;
@@ -44,7 +43,8 @@ const MultiplayerResults = ({ mp }: Props) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [openPlayerId, setOpenPlayerId] = useState<string | null>(null);
+  const [openMyDecisions, setOpenMyDecisions] = useState(false);
+  const [showInsight, setShowInsight] = useState(false);
 
   const ranked = useMemo(() =>
     [...mp.players]
@@ -54,7 +54,8 @@ const MultiplayerResults = ({ mp }: Props) => {
   );
 
   const winner = ranked[0];
-  const openPlayer = openPlayerId ? ranked.find(p => p.id === openPlayerId) : null;
+  const myPlayer = ranked.find(p => p.user_id === user?.id);
+  const myDecisions: DecisionMeta[] = (myPlayer?.decisions as any[]) || [];
 
   return (
     <motion.div
@@ -87,28 +88,28 @@ const MultiplayerResults = ({ mp }: Props) => {
         )}
       </motion.div>
 
-      {/* Rankings — flex-1 to fill space */}
+      {/* Rankings */}
       <div className="flex-1 flex flex-col gap-3 mb-5">
         {ranked.map((p, i) => {
           const isMe = p.user_id === user?.id;
-          const pctChange = ((p.final_score || INITIAL) - INITIAL) / INITIAL * 100;
-          const decisions: DecisionMeta[] = (p.decisions as any[]) || [];
-          const holds = decisions.filter(d => d.decision === "hold").length;
-          const sells = decisions.filter(d => d.decision === "sell").length;
-          const positive = pctChange >= 0;
+          const finalScore = p.final_score || INITIAL;
+          const pctChange = (finalScore - INITIAL) / INITIAL * 100;
+          const positive = pctChange > 0.5;
+          const negative = pctChange < -0.5;
 
           return (
             <motion.div
               key={p.id}
-              className="rounded-3xl p-4 shadow-sm cursor-pointer"
+              className="rounded-3xl p-4 shadow-sm"
               style={{
                 background: isMe ? `${CELESTE}12` : "hsl(var(--card))",
                 border: `2px solid ${isMe ? CELESTE : "hsl(var(--border))"}`,
+                cursor: isMe && myDecisions.length > 0 ? "pointer" : "default",
               }}
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.3 + i * 0.12 }}
-              onClick={() => decisions.length > 0 && setOpenPlayerId(p.id)}
+              onClick={() => isMe && myDecisions.length > 0 && setOpenMyDecisions(true)}
             >
               <div className="flex items-center gap-3">
                 <span className="text-base font-black w-9 flex-shrink-0"
@@ -119,32 +120,27 @@ const MultiplayerResults = ({ mp }: Props) => {
                   <p className="text-sm font-black text-foreground truncate" style={nunito}>
                     {p.display_name}{isMe ? ` (${t("multiplayer.you")})` : ""}
                   </p>
-                  {decisions.length > 0 && (
-                    <div className="flex items-center gap-2 mt-1">
-                      <div className="flex gap-0.5 flex-wrap">
-                        {decisions.map((d, di) => (
-                          <div key={di} className="w-2 h-2 rounded-full"
-                            style={{ backgroundColor: d.decision === "hold" ? HOLD_COLOR : SELL_COLOR }} />
-                        ))}
-                      </div>
-                      <span className="text-[10px]" style={{ color: "hsl(var(--muted-foreground))", ...nunito }}>
-                        {holds}H · {sells}S
-                      </span>
-                    </div>
-                  )}
-                </div>
-                <div className="text-right flex-shrink-0">
-                  <p className="text-base font-black" style={{ ...nunito, color: isMe ? CELESTE : "hsl(var(--foreground))" }}>
-                    CHF {(p.final_score || INITIAL).toLocaleString()}
+                  <p className="text-[10px] text-muted-foreground mt-0.5" style={nunito}>
+                    CHF {INITIAL.toLocaleString()} → CHF {Math.round(finalScore).toLocaleString()}
                   </p>
-                  <div className="flex items-center justify-end gap-0.5">
+                </div>
+                <div className="text-right flex-shrink-0 flex items-center gap-1.5">
+                  <div className="flex items-center gap-0.5">
                     {positive
                       ? <TrendingUp className="w-3 h-3" style={{ color: GAIN_COLOR }} />
-                      : <TrendingDown className="w-3 h-3" style={{ color: LOSS_COLOR }} />}
-                    <span className="text-[10px]" style={{ color: positive ? GAIN_COLOR : LOSS_COLOR }}>
+                      : negative
+                      ? <TrendingDown className="w-3 h-3" style={{ color: LOSS_COLOR }} />
+                      : <Minus className="w-3 h-3" style={{ color: FLAT_COLOR }} />}
+                    <span className="text-sm font-black tabular-nums" style={{
+                      ...nunito,
+                      color: positive ? GAIN_COLOR : negative ? LOSS_COLOR : FLAT_COLOR,
+                    }}>
                       {positive ? "+" : ""}{pctChange.toFixed(1)}%
                     </span>
                   </div>
+                  {isMe && myDecisions.length > 0 && (
+                    <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
+                  )}
                 </div>
               </div>
             </motion.div>
@@ -152,35 +148,12 @@ const MultiplayerResults = ({ mp }: Props) => {
         })}
       </div>
 
-      {/* Insight */}
-      <motion.div
-        className="bg-card rounded-2xl p-4 shadow-sm flex items-center gap-3 mb-5"
-        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}
-      >
-        <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-          style={{ backgroundColor: `${CELESTE}18` }}>
-          <Lightbulb className="w-4 h-4" style={{ color: CELESTE }} />
-        </div>
-        <p className="text-xs text-muted-foreground leading-relaxed" style={nunito}>
-          {t("multiplayer.insightText")}
-        </p>
-      </motion.div>
-
-      {/* Actions */}
+      {/* Action */}
       <div className="flex flex-col gap-3">
         <motion.button
           className="w-full py-4 rounded-3xl font-black text-base shadow-lg flex items-center justify-center gap-2 text-white"
           style={{ ...nunito, backgroundColor: CELESTE }}
-          onClick={() => { mp.leaveRoom(); }}
-          whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-        >
-          <RotateCcw className="w-4 h-4" />
-          {t("multiplayer.playAgain")}
-        </motion.button>
-        <motion.button
-          className="w-full py-3 rounded-3xl bg-card font-bold text-sm border border-border flex items-center justify-center gap-2 text-foreground"
-          style={nunito}
-          onClick={() => navigate("/panel")}
+          onClick={() => { mp.leaveRoom(); navigate("/panel"); }}
           whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
         >
           <ArrowLeft className="w-4 h-4" />
@@ -188,13 +161,59 @@ const MultiplayerResults = ({ mp }: Props) => {
         </motion.button>
       </div>
 
-      {/* Decision history modal */}
+      {/* Floating insight button */}
+      <motion.button
+        className="fixed bottom-24 right-5 w-12 h-12 rounded-full shadow-lg flex items-center justify-center z-40"
+        style={{ backgroundColor: CELESTE }}
+        onClick={() => setShowInsight(true)}
+        whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ delay: 0.8, type: "spring", bounce: 0.5 }}
+      >
+        <Lightbulb className="w-5 h-5 text-white" />
+      </motion.button>
+
+      {/* Insight popup */}
       <AnimatePresence>
-        {openPlayer && (
+        {showInsight && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 px-4 pb-6"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            onClick={() => setShowInsight(false)}
+          >
+            <motion.div
+              className="bg-card rounded-3xl w-full max-w-sm p-5 shadow-xl"
+              initial={{ y: 60, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 60, opacity: 0 }}
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                  style={{ backgroundColor: `${CELESTE}18` }}>
+                  <Lightbulb className="w-4 h-4" style={{ color: CELESTE }} />
+                </div>
+                <p className="text-sm font-black text-foreground" style={nunito}>
+                  {t("multiplayer.insight")}
+                </p>
+                <button className="ml-auto" onClick={() => setShowInsight(false)}>
+                  <X className="w-4 h-4 text-muted-foreground" />
+                </button>
+              </div>
+              <p className="text-xs text-muted-foreground leading-relaxed" style={nunito}>
+                {t("multiplayer.insightText")}
+              </p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* My decision history modal */}
+      <AnimatePresence>
+        {openMyDecisions && myPlayer && (
           <motion.div
             className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 px-4 pb-4"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            onClick={() => setOpenPlayerId(null)}
+            onClick={() => setOpenMyDecisions(false)}
           >
             <motion.div
               className="bg-card rounded-3xl w-full max-w-sm overflow-hidden"
@@ -205,21 +224,19 @@ const MultiplayerResults = ({ mp }: Props) => {
               {/* Modal header */}
               <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-border">
                 <p className="text-sm font-black text-foreground" style={nunito}>
-                  {openPlayer.display_name} · {t("multiplayer.decisions")}
+                  {myPlayer.display_name} · {t("multiplayer.decisions")}
                 </p>
-                <button onClick={() => setOpenPlayerId(null)}>
+                <button onClick={() => setOpenMyDecisions(false)}>
                   <X className="w-4 h-4 text-muted-foreground" />
                 </button>
               </div>
 
               {/* Decision list */}
               <div className="overflow-y-auto p-4 space-y-3" style={{ maxHeight: "calc(75vh - 64px)" }}>
-                {((openPlayer.decisions as any[]) || []).map((d: DecisionMeta, i: number) => {
+                {myDecisions.map((d: DecisionMeta, i: number) => {
                   const chfChange = d.balanceBefore && d.balanceAfter
                     ? d.balanceAfter - d.balanceBefore
                     : null;
-                  const altImpact = d.decision === "hold" ? d.sellImpact : d.holdImpact;
-                  const altLabel = d.decision === "hold" ? "Sell" : "Hold";
                   const recommended = d.holdImpact && d.sellImpact
                     ? (d.holdImpact >= d.sellImpact ? "Hold" : "Sell")
                     : null;

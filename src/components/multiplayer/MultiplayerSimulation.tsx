@@ -19,7 +19,7 @@ const CAT_COLORS: Record<string, string> = {
 };
 const STEP_INTERVAL = 300;
 const EVENT_TIMER = 8;
-const NUM_EVENTS = 6;
+const NUM_EVENTS = 5;
 
 // Generate event months spread across simulation
 function generateEventMonths(total: number, count: number): number[] {
