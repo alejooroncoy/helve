@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import type { GameStep, PortfolioSlot, Investment, GameState } from "@/game/types";
 import { initialGameState, getProfile } from "@/game/types";
+import { useUserProgress } from "@/hooks/useUserProgress";
 import WelcomeScreen from "./WelcomeScreen";
 import RiskScreen from "./RiskScreen";
 import ProfileResult from "./ProfileResult";
@@ -17,6 +18,7 @@ const riskSteps: GameStep[] = ["risk-1", "risk-2", "risk-3"];
 const GameFlow = () => {
   const [state, setState] = useState<GameState>(initialGameState);
   const navigate = useNavigate();
+  const { saveProgress } = useUserProgress();
 
   const go = useCallback((step: GameStep, patch?: Partial<GameState>) => {
     setState((prev) => ({ ...prev, ...patch, step }));
@@ -29,7 +31,15 @@ const GameFlow = () => {
     if (nextStep) {
       go(nextStep, { riskScore: newTotal, riskScores: newScores });
     } else {
-      go("profile-result", { riskScore: newTotal, riskScores: newScores, profile: getProfile(newTotal) });
+      const profile = getProfile(newTotal);
+      go("profile-result", { riskScore: newTotal, riskScores: newScores, profile });
+      // Save risk profile to DB
+      saveProgress({
+        risk_score: newTotal,
+        risk_scores: newScores,
+        risk_profile: profile,
+        game_step: "profile-result",
+      });
     }
   };
 
@@ -41,6 +51,17 @@ const GameFlow = () => {
       const prevTotal = prevScores.reduce((a, b) => a + b, 0);
       go(riskSteps[questionIndex - 1], { riskScore: prevTotal, riskScores: prevScores });
     }
+  };
+
+  const handleProfileContinue = async () => {
+    // Mark onboarding as completed and save profile
+    await saveProgress({
+      onboarding_completed: true,
+      risk_profile: state.profile,
+      risk_score: state.riskScore,
+      risk_scores: state.riskScores,
+    });
+    navigate("/panel");
   };
 
   const resetFull = () => setState(initialGameState);
@@ -72,10 +93,7 @@ const GameFlow = () => {
         )}
 
         {state.step === "profile-result" && (
-          <ProfileResult key="profile" profile={state.profile} onContinue={() => {
-            sessionStorage.setItem("helve-profile", state.profile);
-            navigate("/panel");
-          }} />
+          <ProfileResult key="profile" profile={state.profile} onContinue={handleProfileContinue} />
         )}
 
         {state.step === "portfolio" && (
