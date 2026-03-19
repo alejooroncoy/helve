@@ -1053,8 +1053,8 @@ const Panel = () => {
 
       {/* DnD Content */}
       <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-        <div className="flex-1 min-h-0 px-5 pb-4 overflow-hidden">
-          <div className="flex h-full min-h-0 flex-col gap-4 md:flex-row">
+        <div className="flex-1 min-h-0 px-5 pb-4 overflow-y-auto md:overflow-hidden">
+          <div className="flex min-h-0 flex-col gap-4 md:h-full md:flex-row">
             {/* My Nest */}
             <div className="flex min-h-0 flex-1 flex-col md:pr-2">
               <DropZone id="nest">
