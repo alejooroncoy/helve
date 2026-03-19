@@ -91,7 +91,7 @@ const GameFlow = () => {
         {state.step === "learning" && (
           <LearningMoment
             key="learning"
-            portfolio={state.portfolio}
+            portfolio={state.portfolioSlots}
             stormChoice={state.stormChoice}
             result={state.simulationResult}
             onContinue={() => go("loop")}
