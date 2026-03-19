@@ -279,6 +279,29 @@ const Panel = () => {
   const [simMonths, setSimMonths] = useState(12);
   const isMobile = useIsMobile();
 
+  // Fetch real stats from DB for all instruments
+  const { stats, loading: statsLoading } = useInstrumentStats(allDbIds);
+
+  // Enrich investments with real DB data
+  const enrichInvestment = useCallback((inv: Investment): Investment => {
+    const dbId = investmentToDbId[inv.id];
+    const real = dbId ? stats[dbId] : null;
+    if (real) {
+      return { ...inv, annualReturn: real.avgAnnualReturn, riskLevel: real.riskLevel };
+    }
+    return inv;
+  }, [stats]);
+
+  const enrichedPortfolio = useMemo(
+    () => activePortfolio.map(enrichInvestment),
+    [activePortfolio, enrichInvestment]
+  );
+
+  const enrichedAvailable = useMemo(
+    () => availableInvestments.map(enrichInvestment),
+    [enrichInvestment]
+  );
+
   useEffect(() => {
     loadProgress().then((p) => {
       if (p) {
@@ -289,16 +312,16 @@ const Panel = () => {
   }, [loadProgress]);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
-  const suggestions = useMemo(() => getSuggestions(profile, activePortfolio), [profile, activePortfolio]);
+  const suggestions = useMemo(() => getSuggestions(profile, enrichedPortfolio), [profile, enrichedPortfolio]);
 
-  const totalRisk = activePortfolio.length
-    ? Math.round(activePortfolio.reduce((s, i) => s + i.riskLevel, 0) / activePortfolio.length * 10)
+  const totalRisk = enrichedPortfolio.length
+    ? Math.round(enrichedPortfolio.reduce((s, i) => s + i.riskLevel, 0) / enrichedPortfolio.length * 10)
     : 0;
 
   const balance = 1000;
-  const monthlyIncome = activePortfolio.reduce((s, i) => s + Math.round((balance * i.annualReturn) / 100 / 12), 0);
-  const avgReturn = activePortfolio.length
-    ? (activePortfolio.reduce((s, i) => s + i.annualReturn, 0) / activePortfolio.length).toFixed(1)
+  const monthlyIncome = enrichedPortfolio.reduce((s, i) => s + Math.round((balance * i.annualReturn) / 100 / 12), 0);
+  const avgReturn = enrichedPortfolio.length
+    ? (enrichedPortfolio.reduce((s, i) => s + i.annualReturn, 0) / enrichedPortfolio.length).toFixed(1)
     : "0.0";
 
   const addInvestment = (inv: Investment) => {
