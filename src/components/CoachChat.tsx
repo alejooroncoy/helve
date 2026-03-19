@@ -317,6 +317,7 @@ export default function CoachChat({ onClose, portfolio, onAddInvestment, onRemov
     const userMsg: Msg = { role: "user", content: text };
     if (!overrideText) setInput("");
     setMessages((prev) => [...prev, userMsg]);
+    persistMessage(userMsg);
     setLoading(true);
     try {
       const { text: responseText, actions } = await chatWithTools({ messages: [...messages, userMsg], portfolio });
@@ -324,24 +325,32 @@ export default function CoachChat({ onClose, portfolio, onAddInvestment, onRemov
         if (action.type === "add" && onAddInvestment) onAddInvestment(action.investmentId);
         else if (action.type === "remove" && onRemoveInvestment) onRemoveInvestment(action.investmentId);
       }
-      setMessages((prev) => [...prev, { role: "assistant", content: responseText }]);
+      const assistantMsg: Msg = { role: "assistant", content: responseText };
+      setMessages((prev) => [...prev, assistantMsg]);
+      persistMessage(assistantMsg);
     } catch (e) {
-      setMessages((prev) => [...prev, { role: "assistant", content: e instanceof Error ? e.message : "Connection error" }]);
+      const errMsg: Msg = { role: "assistant", content: e instanceof Error ? e.message : "Connection error" };
+      setMessages((prev) => [...prev, errMsg]);
     } finally {
       setLoading(false);
     }
   };
 
   const handleAcceptSwap = useCallback((swap: string) => {
-    // Format: "id_remove -> id_add"
     const parts = swap.split("->").map(s => s.trim());
     if (parts.length === 2) {
-      if (onRemoveInvestment) onRemoveInvestment(parts[0]);
-      setTimeout(() => {
-        if (onAddInvestment) onAddInvestment(parts[1]);
-      }, 300);
+      if (onSwapAccepted) {
+        onSwapAccepted(parts[0], parts[1]);
+      } else {
+        if (onRemoveInvestment) onRemoveInvestment(parts[0]);
+        setTimeout(() => {
+          if (onAddInvestment) onAddInvestment(parts[1]);
+        }, 300);
+      }
+      // Close chat after swap to show portfolio changes
+      setTimeout(() => onClose(), 800);
     }
-  }, [onAddInvestment, onRemoveInvestment]);
+  }, [onAddInvestment, onRemoveInvestment, onSwapAccepted, onClose]);
 
   const quickQuestions = portfolio && portfolio.length > 0
     ? ["How is my nest doing?", "Should I diversify?", "What's my risk level?"]
