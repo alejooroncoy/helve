@@ -573,7 +573,9 @@ const Panel = () => {
           <TimeSimulation
             portfolio={enrichedPortfolio}
             initialMonths={simMonths}
+            initialBalance={balance}
             onClose={() => setSimulationOpen(false)}
+            onComplete={handleSimulationComplete}
             onSellInvestment={handleSimSell}
             onAskCoach={(q) => { setCoachInitQ(q); setCoachOpen(true); }}
           />
