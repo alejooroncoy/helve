@@ -1006,12 +1006,8 @@ export default function TimeSimulation({
                 }}
               >
                 {aiFeedback.isGood
-                  ? i18n.language === "es"
-                    ? "Buena decisión"
-                    : "Great call"
-                  : i18n.language === "es"
-                    ? "No te preocupes"
-                    : "Don't worry"}
+                  ? t("timeSim.goodDecision")
+                  : t("timeSim.badDecision")}
               </h3>
               <p className="text-sm text-muted-foreground mb-3 leading-relaxed" style={nunito}>
                 {aiFeedback.text}
