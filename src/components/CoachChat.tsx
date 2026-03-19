@@ -310,7 +310,7 @@ interface CoachChatProps {
   onRemoveInvestment?: (investmentId: string) => void;
 }
 
-export default function CoachChat({ onClose, portfolio }: CoachChatProps) {
+export default function CoachChat({ onClose, portfolio, onAddInvestment, onRemoveInvestment }: CoachChatProps) {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -355,33 +355,28 @@ export default function CoachChat({ onClose, portfolio }: CoachChatProps) {
     setMessages((prev) => [...prev, userMsg]);
     setLoading(true);
 
-    let assistantSoFar = "";
     const allMessages = [...messages, userMsg];
 
-    const upsert = (chunk: string) => {
-      assistantSoFar += chunk;
-      setMessages((prev) => {
-        const last = prev[prev.length - 1];
-        if (last?.role === "assistant") {
-          return prev.map((m, i) => (i === prev.length - 1 ? { ...m, content: assistantSoFar } : m));
-        }
-        return [...prev, { role: "assistant", content: assistantSoFar }];
-      });
-    };
-
     try {
-      await streamChat({
+      const { text: responseText, actions } = await chatWithTools({
         messages: allMessages,
         portfolio,
-        onDelta: upsert,
-        onDone: () => setLoading(false),
-        onError: (msg) => {
-          setMessages((prev) => [...prev, { role: "assistant", content: `⚠️ ${msg}` }]);
-          setLoading(false);
-        },
       });
-    } catch {
-      setMessages((prev) => [...prev, { role: "assistant", content: "⚠️ Error de conexión" }]);
+
+      // Execute actions
+      for (const action of actions) {
+        if (action.type === "add" && onAddInvestment) {
+          onAddInvestment(action.investmentId);
+        } else if (action.type === "remove" && onRemoveInvestment) {
+          onRemoveInvestment(action.investmentId);
+        }
+      }
+
+      setMessages((prev) => [...prev, { role: "assistant", content: responseText }]);
+    } catch (e) {
+      const errorMsg = e instanceof Error ? e.message : "Error de conexión";
+      setMessages((prev) => [...prev, { role: "assistant", content: `⚠️ ${errorMsg}` }]);
+    } finally {
       setLoading(false);
     }
   };
