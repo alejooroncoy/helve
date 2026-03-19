@@ -479,7 +479,7 @@ const Panel = () => {
     ? (enrichedPortfolio.reduce((s, i) => s + i.annualReturn, 0) / enrichedPortfolio.length).toFixed(1)
     : "0.0";
 
-  const addInvestment = (inv: Investment) => {
+  const executeBuy = useCallback((inv: Investment) => {
     if (activePortfolio.length >= 4) {
       setMascotMessage("🪺 ¡Tu nido está lleno! Vende un huevo para hacer espacio.");
       return;
@@ -492,7 +492,29 @@ const Panel = () => {
     if (newRisk > 70) setMascotMessage("🦉 ¡Cuidado! Compraste algo arriesgado. Tu nido tiembla un poco...");
     else if (newRisk < 20) setMascotMessage("🦉 ¡Buena compra! Un huevito muy seguro para tu nido.");
     else setMascotMessage("🦉 ¡Comprado! Buen ojo, ese huevo se ve prometedor.");
-  };
+  }, [activePortfolio, saveProgress]);
+
+  const tryBuyInvestment = useCallback((inv: Investment) => {
+    if (activePortfolio.length >= 4) {
+      setMascotMessage("🪺 ¡Tu nido está lleno! Vende un huevo para hacer espacio.");
+      return;
+    }
+    if (activePortfolio.find((i) => i.id === inv.id)) return;
+    if (skipBuyDialog) {
+      executeBuy(inv);
+    } else {
+      setBuyDialogInv(inv);
+    }
+  }, [activePortfolio, skipBuyDialog, executeBuy]);
+
+  const handleBuyConfirm = useCallback((dontShowAgain: boolean) => {
+    if (dontShowAgain) {
+      setSkipBuyDialog(true);
+      localStorage.setItem("helve_skip_buy_dialog", "1");
+    }
+    if (buyDialogInv) executeBuy(buyDialogInv);
+    setBuyDialogInv(null);
+  }, [buyDialogInv, executeBuy]);
 
   const removeInvestment = (id: string) => {
     const sold = activePortfolio.find(i => i.id === id);
