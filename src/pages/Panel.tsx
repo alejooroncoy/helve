@@ -1057,7 +1057,7 @@ const Panel = () => {
         <div className="flex-1 min-h-0 px-5 pb-4 flex flex-col">
           <div className="flex flex-col md:flex-row gap-4 flex-1 min-h-0">
             {/* My Nest */}
-            <div className="flex-1 md:pr-2">
+            <div className="flex-1 min-h-0 md:pr-2 flex flex-col">
               <DropZone id="nest">
                 <div className="flex items-center justify-between mb-3">
                   <h2 className="text-sm font-bold text-foreground uppercase tracking-wide" style={nunito}>
