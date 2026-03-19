@@ -117,6 +117,7 @@ const GameFlow = () => {
           <SimulationScreen
             key="simulation"
             portfolio={state.portfolioSlots}
+            investments={state.portfolio}
             stormChoice={state.stormChoice}
             onContinue={(r) => go("learning", { simulationResult: r })}
           />
