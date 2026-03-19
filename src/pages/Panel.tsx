@@ -279,7 +279,7 @@ function NestCard({ inv, overlay, onSell, onAsk, onInfo }: { inv: Investment; ov
 
 function ScoutedCard({ inv, overlay, onAsk }: { inv: Investment; overlay?: boolean; onAsk?: () => void }) {
   return (
-    <div className={`bg-card rounded-2xl p-3 shadow-sm border-2 border-dashed border-border ${overlay ? "-rotate-2" : ""} cursor-grab active:cursor-grabbing h-full`} style={overlay ? { boxShadow: `0 0 0 2px ${CELESTE}40`, borderColor: `${CELESTE}60` } : {}}>
+    <div className={`bg-card rounded-2xl p-3 shadow-sm border-2 border-dashed border-border ${overlay ? "-rotate-2" : ""} cursor-grab active:cursor-grabbing min-h-[120px] flex flex-col`} style={overlay ? { boxShadow: `0 0 0 2px ${CELESTE}40`, borderColor: `${CELESTE}60` } : {}}>
       <div className="flex items-start gap-2">
         <div className="w-9 h-9 bg-secondary rounded-xl flex items-center justify-center text-muted-foreground flex-shrink-0">
           {getInvestmentIcon(inv)}
