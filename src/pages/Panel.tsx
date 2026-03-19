@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { useInstrumentStats } from "@/hooks/useMarketData";
 import { motion, AnimatePresence } from "framer-motion";
@@ -457,14 +458,18 @@ function BuyConfirmDialog({
   onConfirm,
   onCancel,
   t,
+  availablePct,
 }: {
   inv: Investment;
-  onConfirm: (dontShowAgain: boolean) => void;
+  onConfirm: (dontShowAgain: boolean, pct: number) => void;
   onCancel: () => void;
   t: any;
+  availablePct: number;
 }) {
   const displayName = t(`allocation.classes.${inv.id}`, { defaultValue: inv.name });
   const color = CLASS_COLORS[inv.id as AssetClass] || CELESTE;
+  const maxPct = Math.min(100, availablePct);
+  const [pct, setPct] = useState(Math.min(25, maxPct));
 
   return (
     <motion.div
@@ -519,17 +524,44 @@ function BuyConfirmDialog({
             </div>
           </div>
         </div>
+
+        {/* Allocation slider */}
+        <div className="bg-muted/30 rounded-2xl p-3 mb-4">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium" style={nunito}>
+              {t("panel.allocation")}
+            </p>
+            <p className="text-sm font-bold" style={{ ...nunito, color }}>{pct}%</p>
+          </div>
+          <input
+            type="range"
+            min={1}
+            max={maxPct}
+            value={pct}
+            onChange={(e) => setPct(Number(e.target.value))}
+            className="w-full h-2 rounded-full appearance-none cursor-pointer"
+            style={{
+              accentColor: color,
+              background: `linear-gradient(to right, ${color} ${(pct / maxPct) * 100}%, hsl(var(--muted)) ${(pct / maxPct) * 100}%)`,
+            }}
+          />
+          <div className="flex justify-between mt-1">
+            <span className="text-[10px] text-muted-foreground" style={nunito}>1%</span>
+            <span className="text-[10px] text-muted-foreground" style={nunito}>{maxPct}% max</span>
+          </div>
+        </div>
+
         <div className="space-y-2">
           <motion.button
-            onClick={() => onConfirm(false)}
+            onClick={() => onConfirm(false, pct)}
             className="w-full py-3 rounded-2xl text-sm font-bold text-white"
             style={{ ...nunito, backgroundColor: color }}
             whileTap={{ scale: 0.97 }}
           >
-            {t("panel.buyDialogConfirm")}
+            {t("panel.buyDialogConfirm")} — {pct}%
           </motion.button>
           <motion.button
-            onClick={() => onConfirm(true)}
+            onClick={() => onConfirm(true, pct)}
             className="w-full py-2.5 rounded-2xl text-xs font-bold text-muted-foreground bg-muted/60"
             style={nunito}
             whileTap={{ scale: 0.97 }}
@@ -541,7 +573,6 @@ function BuyConfirmDialog({
     </motion.div>
   );
 }
-
 /* ---- Main Panel ---- */
 const Panel = () => {
   const navigate = useNavigate();
@@ -732,13 +763,12 @@ const Panel = () => {
   }, [enrichInvestment]);
 
   const executeBuy = useCallback(
-    (inv: Investment) => {
-      if (activePortfolio.find((i) => i.id === inv.id)) return;
+    (inv: Investment, customPct?: number) => {
       if (activePortfolio.find((i) => i.id === inv.id)) return;
       const next = [...activePortfolio, inv];
       const currentTotal = Object.values(allocations).reduce((s, v) => s + v, 0);
       const remaining = 100 - currentTotal;
-      const newAlloc = Math.min(25, remaining);
+      const newAlloc = customPct != null ? Math.min(customPct, remaining) : Math.min(25, remaining);
       const newAllocations = { ...allocations, [inv.id]: newAlloc };
       setActivePortfolio(next);
       setAllocations(newAllocations);
@@ -754,20 +784,23 @@ const Panel = () => {
   const tryBuyInvestment = useCallback(
     (inv: Investment) => {
       if (activePortfolio.find((i) => i.id === inv.id)) return;
-      if (activePortfolio.find((i) => i.id === inv.id)) return;
+      if (totalAllocated >= 100) {
+        mascotToast(t("panel.noCapital"));
+        return;
+      }
       if (skipBuyDialog) executeBuy(inv);
       else setBuyDialogInv(inv);
     },
-    [activePortfolio, skipBuyDialog, executeBuy, t],
+    [activePortfolio, skipBuyDialog, executeBuy, t, totalAllocated],
   );
 
   const handleBuyConfirm = useCallback(
-    (dontShowAgain: boolean) => {
+    (dontShowAgain: boolean, pct: number) => {
       if (dontShowAgain) {
         setSkipBuyDialog(true);
         localStorage.setItem("helve_skip_buy_dialog", "1");
       }
-      if (buyDialogInv) executeBuy(buyDialogInv);
+      if (buyDialogInv) executeBuy(buyDialogInv, pct);
       setBuyDialogInv(null);
     },
     [buyDialogInv, executeBuy],
@@ -915,20 +948,26 @@ const Panel = () => {
           )}
         </div>
 
-        {/* Stat Cards — Balance (global), Risk & Return (per nest) */}
+        {/* Stat Cards — Capital & Invested (global), Risk & Return (per nest) */}
         <div className="grid grid-cols-3 gap-2.5">
-          <div className="bg-card rounded-2xl p-3 shadow-sm">
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium" style={nunito}>
-              {t("panel.balance")}
-            </p>
-            <p className="text-lg font-bold text-foreground mt-0.5" style={nunito}>
-              CHF {balance.toLocaleString()}
-            </p>
-            <p className="text-[10px] mt-0.5" style={{ ...nunito, color: lastSimGain !== null ? (lastSimGain >= 0 ? CELESTE : "hsl(var(--destructive))") : CELESTE }}>
-              {lastSimGain !== null
-                ? `${lastSimGain > 0 ? "+" : ""}${lastSimGain.toFixed(1)}% ${t("panel.lastSim")}`
-                : `+CHF ${monthlyIncome}${t("panel.perMonth")}`}
-            </p>
+          <div className="bg-card rounded-2xl p-3 shadow-sm flex items-stretch gap-2.5">
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium" style={nunito}>
+                {t("panel.capital")}
+              </p>
+              <p className="text-lg font-bold text-foreground mt-0.5" style={nunito}>
+                CHF {Math.round(balance * (100 - totalAllocated) / 100).toLocaleString()}
+              </p>
+            </div>
+            <Separator orientation="vertical" />
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium" style={nunito}>
+                {t("panel.invested")}
+              </p>
+              <p className="text-lg font-bold mt-0.5" style={{ ...nunito, color: CELESTE }}>
+                CHF {Math.round(balance * totalAllocated / 100).toLocaleString()}
+              </p>
+            </div>
           </div>
           <div className="bg-card rounded-2xl p-3 shadow-sm">
             <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium" style={nunito}>
@@ -1246,6 +1285,7 @@ const Panel = () => {
             onConfirm={handleBuyConfirm}
             onCancel={() => setBuyDialogInv(null)}
             t={t}
+            availablePct={100 - totalAllocated}
           />
         )}
       </AnimatePresence>

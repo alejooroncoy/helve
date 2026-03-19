@@ -234,7 +234,9 @@ const en = {
   panel: {
     myNest: "My Nest",
     panelTitle: "Panel",
-    balance: "Balance",
+    balance: "Balance (shared)",
+    capital: "Capital",
+    invested: "Invested",
     risk: "Risk",
     returnLabel: "Return",
     annual: "Annual",
@@ -250,6 +252,7 @@ const en = {
     simulate: "Simulate",
     addToSimulate: "Add categories to your nest to simulate",
     nestFull: "Your nest is full! Remove a category to make room.",
+    noCapital: "No capital left! Sell a category to free up some capital before buying.",
     riskyBuy: "Added! Careful, this one's risky. Your nest shakes a bit...",
     safeBuy: "Added! A very safe category for your nest.",
     normalBuy: "Added! Good eye, that category looks promising.",
