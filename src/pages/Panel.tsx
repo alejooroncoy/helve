@@ -458,14 +458,18 @@ function BuyConfirmDialog({
   onConfirm,
   onCancel,
   t,
+  availablePct,
 }: {
   inv: Investment;
-  onConfirm: (dontShowAgain: boolean) => void;
+  onConfirm: (dontShowAgain: boolean, pct: number) => void;
   onCancel: () => void;
   t: any;
+  availablePct: number;
 }) {
   const displayName = t(`allocation.classes.${inv.id}`, { defaultValue: inv.name });
   const color = CLASS_COLORS[inv.id as AssetClass] || CELESTE;
+  const maxPct = Math.min(100, availablePct);
+  const [pct, setPct] = useState(Math.min(25, maxPct));
 
   return (
     <motion.div
@@ -520,17 +524,44 @@ function BuyConfirmDialog({
             </div>
           </div>
         </div>
+
+        {/* Allocation slider */}
+        <div className="bg-muted/30 rounded-2xl p-3 mb-4">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium" style={nunito}>
+              {t("panel.allocation")}
+            </p>
+            <p className="text-sm font-bold" style={{ ...nunito, color }}>{pct}%</p>
+          </div>
+          <input
+            type="range"
+            min={1}
+            max={maxPct}
+            value={pct}
+            onChange={(e) => setPct(Number(e.target.value))}
+            className="w-full h-2 rounded-full appearance-none cursor-pointer"
+            style={{
+              accentColor: color,
+              background: `linear-gradient(to right, ${color} ${(pct / maxPct) * 100}%, hsl(var(--muted)) ${(pct / maxPct) * 100}%)`,
+            }}
+          />
+          <div className="flex justify-between mt-1">
+            <span className="text-[10px] text-muted-foreground" style={nunito}>1%</span>
+            <span className="text-[10px] text-muted-foreground" style={nunito}>{maxPct}% max</span>
+          </div>
+        </div>
+
         <div className="space-y-2">
           <motion.button
-            onClick={() => onConfirm(false)}
+            onClick={() => onConfirm(false, pct)}
             className="w-full py-3 rounded-2xl text-sm font-bold text-white"
             style={{ ...nunito, backgroundColor: color }}
             whileTap={{ scale: 0.97 }}
           >
-            {t("panel.buyDialogConfirm")}
+            {t("panel.buyDialogConfirm")} — {pct}%
           </motion.button>
           <motion.button
-            onClick={() => onConfirm(true)}
+            onClick={() => onConfirm(true, pct)}
             className="w-full py-2.5 rounded-2xl text-xs font-bold text-muted-foreground bg-muted/60"
             style={nunito}
             whileTap={{ scale: 0.97 }}
@@ -542,7 +573,6 @@ function BuyConfirmDialog({
     </motion.div>
   );
 }
-
 /* ---- Main Panel ---- */
 const Panel = () => {
   const navigate = useNavigate();
