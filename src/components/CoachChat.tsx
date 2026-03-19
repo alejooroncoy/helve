@@ -366,7 +366,7 @@ export default function CoachChat({ onClose, portfolio, onAddInvestment, onRemov
           <img src="/perspectiva1.png" alt="Coach" className="w-full h-full object-cover" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-bold text-foreground" style={nunito}>Helve Coach</p>
+          <p className="text-sm font-bold text-foreground" style={nunito}>{t("coach.title")}</p>
           <p className="text-[10px] font-medium" style={{ color: CELESTE, ...nunito }}>
             {portfolio && portfolio.length > 0
               ? `Analyzing ${portfolio.length} investment${portfolio.length > 1 ? "s" : ""}`
