@@ -24,7 +24,8 @@ import {
   type DragStartEvent,
   type DragEndEvent,
 } from "@dnd-kit/core";
-import type { Investment } from "@/game/types";
+import type { Investment, AssetClass } from "@/game/types";
+import { ASSET_CLASSES, ALL_ASSET_DB_IDS } from "@/game/types";
 import { availableInvestments } from "@/game/types";
 import {
   LogOut, X, AlertTriangle, Inbox, Shield, TrendingUp, BarChart2,
@@ -40,36 +41,31 @@ const MascotIcon = () => (
 
 const mascotToast = (msg: string) => toast(msg, { icon: <MascotIcon />, duration: 3000 });
 
-const investmentToDbId: Record<string, string> = {
-  "ch-bond-aaa": "ch-bond-aaa",
-  "global-bond": "global-bond-agg",
-  "ch-govt-10y": "ch-govt-10y",
-  "smi-index": "smi-index",
-  "eurostoxx50": "eurostoxx50",
-  "gold-chf": "gold-chf",
-  "nestle": "nesn-ch",
-  "novartis": "novn-ch",
-  "djia-index": "djia-index",
-  "dax-index": "dax-index",
-  "apple": "aapl-us",
-  "microsoft": "msft-us",
-  "nvidia": "nvda-us",
-  "logitech": "logn-ch",
-  "ubs": "ubsg-ch",
-  "amazon": "amzn-us",
-};
-const allDbIds = Object.values(investmentToDbId);
+// Map category keys to their representative DB IDs for stats enrichment
+const categoryToDbIds: Record<string, string[]> = {};
+ASSET_CLASSES.forEach(cls => {
+  categoryToDbIds[cls.key] = cls.dbIds;
+});
+const allDbIds = ALL_ASSET_DB_IDS;
 
-function getInvestmentIcon(inv: Investment) {
-  const name = inv.name.toLowerCase();
-  if (name.includes("bond") || name.includes("treasury")) return <Landmark className="w-5 h-5" />;
-  if (name.includes("real estate")) return <Building2 className="w-5 h-5" />;
-  if (name.includes("energy") || name.includes("green")) return <Leaf className="w-5 h-5" />;
-  if (name.includes("global") || name.includes("world")) return <Globe className="w-5 h-5" />;
-  if (name.includes("tech") || name.includes("innovation")) return <Zap className="w-5 h-5" />;
-  if (inv.type === "safe") return <Shield className="w-5 h-5" />;
-  if (inv.type === "growth") return <TrendingUp className="w-5 h-5" />;
-  return <BarChart2 className="w-5 h-5" />;
+const CLASS_COLORS: Record<AssetClass, string> = {
+  bonds: "hsl(210, 60%, 55%)", equity: "hsl(145, 58%, 36%)", gold: "hsl(38, 92%, 50%)",
+  fx: "hsl(200, 70%, 50%)", swissStocks: "hsl(0, 72%, 51%)", usStocks: "hsl(220, 70%, 50%)",
+  crypto: "hsl(270, 60%, 55%)", cleanEnergy: "hsl(150, 60%, 45%)",
+};
+
+function getCategoryIcon(key: string) {
+  switch (key) {
+    case "bonds": return <Landmark className="w-5 h-5" />;
+    case "equity": return <Globe className="w-5 h-5" />;
+    case "gold": return <Shield className="w-5 h-5" />;
+    case "fx": return <DollarSign className="w-5 h-5" />;
+    case "swissStocks": return <BarChart2 className="w-5 h-5" />;
+    case "usStocks": return <TrendingUp className="w-5 h-5" />;
+    case "crypto": return <Zap className="w-5 h-5" />;
+    case "cleanEnergy": return <Leaf className="w-5 h-5" />;
+    default: return <BarChart2 className="w-5 h-5" />;
+  }
 }
 
 function getRiskBarColor(risk: number): string {
@@ -80,7 +76,6 @@ function getRiskBarColor(risk: number): string {
 
 function getSuggestions(profile: string, active: Investment[]): Investment[] {
   const activeIds = new Set(active.map((i) => i.id));
-  const activeTypes = new Set(active.map((i) => i.type));
   const pool = availableInvestments.filter((i) => !activeIds.has(i.id));
   if (pool.length === 0) return [];
 
@@ -88,31 +83,14 @@ function getSuggestions(profile: string, active: Investment[]): Investment[] {
     : profile === "growth" ? [5, 10]
     : [3, 7];
 
-  const avgRisk = active.length
-    ? active.reduce((s, i) => s + i.riskLevel, 0) / active.length
-    : riskRange[0] + (riskRange[1] - riskRange[0]) / 2;
-  const hasType = (t: string) => activeTypes.has(t as any);
-
   const scored = pool.map((inv) => {
     let score = 0;
     const inRange = inv.riskLevel >= riskRange[0] && inv.riskLevel <= riskRange[1];
     if (inRange) score += 30;
     else score -= Math.abs(inv.riskLevel - (riskRange[0] + riskRange[1]) / 2) * 3;
-    if (!hasType(inv.type)) score += 25;
-    if (active.length > 0) {
-      if (avgRisk > 7 && inv.riskLevel <= 4) score += 20;
-      if (avgRisk < 3 && inv.riskLevel >= 5) score += 15;
-    }
-    const efficiency = inv.annualReturn / Math.max(inv.riskLevel, 1);
-    score += efficiency * 2;
     if (profile === "conservative" && inv.riskLevel <= 3) score += 10;
     if (profile === "balanced" && inv.riskLevel >= 3 && inv.riskLevel <= 6) score += 10;
-    if (active.length === 0) {
-      if (profile === "conservative" && inv.type === "safe") score += 20;
-      if (profile === "balanced" && inv.type === "balanced") score += 20;
-      if (profile === "growth" && inv.type === "growth") score += 20;
-    }
-    if (profile === "conservative" && inv.riskLevel >= 8) score -= 15;
+    if (profile === "growth" && inv.riskLevel >= 6) score += 10;
     return { inv, score };
   });
 
@@ -120,12 +98,12 @@ function getSuggestions(profile: string, active: Investment[]): Investment[] {
   return scored.map((s) => s.inv);
 }
 
-/* ---- Draggable investment card ---- */
+/* ---- Draggable category card ---- */
 function DraggableCard({
-  inv, zone, onClick, onAsk, onSell, onInfo, allocation, balance,
+  inv, zone, onClick, onAsk, onSell, onInfo, allocation, balance, t,
 }: {
   inv: Investment; zone: "scouted" | "nest"; onClick: () => void; onAsk?: () => void; onSell?: () => void; onInfo?: () => void;
-  allocation?: number; balance?: number;
+  allocation?: number; balance?: number; t: any;
 }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `${zone}-${inv.id}`,
@@ -140,95 +118,66 @@ function DraggableCard({
       onClick={zone === "scouted" ? onClick : undefined}
       className={`touch-none select-none transition-all h-full w-full ${isDragging ? "opacity-30 scale-95" : ""}`}
     >
-      {zone === "nest" ? <NestCard inv={inv} onSell={onSell} onAsk={onAsk} onInfo={onInfo} allocation={allocation} balance={balance} /> : <ScoutedCard inv={inv} onAsk={onAsk} />}
+      {zone === "nest"
+        ? <NestCard inv={inv} onSell={onSell} onAsk={onAsk} onInfo={onInfo} allocation={allocation} balance={balance} t={t} />
+        : <ScoutedCard inv={inv} onAsk={onAsk} t={t} />}
     </div>
   );
 }
 
-function NestCard({ inv, overlay, onSell, onAsk, onInfo, allocation, balance }: { inv: Investment; overlay?: boolean; onSell?: () => void; onAsk?: () => void; onInfo?: () => void; allocation?: number; balance?: number }) {
+function NestCard({ inv, overlay, onSell, onAsk, onInfo, allocation, balance, t }: { inv: Investment; overlay?: boolean; onSell?: () => void; onAsk?: () => void; onInfo?: () => void; allocation?: number; balance?: number; t: any }) {
   const [expanded, setExpanded] = useState(false);
-  const { t } = useTranslation();
   const pct = allocation ?? 25;
   const chfAmount = balance ? Math.round(balance * pct / 100) : 0;
+  const displayName = t(`allocation.classes.${inv.id}`, { defaultValue: inv.name });
+  const color = CLASS_COLORS[inv.id as AssetClass] || CELESTE;
 
   return (
-    <div className={`bg-card rounded-2xl p-3.5 shadow-sm ${overlay ? "shadow-lg rotate-2" : ""} cursor-grab active:cursor-grabbing`} style={overlay ? { boxShadow: `0 0 0 2px ${CELESTE}40` } : {}}>
+    <div className={`bg-card rounded-2xl p-3.5 shadow-sm ${overlay ? "shadow-lg rotate-2" : ""} cursor-grab active:cursor-grabbing`} style={overlay ? { boxShadow: `0 0 0 2px ${color}40` } : {}}>
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${CELESTE}18`, color: CELESTE }}>
-          {getInvestmentIcon(inv)}
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${color}18`, color }}>
+          {getCategoryIcon(inv.id)}
         </div>
         <div className="flex-1 min-w-0" onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }} onPointerDown={(e) => e.stopPropagation()}>
           <div className="flex items-center gap-1.5 flex-wrap">
-            <p className="text-sm font-bold text-foreground" style={nunito}>{inv.name}</p>
-            {inv.flag && <span className="text-xs">{inv.flag}</span>}
+            <span className="text-base">{inv.emoji}</span>
+            <p className="text-sm font-bold text-foreground" style={nunito}>{displayName}</p>
           </div>
           <div className="flex items-center gap-2 mt-1 flex-wrap">
             <span className="text-xs text-muted-foreground" style={nunito}>
               {t("panel.riskLabel")} <span style={{ color: getRiskBarColor(inv.riskLevel), fontWeight: 700 }}>{inv.riskLevel}/10</span>
             </span>
-            <span className="text-xs" style={{ ...nunito, color: CELESTE, fontWeight: 700 }}>
+            <span className="text-xs" style={{ ...nunito, color, fontWeight: 700 }}>
               {inv.annualReturn}%{t("common.perYear")}
             </span>
           </div>
         </div>
-        {/* Allocation badge */}
         {!overlay && (
           <div className="flex flex-col items-end flex-shrink-0" onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }} onPointerDown={(e) => e.stopPropagation()}>
-            <span className="text-sm font-bold" style={{ ...nunito, color: CELESTE }}>{pct}%</span>
+            <span className="text-sm font-bold" style={{ ...nunito, color }}>{pct}%</span>
             <span className="text-[10px] text-muted-foreground" style={nunito}>CHF {chfAmount}</span>
           </div>
         )}
       </div>
 
-      {inv.tag && (
-        <div className="mt-2 flex items-center gap-1.5">
-          <span className="text-[10px] font-bold bg-accent/15 text-accent px-2 py-0.5 rounded-full" style={nunito}>
-            {inv.tag}
-          </span>
-          {inv.tag && t(`tags.${inv.tag}`, { defaultValue: "" }) && (
-            <span className="text-[10px] text-muted-foreground" style={nunito}>{t(`tags.${inv.tag}`)}</span>
-          )}
-        </div>
-      )}
-
       <AnimatePresence>
         {expanded && !overlay && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden"
-          >
+          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+            <p className="text-[10px] text-muted-foreground mt-2 px-1" style={nunito}>
+              {t(`allocation.classDesc.${inv.id}`, { defaultValue: "" })}
+            </p>
             <div className="flex gap-2 mt-3 pt-3 border-t border-border">
-              <motion.button
-                onClick={(e) => { e.stopPropagation(); onSell?.(); }}
-                onPointerDown={(e) => e.stopPropagation()}
-                className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold bg-destructive/10 text-destructive transition-colors"
-                style={nunito}
-                whileTap={{ scale: 0.95 }}
-              >
-                <DollarSign className="w-3.5 h-3.5" />
-                {t("panel.sell")}
+              <motion.button onClick={(e) => { e.stopPropagation(); onSell?.(); }} onPointerDown={(e) => e.stopPropagation()}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold bg-destructive/10 text-destructive transition-colors" style={nunito} whileTap={{ scale: 0.95 }}>
+                <DollarSign className="w-3.5 h-3.5" /> {t("panel.sell")}
               </motion.button>
-              <motion.button
-                onClick={(e) => { e.stopPropagation(); onAsk?.(); }}
-                onPointerDown={(e) => e.stopPropagation()}
-                className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold transition-colors"
-                style={{ ...nunito, backgroundColor: `${CELESTE}15`, color: CELESTE }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <MessageCircle className="w-3.5 h-3.5" />
-                {t("panel.ask")}
+              <motion.button onClick={(e) => { e.stopPropagation(); onAsk?.(); }} onPointerDown={(e) => e.stopPropagation()}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold transition-colors" style={{ ...nunito, backgroundColor: `${color}15`, color }} whileTap={{ scale: 0.95 }}>
+                <MessageCircle className="w-3.5 h-3.5" /> {t("panel.ask")}
               </motion.button>
-              <motion.button
-                onClick={(e) => { e.stopPropagation(); onInfo?.(); }}
-                onPointerDown={(e) => e.stopPropagation()}
-                className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold bg-muted text-muted-foreground transition-colors"
-                style={nunito}
-                whileTap={{ scale: 0.95 }}
-              >
-                <BarChart2 className="w-3.5 h-3.5" />
-                {t("panel.detail")}
+              <motion.button onClick={(e) => { e.stopPropagation(); onInfo?.(); }} onPointerDown={(e) => e.stopPropagation()}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold bg-muted text-muted-foreground transition-colors" style={nunito} whileTap={{ scale: 0.95 }}>
+                <BarChart2 className="w-3.5 h-3.5" /> {t("panel.detail")}
               </motion.button>
             </div>
           </motion.div>
@@ -238,18 +187,21 @@ function NestCard({ inv, overlay, onSell, onAsk, onInfo, allocation, balance }: 
   );
 }
 
-function ScoutedCard({ inv, overlay, onAsk }: { inv: Investment; overlay?: boolean; onAsk?: () => void }) {
-  const { t } = useTranslation();
+function ScoutedCard({ inv, overlay, onAsk, t }: { inv: Investment; overlay?: boolean; onAsk?: () => void; t: any }) {
+  const displayName = t(`allocation.classes.${inv.id}`, { defaultValue: inv.name });
+  const color = CLASS_COLORS[inv.id as AssetClass] || CELESTE;
 
   return (
-    <div className={`bg-card rounded-2xl p-3 shadow-sm border-2 border-dashed border-border ${overlay ? "-rotate-2" : ""} cursor-grab active:cursor-grabbing min-h-[120px] h-full flex flex-col`} style={overlay ? { boxShadow: `0 0 0 2px ${CELESTE}40`, borderColor: `${CELESTE}60` } : {}}>
+    <div className={`bg-card rounded-2xl p-3 shadow-sm border-2 border-dashed border-border ${overlay ? "-rotate-2" : ""} cursor-grab active:cursor-grabbing min-h-[110px] h-full flex flex-col`} style={overlay ? { boxShadow: `0 0 0 2px ${color}40`, borderColor: `${color}60` } : {}}>
       <div className="flex items-start gap-2">
-        <div className="w-9 h-9 bg-secondary rounded-xl flex items-center justify-center text-muted-foreground flex-shrink-0">
-          {getInvestmentIcon(inv)}
+        <div className="w-9 h-9 bg-secondary rounded-xl flex items-center justify-center text-muted-foreground flex-shrink-0" style={{ color }}>
+          {getCategoryIcon(inv.id)}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-bold text-foreground leading-snug" style={nunito}>{inv.name}</p>
-          {inv.flag && <span className="text-[10px]">{inv.flag}</span>}
+          <div className="flex items-center gap-1.5">
+            <span className="text-sm">{inv.emoji}</span>
+            <p className="text-xs font-bold text-foreground leading-snug" style={nunito}>{displayName}</p>
+          </div>
         </div>
       </div>
       <div className="flex-grow" />
@@ -257,28 +209,14 @@ function ScoutedCard({ inv, overlay, onAsk }: { inv: Investment; overlay?: boole
         <span className="text-[10px] text-muted-foreground" style={nunito}>{t("panel.riskLabel")}</span>
         <span className="text-[10px] font-bold" style={{ ...nunito, color: getRiskBarColor(inv.riskLevel) }}>{inv.riskLevel}/10</span>
         <span className="text-muted-foreground text-[10px]">·</span>
-        <span className="text-[10px] font-bold" style={{ ...nunito, color: CELESTE }}>{inv.annualReturn}%</span>
+        <span className="text-[10px] font-bold" style={{ ...nunito, color }}>{inv.annualReturn}%</span>
       </div>
-      {inv.tag && (
-        <div className="mt-1.5 flex items-center gap-1">
-          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${inv.tag === "HIGH RISK" ? "bg-destructive/10 text-destructive" : ""}`} style={{ ...nunito, ...(inv.tag !== "HIGH RISK" ? { backgroundColor: `${CELESTE}18`, color: CELESTE } : {}) }}>
-            {inv.tag}
-          </span>
-          {inv.tag && t(`tags.${inv.tag}`, { defaultValue: "" }) && (
-            <span className="text-[9px] text-muted-foreground" style={nunito}>{t(`tags.${inv.tag}`)}</span>
-          )}
-        </div>
-      )}
       <div className="flex items-center justify-end mt-1.5 gap-1">
         {!overlay && onAsk && (
-          <span
-            onClick={(e) => { e.stopPropagation(); e.preventDefault(); onAsk(); }}
-            onPointerDown={(e) => e.stopPropagation()}
-            className="w-6 h-6 rounded-full bg-accent/10 text-accent flex items-center justify-center text-[10px] font-bold cursor-pointer"
-            style={nunito}
-          >?</span>
+          <span onClick={(e) => { e.stopPropagation(); e.preventDefault(); onAsk(); }} onPointerDown={(e) => e.stopPropagation()}
+            className="w-6 h-6 rounded-full bg-accent/10 text-accent flex items-center justify-center text-[10px] font-bold cursor-pointer" style={nunito}>?</span>
         )}
-        {!overlay && <span className="text-sm font-bold" style={{ color: CELESTE }}>+</span>}
+        {!overlay && <span className="text-sm font-bold" style={{ color }}>+</span>}
       </div>
     </div>
   );
@@ -290,79 +228,51 @@ function DropZone({ id, children, isOver }: { id: string; children: React.ReactN
   const active = isOver ?? over;
 
   return (
-    <div
-      ref={setNodeRef}
-      className="flex-1 min-w-0 rounded-3xl transition-all duration-200 p-1 -m-1 flex flex-col"
-      style={active ? { backgroundColor: `${CELESTE}08`, outline: `2px dashed ${CELESTE}40` } : {}}
-    >
+    <div ref={setNodeRef} className="flex-1 min-w-0 rounded-3xl transition-all duration-200 p-1 -m-1 flex flex-col"
+      style={active ? { backgroundColor: `${CELESTE}08`, outline: `2px dashed ${CELESTE}40` } : {}}>
       {children}
     </div>
   );
 }
 
 /* ---- Buy confirmation dialog ---- */
-function BuyConfirmDialog({ inv, onConfirm, onCancel }: { inv: Investment; onConfirm: (dontShowAgain: boolean) => void; onCancel: () => void }) {
-  const { t } = useTranslation();
+function BuyConfirmDialog({ inv, onConfirm, onCancel, t }: { inv: Investment; onConfirm: (dontShowAgain: boolean) => void; onCancel: () => void; t: any }) {
+  const displayName = t(`allocation.classes.${inv.id}`, { defaultValue: inv.name });
+  const color = CLASS_COLORS[inv.id as AssetClass] || CELESTE;
 
   return (
-    <motion.div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 px-4 pb-6"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      onClick={onCancel}
-    >
-      <motion.div
-        className="w-full max-w-sm bg-card rounded-3xl p-5 shadow-xl"
-        initial={{ y: 100, scale: 0.95 }}
-        animate={{ y: 0, scale: 1 }}
-        exit={{ y: 100, scale: 0.95 }}
-        onClick={(e) => e.stopPropagation()}
-      >
+    <motion.div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 px-4 pb-6"
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onCancel}>
+      <motion.div className="w-full max-w-sm bg-card rounded-3xl p-5 shadow-xl"
+        initial={{ y: 100, scale: 0.95 }} animate={{ y: 0, scale: 1 }} exit={{ y: 100, scale: 0.95 }}
+        onClick={(e) => e.stopPropagation()}>
         <div className="flex items-start gap-3 mb-4">
-          <motion.img
-            src="/perspectiva1.png"
-            alt="Búho"
-            className="w-14 h-14 rounded-full shadow-md flex-shrink-0 object-cover"
-            animate={{ rotate: [0, -8, 8, -4, 0] }}
-            transition={{ duration: 0.8 }}
-          />
+          <motion.img src="/perspectiva1.png" alt="Búho" className="w-14 h-14 rounded-full shadow-md flex-shrink-0 object-cover"
+            animate={{ rotate: [0, -8, 8, -4, 0] }} transition={{ duration: 0.8 }} />
           <div>
             <p className="text-base font-bold text-foreground" style={nunito}>{t("panel.buyDialogTitle")}</p>
-            <p className="text-xs text-muted-foreground mt-0.5" style={nunito}>
-              {t("panel.buyDialogDesc")}
-            </p>
+            <p className="text-xs text-muted-foreground mt-0.5" style={nunito}>{t("panel.buyDialogDesc")}</p>
           </div>
         </div>
-
         <div className="bg-muted/50 rounded-2xl p-3 mb-4 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${CELESTE}18`, color: CELESTE }}>
-            {getInvestmentIcon(inv)}
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${color}18`, color }}>
+            {getCategoryIcon(inv.id)}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold text-foreground" style={nunito}>{inv.name} {inv.flag || ""}</p>
+            <p className="text-sm font-bold text-foreground" style={nunito}>{inv.emoji} {displayName}</p>
             <div className="flex items-center gap-2 mt-0.5">
               <span className="text-xs" style={{ ...nunito, color: getRiskBarColor(inv.riskLevel), fontWeight: 700 }}>{t("panel.riskLabel")} {inv.riskLevel}/10</span>
-              <span className="text-xs" style={{ ...nunito, color: CELESTE, fontWeight: 700 }}>{inv.annualReturn}%{t("common.perYear")}</span>
+              <span className="text-xs" style={{ ...nunito, color, fontWeight: 700 }}>{inv.annualReturn}%{t("common.perYear")}</span>
             </div>
           </div>
         </div>
-
         <div className="space-y-2">
-          <motion.button
-            onClick={() => onConfirm(false)}
-            className="w-full py-3 rounded-2xl text-sm font-bold text-white"
-            style={{ ...nunito, backgroundColor: CELESTE }}
-            whileTap={{ scale: 0.97 }}
-          >
+          <motion.button onClick={() => onConfirm(false)} className="w-full py-3 rounded-2xl text-sm font-bold text-white"
+            style={{ ...nunito, backgroundColor: color }} whileTap={{ scale: 0.97 }}>
             {t("panel.buyDialogConfirm")}
           </motion.button>
-          <motion.button
-            onClick={() => onConfirm(true)}
-            className="w-full py-2.5 rounded-2xl text-xs font-bold text-muted-foreground bg-muted/60"
-            style={nunito}
-            whileTap={{ scale: 0.97 }}
-          >
+          <motion.button onClick={() => onConfirm(true)} className="w-full py-2.5 rounded-2xl text-xs font-bold text-muted-foreground bg-muted/60"
+            style={nunito} whileTap={{ scale: 0.97 }}>
             {t("panel.buyDialogDontRemind")}
           </motion.button>
         </div>
@@ -393,11 +303,15 @@ const Panel = () => {
 
   const { stats, loading: statsLoading } = useInstrumentStats(allDbIds);
 
+  // Enrich category investments with averaged stats from their DB instruments
   const enrichInvestment = useCallback((inv: Investment): Investment => {
-    const dbId = investmentToDbId[inv.id];
-    const real = dbId ? stats[dbId] : null;
-    if (real) return { ...inv, annualReturn: real.avgAnnualReturn, riskLevel: real.riskLevel };
-    return inv;
+    const cls = ASSET_CLASSES.find(c => c.key === inv.id);
+    if (!cls || cls.dbIds.length === 0) return inv;
+    const dbStats = cls.dbIds.map(id => stats[id]).filter(Boolean);
+    if (dbStats.length === 0) return inv;
+    const avgReturn = dbStats.reduce((s, st) => s + st.avgAnnualReturn, 0) / dbStats.length;
+    const avgRisk = Math.round(dbStats.reduce((s, st) => s + st.riskLevel, 0) / dbStats.length);
+    return { ...inv, annualReturn: Math.round(avgReturn * 10) / 10, riskLevel: avgRisk || inv.riskLevel };
   }, [stats]);
 
   const enrichedPortfolio = useMemo(() => activePortfolio.map(enrichInvestment), [activePortfolio, enrichInvestment]);
@@ -412,7 +326,6 @@ const Panel = () => {
           if (p.allocations && Object.keys(p.allocations).length > 0) {
             setAllocations(p.allocations);
           } else {
-            // Auto-distribute evenly
             const evenPct = Math.floor(100 / p.portfolio.length);
             const allocs: Record<string, number> = {};
             p.portfolio.forEach(inv => { allocs[inv.id] = evenPct; });
@@ -420,7 +333,8 @@ const Panel = () => {
             saveProgress({ allocations: allocs });
           }
         } else {
-          const defaults = getSuggestions(p.risk_profile, []).slice(0, 4);
+          // Default: pick 3 suggested categories
+          const defaults = getSuggestions(p.risk_profile, []).slice(0, 3);
           if (defaults.length > 0) {
             setActivePortfolio(defaults);
             const evenPct = Math.floor(100 / defaults.length);
@@ -439,11 +353,8 @@ const Panel = () => {
     setBalance(finalBalance);
     setLastSimGain(gainPct);
     saveProgress({ simulation_result: finalBalance });
-    if (gainPct > 0) {
-      mascotToast(t("panel.nestGrew", { pct: gainPct.toFixed(1) }));
-    } else {
-      mascotToast(t("panel.nestDropped", { pct: Math.abs(gainPct).toFixed(1) }));
-    }
+    if (gainPct > 0) mascotToast(t("panel.nestGrew", { pct: gainPct.toFixed(1) }));
+    else mascotToast(t("panel.nestDropped", { pct: Math.abs(gainPct).toFixed(1) }));
   }, [saveProgress, t]);
 
   const sensors = useSensors(
@@ -455,7 +366,6 @@ const Panel = () => {
   const totalAllocated = useMemo(() => {
     return enrichedPortfolio.reduce((s, i) => s + (allocations[i.id] ?? 0), 0);
   }, [enrichedPortfolio, allocations]);
-  const cashRemaining = 100 - totalAllocated;
 
   const totalRisk = enrichedPortfolio.length
     ? Math.round(
@@ -475,28 +385,10 @@ const Panel = () => {
       ? (enrichedPortfolio.reduce((s, i) => s + i.annualReturn, 0) / enrichedPortfolio.length).toFixed(1)
       : "0.0";
 
-  const handleAllocationChange = useCallback((invId: string, newPct: number) => {
-    setAllocations(prev => {
-      const updated = { ...prev, [invId]: newPct };
-      saveProgress({ allocations: updated });
-      return updated;
-    });
-  }, [saveProgress]);
-
-  const getRiskLabelLocal = (risk: number): string => {
-    if (risk <= 30) return t("portfolio.low");
-    if (risk <= 60) return t("portfolio.medium");
-    return t("portfolio.high");
-  };
-
   const executeBuy = useCallback((inv: Investment) => {
-    if (activePortfolio.length >= 4) {
-      mascotToast(t("panel.nestFull"));
-      return;
-    }
+    if (activePortfolio.length >= 4) { mascotToast(t("panel.nestFull")); return; }
     if (activePortfolio.find((i) => i.id === inv.id)) return;
     const next = [...activePortfolio, inv];
-    // Auto-allocate: give remaining space evenly, or 25% if there's room
     const currentTotal = Object.values(allocations).reduce((s, v) => s + v, 0);
     const remaining = 100 - currentTotal;
     const newAlloc = Math.min(25, remaining);
@@ -511,23 +403,14 @@ const Panel = () => {
   }, [activePortfolio, allocations, saveProgress, t]);
 
   const tryBuyInvestment = useCallback((inv: Investment) => {
-    if (activePortfolio.length >= 4) {
-      mascotToast(t("panel.nestFull"));
-      return;
-    }
+    if (activePortfolio.length >= 4) { mascotToast(t("panel.nestFull")); return; }
     if (activePortfolio.find((i) => i.id === inv.id)) return;
-    if (skipBuyDialog) {
-      executeBuy(inv);
-    } else {
-      setBuyDialogInv(inv);
-    }
+    if (skipBuyDialog) executeBuy(inv);
+    else setBuyDialogInv(inv);
   }, [activePortfolio, skipBuyDialog, executeBuy, t]);
 
   const handleBuyConfirm = useCallback((dontShowAgain: boolean) => {
-    if (dontShowAgain) {
-      setSkipBuyDialog(true);
-      localStorage.setItem("helve_skip_buy_dialog", "1");
-    }
+    if (dontShowAgain) { setSkipBuyDialog(true); localStorage.setItem("helve_skip_buy_dialog", "1"); }
     if (buyDialogInv) executeBuy(buyDialogInv);
     setBuyDialogInv(null);
   }, [buyDialogInv, executeBuy]);
@@ -543,7 +426,8 @@ const Panel = () => {
       return next;
     });
     if (removed) {
-      mascotToast(t("panel.soldMsg", { name: removed.name }));
+      const displayName = t(`allocation.classes.${removed.id}`, { defaultValue: removed.name });
+      mascotToast(t("panel.soldMsg", { name: displayName }));
     } else {
       mascotToast(t("panel.soldGeneric"));
     }
@@ -556,9 +440,7 @@ const Panel = () => {
     const removedAlloc = allocations[removeId] ?? 25;
     setActivePortfolio((prev) => {
       const next = prev.filter((i) => i.id !== removeId);
-      if (!next.find(i => i.id === addId) && next.length < 4) {
-        next.push(toAdd);
-      }
+      if (!next.find(i => i.id === addId) && next.length < 4) next.push(toAdd);
       const newAllocations = { ...allocations };
       delete newAllocations[removeId];
       newAllocations[addId] = removedAlloc;
@@ -566,8 +448,9 @@ const Panel = () => {
       saveProgress({ portfolio: next, allocations: newAllocations });
       return next;
     });
-    const removeName = toRemove?.name || removeId;
-    mascotToast(t("panel.swapMsg", { removed: removeName, added: toAdd.name }));
+    const removeName = t(`allocation.classes.${removeId}`, { defaultValue: toRemove?.name || removeId });
+    const addName = t(`allocation.classes.${addId}`, { defaultValue: toAdd.name });
+    mascotToast(t("panel.swapMsg", { removed: removeName, added: addName }));
   }, [activePortfolio, enrichedAvailable, allocations, saveProgress, t]);
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -589,17 +472,12 @@ const Panel = () => {
     setSimulationOpen(true);
   };
 
-  const handleSignOut = async () => {
-    await signOut();
-    navigate("/auth");
-  };
+  const handleSignOut = async () => { await signOut(); navigate("/auth"); };
 
-  const periodLabel = (months: number) => {
-    if (months <= 6) return t("simulation.periods.3m").replace("3", String(months));
-    if (months === 3) return t("simulation.periods.3m");
-    if (months === 6) return t("simulation.periods.6m");
-    if (months === 12) return t("simulation.periods.1y");
-    return t("simulation.periods.5y");
+  const getRiskLabelLocal = (risk: number): string => {
+    if (risk <= 30) return t("portfolio.low");
+    if (risk <= 60) return t("portfolio.medium");
+    return t("portfolio.high");
   };
 
   const simPeriods = [
@@ -610,11 +488,7 @@ const Panel = () => {
   ];
 
   return (
-    <motion.div
-      className="min-h-screen bg-background flex flex-col"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-    >
+    <motion.div className="min-h-screen bg-background flex flex-col" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
       {/* Header */}
       <div className="px-5 pt-6 pb-3">
         <div className="flex items-center justify-between">
@@ -624,20 +498,13 @@ const Panel = () => {
           </div>
           <div className="flex items-center gap-2">
             <LanguageSwitcher />
-            <motion.button
-              onClick={handleSignOut}
-              className="w-10 h-10 rounded-full bg-card shadow-sm flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors"
-              whileTap={{ scale: 0.9 }}
-            >
+            <motion.button onClick={handleSignOut} className="w-10 h-10 rounded-full bg-card shadow-sm flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors" whileTap={{ scale: 0.9 }}>
               <LogOut className="w-4 h-4" />
             </motion.button>
             {isMobile ? (
               <Drawer open={coachOpen} onOpenChange={setCoachOpen}>
                 <DrawerTrigger asChild>
-                  <motion.button
-                    className="w-12 h-12 rounded-full bg-card shadow-md overflow-hidden border-2" style={{ borderColor: `${CELESTE}40` }}
-                    whileTap={{ scale: 0.9 }}
-                  >
+                  <motion.button className="w-12 h-12 rounded-full bg-card shadow-md overflow-hidden border-2" style={{ borderColor: `${CELESTE}40` }} whileTap={{ scale: 0.9 }}>
                     <img src="/perspectiva1.png" alt="Coach" className="w-full h-full object-cover" />
                   </motion.button>
                 </DrawerTrigger>
@@ -648,10 +515,7 @@ const Panel = () => {
             ) : (
               <Popover open={coachOpen} onOpenChange={setCoachOpen}>
                 <PopoverTrigger asChild>
-                  <motion.button
-                    className="w-12 h-12 rounded-full bg-card shadow-md overflow-hidden border-2" style={{ borderColor: `${CELESTE}40` }}
-                    whileTap={{ scale: 0.9 }}
-                  >
+                  <motion.button className="w-12 h-12 rounded-full bg-card shadow-md overflow-hidden border-2" style={{ borderColor: `${CELESTE}40` }} whileTap={{ scale: 0.9 }}>
                     <img src="/perspectiva1.png" alt="Coach" className="w-full h-full object-cover" />
                   </motion.button>
                 </PopoverTrigger>
@@ -685,7 +549,7 @@ const Panel = () => {
       <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
         <div className="flex-1 overflow-hidden px-5 pb-4">
           <div className="flex flex-col md:flex-row gap-4 h-full">
-            {/* Left: My Nest */}
+            {/* My Nest */}
             <div className="flex-1 overflow-y-auto md:pr-2">
               <DropZone id="nest">
                 <div className="flex items-center justify-between mb-3">
@@ -703,16 +567,11 @@ const Panel = () => {
                     <AnimatePresence>
                       {enrichedPortfolio.map((inv) => (
                         <motion.div key={inv.id} initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }} layout>
-                          <DraggableCard
-                            inv={inv}
-                            zone="nest"
-                            onClick={() => {}}
+                          <DraggableCard inv={inv} zone="nest" onClick={() => {}} t={t}
                             onSell={() => removeInvestment(inv.id)}
-                            onAsk={() => { setCoachInitQ(`Tengo ${inv.name} en mi nido. ¿Es buena inversión? ¿Debería venderla o mantenerla?`); setCoachOpen(true); }}
-                            onInfo={() => { setCoachInitQ(`Dame un análisis detallado de ${inv.name}: riesgo, retorno histórico, y perspectiva futura.`); setCoachOpen(true); }}
-                            allocation={allocations[inv.id] ?? 0}
-                            balance={balance}
-                          />
+                            onAsk={() => { setCoachInitQ(`Tengo ${t(`allocation.classes.${inv.id}`)} en mi nido. ¿Es buena inversión? ¿Debería quitarla o mantenerla?`); setCoachOpen(true); }}
+                            onInfo={() => { setCoachInitQ(`Dame un análisis detallado de ${t(`allocation.classes.${inv.id}`)}: riesgo, retorno histórico, y perspectiva futura.`); setCoachOpen(true); }}
+                            allocation={allocations[inv.id] ?? 0} balance={balance} />
                         </motion.div>
                       ))}
                     </AnimatePresence>
@@ -721,23 +580,25 @@ const Panel = () => {
               </DropZone>
             </div>
 
-            {/* Right: Buy/Scouted — sidebar on desktop, horizontal scroll on mobile */}
+            {/* Add categories */}
             <div className="md:w-[280px] lg:w-[320px] md:flex-shrink-0 md:overflow-y-auto md:border-l md:border-border md:pl-4">
               <DropZone id="scouted">
                 <h2 className="text-sm font-bold text-foreground uppercase tracking-wide mb-3 md:mt-0 mt-4" style={nunito}>{t("panel.buy")}</h2>
                 {/* Mobile: horizontal scroll */}
                 <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide items-stretch md:hidden" style={{ scrollSnapType: "x mandatory" }}>
                   {suggestions.map((inv) => (
-                    <div key={inv.id} className="flex-shrink-0 flex" style={{ width: 180, minWidth: 170, scrollSnapAlign: "start" }}>
-                      <DraggableCard inv={inv} zone="scouted" onClick={() => tryBuyInvestment(inv)} onAsk={() => { setCoachInitQ(`Explica brevemente qué es ${inv.name} y si encaja con mi perfil`); setCoachOpen(true); }} />
+                    <div key={inv.id} className="flex-shrink-0 flex" style={{ width: 170, minWidth: 160, scrollSnapAlign: "start" }}>
+                      <DraggableCard inv={inv} zone="scouted" onClick={() => tryBuyInvestment(inv)} t={t}
+                        onAsk={() => { setCoachInitQ(`Explica brevemente qué es ${t(`allocation.classes.${inv.id}`)} y si encaja con mi perfil`); setCoachOpen(true); }} />
                     </div>
                   ))}
                 </div>
-                {/* Desktop: vertical list */}
+                {/* Desktop */}
                 <div className="hidden md:flex md:flex-col gap-2">
                   {suggestions.map((inv) => (
                     <div key={inv.id} className="w-full">
-                      <DraggableCard inv={inv} zone="scouted" onClick={() => tryBuyInvestment(inv)} onAsk={() => { setCoachInitQ(`Explica brevemente qué es ${inv.name} y si encaja con mi perfil`); setCoachOpen(true); }} />
+                      <DraggableCard inv={inv} zone="scouted" onClick={() => tryBuyInvestment(inv)} t={t}
+                        onAsk={() => { setCoachInitQ(`Explica brevemente qué es ${t(`allocation.classes.${inv.id}`)} y si encaja con mi perfil`); setCoachOpen(true); }} />
                     </div>
                   ))}
                 </div>
@@ -748,8 +609,10 @@ const Panel = () => {
 
         <DragOverlay dropAnimation={null}>
           {draggedItem ? (
-            <div style={{ width: draggedItem.zone === "scouted" ? 170 : "auto", maxWidth: 340 }}>
-              {draggedItem.zone === "nest" ? <NestCard inv={draggedItem.inv} overlay /> : <ScoutedCard inv={draggedItem.inv} overlay />}
+            <div style={{ width: draggedItem.zone === "scouted" ? 160 : "auto", maxWidth: 340 }}>
+              {draggedItem.zone === "nest"
+                ? <NestCard inv={draggedItem.inv} overlay t={t} />
+                : <ScoutedCard inv={draggedItem.inv} overlay t={t} />}
             </div>
           ) : null}
         </DragOverlay>
@@ -757,84 +620,55 @@ const Panel = () => {
 
       {/* Bottom Actions */}
       <div className="px-5 pb-6 pt-3 bg-gradient-to-t from-background via-background to-transparent">
-        {/* Multiplayer button */}
         <motion.button
           className="w-full py-3 rounded-3xl text-sm font-black shadow-md mb-3 flex items-center justify-center gap-2 border-2"
-          style={{
-            ...nunito,
-            borderColor: "hsl(var(--accent))",
-            background: "hsl(var(--accent) / 0.1)",
-            color: "hsl(var(--accent))",
-          }}
-          onClick={() => navigate("/multiplayer")}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.97 }}
-        >
+          style={{ ...nunito, borderColor: "hsl(var(--accent))", background: "hsl(var(--accent) / 0.1)", color: "hsl(var(--accent))" }}
+          onClick={() => navigate("/multiplayer")} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}>
           🎮 Multiplayer
         </motion.button>
         <div className="flex gap-2 mb-3">
           {simPeriods.map((p) => (
-            <button
-              key={p.months}
-              onClick={() => setSimMonths(p.months)}
+            <button key={p.months} onClick={() => setSimMonths(p.months)}
               className="flex-1 py-2 rounded-2xl text-xs transition-all border-2"
-              style={{
-                ...nunito,
-                fontWeight: 700,
+              style={{ ...nunito, fontWeight: 700,
                 borderColor: simMonths === p.months ? CELESTE : "hsl(var(--border))",
                 backgroundColor: simMonths === p.months ? CELESTE + "15" : "hsl(var(--card))",
                 color: simMonths === p.months ? CELESTE : "hsl(var(--muted-foreground))",
-              }}
-            >
+              }}>
               {p.label}
             </button>
           ))}
         </div>
         <motion.button
           className="w-full py-4 rounded-3xl text-base shadow-lg transition-all flex items-center justify-center gap-2 text-white"
-          style={{
-            ...nunito,
-            fontWeight: 900,
+          style={{ ...nunito, fontWeight: 900,
             background: activePortfolio.length === 0 ? "hsl(var(--muted))" : CELESTE,
             color: activePortfolio.length === 0 ? "hsl(var(--muted-foreground))" : "white",
             opacity: activePortfolio.length === 0 ? 0.4 : 1,
             cursor: activePortfolio.length === 0 ? "not-allowed" : "pointer",
           }}
           onClick={activePortfolio.length > 0 ? handleSimulate : undefined}
-          whileHover={activePortfolio.length > 0 ? { scale: 1.02 } : {}}
-          whileTap={activePortfolio.length > 0 ? { scale: 0.97 } : {}}
-        >
+          whileHover={activePortfolio.length > 0 ? { scale: 1.02 } : {}} whileTap={activePortfolio.length > 0 ? { scale: 0.97 } : {}}>
           <FastForward className="w-4 h-4" />
           {t("panel.simulate")} {simPeriods.find(p => p.months === simMonths)?.label}
         </motion.button>
         {activePortfolio.length === 0 && (
-          <p className="text-[10px] text-muted-foreground text-center mt-2" style={nunito}>
-            {t("panel.addToSimulate")}
-          </p>
+          <p className="text-[10px] text-muted-foreground text-center mt-2" style={nunito}>{t("panel.addToSimulate")}</p>
         )}
       </div>
 
       <AnimatePresence>
         {simulationOpen && (
-          <TimeSimulation
-            portfolio={enrichedPortfolio}
-            initialMonths={simMonths}
-            initialBalance={balance}
-            onClose={() => setSimulationOpen(false)}
-            onComplete={handleSimulationComplete}
+          <TimeSimulation portfolio={enrichedPortfolio} initialMonths={simMonths} initialBalance={balance}
+            onClose={() => setSimulationOpen(false)} onComplete={handleSimulationComplete}
             onSellInvestment={handleSimSell}
-            onAskCoach={(q) => { setCoachInitQ(q); setCoachOpen(true); }}
-          />
+            onAskCoach={(q) => { setCoachInitQ(q); setCoachOpen(true); }} />
         )}
       </AnimatePresence>
 
       <AnimatePresence>
         {buyDialogInv && (
-          <BuyConfirmDialog
-            inv={buyDialogInv}
-            onConfirm={handleBuyConfirm}
-            onCancel={() => setBuyDialogInv(null)}
-          />
+          <BuyConfirmDialog inv={buyDialogInv} onConfirm={handleBuyConfirm} onCancel={() => setBuyDialogInv(null)} t={t} />
         )}
       </AnimatePresence>
     </motion.div>

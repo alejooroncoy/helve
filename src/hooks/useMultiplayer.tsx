@@ -114,7 +114,7 @@ export function useMultiplayer() {
     if (!user) return null;
     setLoading(true);
     const code = generateRoomCode();
-    const assets = pickRandomAssets(10);
+    const assets = pickRandomAssets(8);
 
     const { data: roomData, error: roomErr } = await supabase
       .from("multiplayer_rooms")
