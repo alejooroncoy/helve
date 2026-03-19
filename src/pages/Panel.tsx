@@ -254,6 +254,7 @@ const Panel = () => {
   const [coachOpen, setCoachOpen] = useState(false);
   const [coachInitQ, setCoachInitQ] = useState<string | undefined>(undefined);
   const [simulationOpen, setSimulationOpen] = useState(false);
+  const [simMonths, setSimMonths] = useState(12);
   const isMobile = useIsMobile();
 
   useEffect(() => {
