@@ -6,8 +6,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-// CSV source URLs (raw GitHub)
-const CSV_SOURCES = {
+const CSV_SOURCES: Record<string, string> = {
   bonds:
     "https://raw.githubusercontent.com/adriank71/PostFinance-START-Hack-2026/main/Market_Data%20-%20Bonds.csv",
   equity:
@@ -21,226 +20,115 @@ const CSV_SOURCES = {
 };
 
 function parseDate(d: string): string | null {
-  // Format: d/m/yyyy → yyyy-mm-dd
   const parts = d.trim().split("/");
   if (parts.length !== 3) return null;
   const [day, month, year] = parts;
+  if (!year || year.length !== 4) return null;
   return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
 }
 
 function parseNum(v: string): number | null {
-  if (!v || v.trim() === "" || v.includes("#N/A")) return null;
-  // Remove quotes, spaces, thousands commas
+  if (!v || v.includes("#N/A")) return null;
   const clean = v.replace(/"/g, "").replace(/\s/g, "").replace(/,/g, "");
+  if (clean === "") return null;
   const n = parseFloat(clean);
   return isNaN(n) ? null : n;
 }
 
-// Parse a standard CSV line handling quoted fields with commas
-function parseCSVLine(line: string): string[] {
+function splitCSVLine(line: string): string[] {
   const result: string[] = [];
-  let current = "";
-  let inQuotes = false;
-  for (let i = 0; i < line.length; i++) {
-    const ch = line[i];
-    if (ch === '"') {
-      inQuotes = !inQuotes;
-    } else if (ch === "," && !inQuotes) {
-      result.push(current);
-      current = "";
-    } else {
-      current += ch;
-    }
+  let cur = "";
+  let inQ = false;
+  for (const ch of line) {
+    if (ch === '"') { inQ = !inQ; }
+    else if (ch === "," && !inQ) { result.push(cur); cur = ""; }
+    else { cur += ch; }
   }
-  result.push(current);
+  result.push(cur);
   return result;
 }
 
-interface InstrumentDef {
-  id: string;
-  name: string;
-  ticker: string;
-  category: string;
-  currency: string;
-}
+interface Inst { id: string; name: string; ticker: string; category: string; currency: string; }
+interface PRow { instrument_id: string; date: string; price: number; }
 
-interface PriceRow {
-  instrument_id: string;
-  date: string;
-  price: number;
-}
-
-async function fetchCSV(url: string): Promise<string> {
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`Failed to fetch ${url}: ${res.status}`);
-  return await res.text();
-}
-
-function processBonds(csv: string): {
-  instruments: InstrumentDef[];
-  prices: PriceRow[];
-} {
-  const lines = csv.split("\n").filter((l) => l.trim());
-  const instruments: InstrumentDef[] = [
-    {
-      id: "ch-bond-aaa",
-      name: "Swiss Bond AAA-BBB",
-      ticker: "CH-BOND-AAA",
-      category: "bond",
-      currency: "CHF",
-    },
-    {
-      id: "global-bond-agg",
-      name: "Bloomberg Global Aggregate Bond Index",
-      ticker: "LEGATRUHCHF",
-      category: "bond",
-      currency: "CHF",
-    },
-    {
-      id: "ch-govt-10y",
-      name: "Switzerland Government Bond 10Y Yield",
-      ticker: "CH-10Y",
-      category: "bond",
-      currency: "CHF",
-    },
-  ];
-  const prices: PriceRow[] = [];
-  for (let i = 1; i < lines.length; i++) {
-    const cols = parseCSVLine(lines[i]);
-    const date = parseDate(cols[0]);
-    if (!date) continue;
-    const vals = [
-      { id: "ch-bond-aaa", val: parseNum(cols[1]) },
-      { id: "global-bond-agg", val: parseNum(cols[2]) },
-      { id: "ch-govt-10y", val: parseNum(cols[3]) },
-    ];
-    for (const v of vals) {
-      if (v.val !== null)
-        prices.push({ instrument_id: v.id, date, price: v.val });
-    }
-  }
-  return { instruments, prices };
-}
-
-function processEquity(csv: string): {
-  instruments: InstrumentDef[];
-  prices: PriceRow[];
-} {
-  const lines = csv.split("\n").filter((l) => l.trim());
-  const instruments: InstrumentDef[] = [
-    { id: "smi-index", name: "SMI (Price Return)", ticker: "SMI", category: "equity_index", currency: "CHF" },
-    { id: "eurostoxx50", name: "EuroStoxx 50 (Price Return)", ticker: "SX5E", category: "equity_index", currency: "EUR" },
-    { id: "djia-index", name: "Dow Jones Industrial Average", ticker: "DJI", category: "equity_index", currency: "USD" },
-    { id: "nikkei225", name: "Nikkei 225 (Price Return)", ticker: "NKY", category: "equity_index", currency: "JPY" },
-    { id: "dax-index", name: "DAX (Total Return)", ticker: "DAX", category: "equity_index", currency: "EUR" },
-  ];
-  const prices: PriceRow[] = [];
-  for (let i = 1; i < lines.length; i++) {
-    const cols = parseCSVLine(lines[i]);
-    const date = parseDate(cols[0]);
-    if (!date) continue;
-    const vals = [
-      { id: "smi-index", val: parseNum(cols[1]) },
-      { id: "eurostoxx50", val: parseNum(cols[2]) },
-      { id: "djia-index", val: parseNum(cols[3]) },
-      { id: "nikkei225", val: parseNum(cols[4]) },
-      { id: "dax-index", val: parseNum(cols[5]) },
-    ];
-    for (const v of vals) {
-      if (v.val !== null) prices.push({ instrument_id: v.id, date, price: v.val });
-    }
-  }
-  return { instruments, prices };
-}
-
-function processGold(csv: string): {
-  instruments: InstrumentDef[];
-  prices: PriceRow[];
-} {
-  const lines = csv.split("\n").filter((l) => l.trim());
-  const instruments: InstrumentDef[] = [
-    { id: "gold-usd", name: "Gold (NY) USD", ticker: "XAU-USD", category: "gold", currency: "USD" },
-    { id: "gold-chf", name: "Gold (NY) CHF", ticker: "XAU-CHF", category: "gold", currency: "CHF" },
-  ];
-  const prices: PriceRow[] = [];
-  for (let i = 1; i < lines.length; i++) {
-    const cols = parseCSVLine(lines[i]);
-    const date = parseDate(cols[0]);
-    if (!date) continue;
-    const vals = [
-      { id: "gold-usd", val: parseNum(cols[1]) },
-      { id: "gold-chf", val: parseNum(cols[2]) },
-    ];
-    for (const v of vals) {
-      if (v.val !== null) prices.push({ instrument_id: v.id, date, price: v.val });
-    }
-  }
-  return { instruments, prices };
-}
-
-function processFX(csv: string): {
-  instruments: InstrumentDef[];
-  prices: PriceRow[];
-} {
-  const lines = csv.split("\n").filter((l) => l.trim());
-  const instruments: InstrumentDef[] = [
-    { id: "usdchf", name: "USD/CHF", ticker: "USDCHF", category: "fx", currency: "CHF" },
-    { id: "eurchf", name: "EUR/CHF", ticker: "EURCHF", category: "fx", currency: "CHF" },
-  ];
-  const prices: PriceRow[] = [];
-  for (let i = 1; i < lines.length; i++) {
-    const cols = parseCSVLine(lines[i]);
-    const date = parseDate(cols[0]);
-    if (!date) continue;
-    const vals = [
-      { id: "usdchf", val: parseNum(cols[1]) },
-      { id: "eurchf", val: parseNum(cols[2]) },
-    ];
-    for (const v of vals) {
-      if (v.val !== null) prices.push({ instrument_id: v.id, date, price: v.val });
-    }
-  }
-  return { instruments, prices };
-}
-
-function processStocks(
+function processSimpleCSV(
   csv: string,
-  category: "stock_smi" | "stock_djia"
-): { instruments: InstrumentDef[]; prices: PriceRow[] } {
-  const lines = csv.split("\n").filter((l) => l.trim());
-  if (lines.length < 3) return { instruments: [], prices: [] };
+  columns: { id: string; name: string; ticker: string; category: string; currency: string }[]
+): { instruments: Inst[]; prices: PRow[] } {
+  const lines = csv.split("\n");
+  const prices: PRow[] = [];
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
+    const cols = splitCSVLine(line);
+    const date = parseDate(cols[0]);
+    if (!date) continue;
+    for (let c = 0; c < columns.length; c++) {
+      const val = parseNum(cols[c + 1]);
+      if (val !== null) prices.push({ instrument_id: columns[c].id, date, price: val });
+    }
+  }
+  return { instruments: columns, prices };
+}
 
-  const companyNames = parseCSVLine(lines[0]).slice(1);
-  const tickers = parseCSVLine(lines[1]).slice(1);
-
-  const instruments: InstrumentDef[] = [];
-  for (let c = 0; c < companyNames.length; c++) {
-    const ticker = tickers[c]?.trim();
-    if (!ticker) continue;
-    const id = ticker.toLowerCase().replace(/[^a-z0-9]/g, "-");
+function processStocksCSV(
+  csv: string,
+  category: string
+): { instruments: Inst[]; prices: PRow[] } {
+  const lines = csv.split("\n");
+  const names = splitCSVLine(lines[0]).slice(1);
+  const tickers = splitCSVLine(lines[1]).slice(1);
+  const instruments: Inst[] = [];
+  for (let c = 0; c < names.length; c++) {
+    const t = tickers[c]?.trim();
+    if (!t) continue;
     instruments.push({
-      id,
-      name: companyNames[c].trim(),
-      ticker,
+      id: t.toLowerCase().replace(/[^a-z0-9]/g, "-"),
+      name: names[c].trim(),
+      ticker: t,
       category,
       currency: category === "stock_smi" ? "CHF" : "USD",
     });
   }
-
-  const prices: PriceRow[] = [];
+  const prices: PRow[] = [];
   for (let i = 2; i < lines.length; i++) {
-    const cols = parseCSVLine(lines[i]);
+    const line = lines[i].trim();
+    if (!line) continue;
+    const cols = splitCSVLine(line);
     const date = parseDate(cols[0]);
     if (!date) continue;
     for (let c = 0; c < instruments.length; c++) {
       const val = parseNum(cols[c + 1]);
-      if (val !== null) {
-        prices.push({ instrument_id: instruments[c].id, date, price: val });
-      }
+      if (val !== null) prices.push({ instrument_id: instruments[c].id, date, price: val });
     }
   }
   return { instruments, prices };
 }
+
+const PROCESSORS: Record<string, (csv: string) => { instruments: Inst[]; prices: PRow[] }> = {
+  bonds: (csv) => processSimpleCSV(csv, [
+    { id: "ch-bond-aaa", name: "Swiss Bond AAA-BBB", ticker: "CH-BOND-AAA", category: "bond", currency: "CHF" },
+    { id: "global-bond-agg", name: "Bloomberg Global Aggregate Bond Index", ticker: "LEGATRUHCHF", category: "bond", currency: "CHF" },
+    { id: "ch-govt-10y", name: "Switzerland Government Bond 10Y Yield", ticker: "CH-10Y", category: "bond", currency: "CHF" },
+  ]),
+  equity: (csv) => processSimpleCSV(csv, [
+    { id: "smi-index", name: "SMI (Price Return)", ticker: "SMI", category: "equity_index", currency: "CHF" },
+    { id: "eurostoxx50", name: "EuroStoxx 50", ticker: "SX5E", category: "equity_index", currency: "EUR" },
+    { id: "djia-index", name: "Dow Jones Industrial Average", ticker: "DJI", category: "equity_index", currency: "USD" },
+    { id: "nikkei225", name: "Nikkei 225", ticker: "NKY", category: "equity_index", currency: "JPY" },
+    { id: "dax-index", name: "DAX (Total Return)", ticker: "DAX", category: "equity_index", currency: "EUR" },
+  ]),
+  gold: (csv) => processSimpleCSV(csv, [
+    { id: "gold-usd", name: "Gold (NY) USD", ticker: "XAU-USD", category: "gold", currency: "USD" },
+    { id: "gold-chf", name: "Gold (NY) CHF", ticker: "XAU-CHF", category: "gold", currency: "CHF" },
+  ]),
+  fx: (csv) => processSimpleCSV(csv, [
+    { id: "usdchf", name: "USD/CHF", ticker: "USDCHF", category: "fx", currency: "CHF" },
+    { id: "eurchf", name: "EUR/CHF", ticker: "EURCHF", category: "fx", currency: "CHF" },
+  ]),
+  smi_stocks: (csv) => processStocksCSV(csv, "stock_smi"),
+  djia_stocks: (csv) => processStocksCSV(csv, "stock_djia"),
+};
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -248,104 +136,58 @@ Deno.serve(async (req) => {
   }
 
   try {
+    const url = new URL(req.url);
+    const dataset = url.searchParams.get("dataset");
+
+    if (!dataset || !CSV_SOURCES[dataset]) {
+      return new Response(
+        JSON.stringify({
+          error: "Pass ?dataset= one of: " + Object.keys(CSV_SOURCES).join(", "),
+          available: Object.keys(CSV_SOURCES),
+        }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceKey);
 
-    const allInstruments: InstrumentDef[] = [];
-    const allPrices: PriceRow[] = [];
-    const log: string[] = [];
+    console.log(`Fetching ${dataset}...`);
+    const csvText = await (await fetch(CSV_SOURCES[dataset])).text();
+    console.log(`Fetched ${csvText.length} chars`);
 
-    // Fetch and process all CSVs
-    log.push("Fetching CSVs...");
-
-    const [bondsCSV, equityCSV, goldCSV, fxCSV, smiCSV, djiaCSV] =
-      await Promise.all([
-        fetchCSV(CSV_SOURCES.bonds),
-        fetchCSV(CSV_SOURCES.equity),
-        fetchCSV(CSV_SOURCES.gold),
-        fetchCSV(CSV_SOURCES.fx),
-        fetchCSV(CSV_SOURCES.smi_stocks),
-        fetchCSV(CSV_SOURCES.djia_stocks),
-      ]);
-
-    log.push("Parsing CSVs...");
-
-    const datasets = [
-      processBonds(bondsCSV),
-      processEquity(equityCSV),
-      processGold(goldCSV),
-      processFX(fxCSV),
-      processStocks(smiCSV, "stock_smi"),
-      processStocks(djiaCSV, "stock_djia"),
-    ];
-
-    for (const ds of datasets) {
-      allInstruments.push(...ds.instruments);
-      allPrices.push(...ds.prices);
-    }
-
-    log.push(
-      `Parsed ${allInstruments.length} instruments, ${allPrices.length} price points`
-    );
+    const { instruments, prices } = PROCESSORS[dataset](csvText);
+    console.log(`Parsed ${instruments.length} instruments, ${prices.length} prices`);
 
     // Upsert instruments
-    const { error: instErr } = await supabase
+    const { error: ie } = await supabase
       .from("instruments")
-      .upsert(
-        allInstruments.map((i) => ({
-          id: i.id,
-          name: i.name,
-          ticker: i.ticker,
-          category: i.category,
-          currency: i.currency,
-          source_csv: "PostFinance-START-Hack-2026",
-        })),
-        { onConflict: "id" }
-      );
+      .upsert(instruments.map((i) => ({ ...i, source_csv: dataset })), { onConflict: "id" });
+    if (ie) throw new Error(`Instruments error: ${ie.message}`);
 
-    if (instErr) throw new Error(`Instruments upsert error: ${instErr.message}`);
-    log.push(`Upserted ${allInstruments.length} instruments`);
-
-    // Insert prices in batches of 1000
-    const BATCH = 1000;
+    // Insert prices in batches
+    const BATCH = 500;
     let inserted = 0;
-    for (let i = 0; i < allPrices.length; i += BATCH) {
-      const batch = allPrices.slice(i, i + BATCH);
-      const { error: priceErr } = await supabase
+    for (let i = 0; i < prices.length; i += BATCH) {
+      const batch = prices.slice(i, i + BATCH);
+      const { error: pe } = await supabase
         .from("market_prices")
         .upsert(batch, { onConflict: "instrument_id,date", ignoreDuplicates: true });
-
-      if (priceErr)
-        throw new Error(
-          `Prices batch ${i / BATCH} error: ${priceErr.message}`
-        );
+      if (pe) throw new Error(`Prices batch ${Math.floor(i / BATCH)} error: ${pe.message}`);
       inserted += batch.length;
+      console.log(`Inserted batch ${Math.floor(i / BATCH)}, total: ${inserted}/${prices.length}`);
     }
-    log.push(`Inserted ${inserted} price rows`);
 
     return new Response(
-      JSON.stringify({
-        success: true,
-        instruments: allInstruments.length,
-        prices: inserted,
-        log,
-      }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      JSON.stringify({ success: true, dataset, instruments: instruments.length, prices: inserted }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
-    console.error("Seed error:", error);
+    console.error("Error:", error);
     return new Response(
-      JSON.stringify({
-        success: false,
-        error: error instanceof Error ? error.message : String(error),
-      }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      JSON.stringify({ success: false, error: error instanceof Error ? error.message : String(error) }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });
