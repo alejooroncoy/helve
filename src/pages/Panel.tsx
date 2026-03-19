@@ -751,6 +751,21 @@ const Panel = () => {
 
       {/* Bottom Actions */}
       <div className="px-5 pb-6 pt-3 bg-gradient-to-t from-background via-background to-transparent">
+        {/* Multiplayer button */}
+        <motion.button
+          className="w-full py-3 rounded-3xl text-sm font-black shadow-md mb-3 flex items-center justify-center gap-2 border-2"
+          style={{
+            ...nunito,
+            borderColor: "hsl(var(--accent))",
+            background: "hsl(var(--accent) / 0.1)",
+            color: "hsl(var(--accent))",
+          }}
+          onClick={() => navigate("/multiplayer")}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.97 }}
+        >
+          🎮 Multiplayer
+        </motion.button>
         <div className="flex gap-2 mb-3">
           {simPeriods.map((p) => (
             <button
