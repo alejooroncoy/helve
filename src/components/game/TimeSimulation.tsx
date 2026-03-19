@@ -38,6 +38,20 @@ interface MarketEvent {
   type: "positive" | "negative" | "neutral";
 }
 
+interface AIScenarioOption {
+  action: "hold" | "sell" | "buy";
+  label: string;
+  is_best: boolean;
+  feedback_good: string;
+  feedback_bad: string;
+}
+
+interface AIScenario {
+  title: string;
+  description: string;
+  options: AIScenarioOption[];
+}
+
 // Map category keys to their representative DB IDs
 const categoryToDbIds: Record<string, string[]> = {};
 ASSET_CLASSES.forEach(cls => {
@@ -56,6 +70,30 @@ const marketEvents: MarketEvent[] = [
   { id: "stable", emoji: "", title: "Nido estable", description: "Sin sorpresas. Tu nido se mantiene firme.", impact: 1.01, type: "neutral" },
   { id: "war", emoji: "", title: "Tension global", description: "El mundo se sacude. Los mercados tiemblan.", impact: 0.85, type: "negative" },
 ];
+
+const ACTION_ICONS = {
+  hold: ShieldCheck,
+  sell: TrendingDown,
+  buy: Zap,
+};
+
+const ACTION_COLORS = {
+  hold: CELESTE,
+  sell: "hsl(var(--destructive))",
+  buy: "hsl(var(--primary))",
+};
+
+async function fetchAIScenario(portfolio: Investment[], balance: number, monthLabel: string, language: string): Promise<AIScenario | null> {
+  try {
+    const { data, error } = await supabase.functions.invoke("sim-event", {
+      body: { portfolio, balance, monthLabel, language },
+    });
+    if (error || !data || !data.options) return null;
+    return data as AIScenario;
+  } catch {
+    return null;
+  }
+}
 
 const timeLabels = [
   "Hoy", "1 mes", "2 meses", "3 meses", "6 meses",
