@@ -14,6 +14,65 @@ export type Database = {
   }
   public: {
     Tables: {
+      instruments: {
+        Row: {
+          category: string
+          created_at: string | null
+          currency: string | null
+          id: string
+          name: string
+          source_csv: string | null
+          ticker: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          currency?: string | null
+          id: string
+          name: string
+          source_csv?: string | null
+          ticker?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          name?: string
+          source_csv?: string | null
+          ticker?: string | null
+        }
+        Relationships: []
+      }
+      market_prices: {
+        Row: {
+          date: string
+          id: number
+          instrument_id: string
+          price: number
+        }
+        Insert: {
+          date: string
+          id?: never
+          instrument_id: string
+          price: number
+        }
+        Update: {
+          date?: string
+          id?: never
+          instrument_id?: string
+          price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "market_prices_instrument_id_fkey"
+            columns: ["instrument_id"]
+            isOneToOne: false
+            referencedRelation: "instruments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_progress: {
         Row: {
           created_at: string | null
