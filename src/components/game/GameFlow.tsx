@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import type { GameStep, PortfolioSlot, Investment, GameState } from "@/game/types";
 import { initialGameState, getProfile } from "@/game/types";
