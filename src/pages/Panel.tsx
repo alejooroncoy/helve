@@ -450,7 +450,7 @@ const Panel = () => {
       : "0.0";
 
   const executeBuy = useCallback((inv: Investment) => {
-    if (activePortfolio.length >= 4) { mascotToast(t("panel.nestFull")); return; }
+    if (activePortfolio.find((i) => i.id === inv.id)) return;
     if (activePortfolio.find((i) => i.id === inv.id)) return;
     const next = [...activePortfolio, inv];
     const currentTotal = Object.values(allocations).reduce((s, v) => s + v, 0);
