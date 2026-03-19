@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { AnimatePresence } from "framer-motion";
-import type { GameStep, PortfolioSlot, GameState } from "@/game/types";
+import type { GameStep, PortfolioSlot, Investment, GameState } from "@/game/types";
 import { initialGameState, getProfile } from "@/game/types";
 import WelcomeScreen from "./WelcomeScreen";
 import RiskScreen from "./RiskScreen";
@@ -36,6 +36,7 @@ const GameFlow = () => {
       ...prev,
       step: "portfolio",
       portfolio: [],
+      portfolioSlots: [],
       stormChoice: null,
       simulationResult: 0,
     }));
@@ -64,7 +65,10 @@ const GameFlow = () => {
         {state.step === "portfolio" && (
           <PortfolioBuilder
             key="portfolio"
-            onComplete={(p: PortfolioSlot[]) => go("market-event", { portfolio: p })}
+            profile={state.profile}
+            onComplete={(slots: PortfolioSlot[], investments: Investment[]) =>
+              go("market-event", { portfolioSlots: slots, portfolio: investments })
+            }
           />
         )}
 
@@ -78,7 +82,7 @@ const GameFlow = () => {
         {state.step === "simulation" && (
           <SimulationScreen
             key="simulation"
-            portfolio={state.portfolio}
+            portfolio={state.portfolioSlots}
             stormChoice={state.stormChoice}
             onContinue={(r) => go("learning", { simulationResult: r })}
           />
@@ -87,7 +91,7 @@ const GameFlow = () => {
         {state.step === "learning" && (
           <LearningMoment
             key="learning"
-            portfolio={state.portfolio}
+            portfolio={state.portfolioSlots}
             stormChoice={state.stormChoice}
             result={state.simulationResult}
             onContinue={() => go("loop")}
