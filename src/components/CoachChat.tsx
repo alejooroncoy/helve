@@ -355,8 +355,8 @@ export default function CoachChat({ onClose, portfolio, onAddInvestment, onRemov
   }, [onAddInvestment, onRemoveInvestment, onSwapAccepted, onClose]);
 
   const quickQuestions = portfolio && portfolio.length > 0
-    ? ["How is my nest doing?", "Should I diversify?", "What's my risk level?"]
-    : ["What is risk?", "How do I start investing?", "What is an ETF?"];
+    ? (t("coach.quickQuestions.withPortfolio", { returnObjects: true }) as string[])
+    : (t("coach.quickQuestions.withoutPortfolio", { returnObjects: true }) as string[]);
 
   return (
     <div className="flex flex-col h-full bg-background">
