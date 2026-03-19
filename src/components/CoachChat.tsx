@@ -93,34 +93,66 @@ function StrategyCardUI({ card }: { card: StrategyCard }) {
   );
 }
 
-function ComparisonCardUI({ card }: { card: ComparisonCard }) {
+function ComparisonCardUI({ card, onAcceptSwap }: { card: ComparisonCard; onAcceptSwap?: (swap: string) => void }) {
+  const [accepted, setAccepted] = useState(false);
   const parseOption = (opt: string) => {
     const parts = opt.split("|").map((s) => s.trim());
     return { name: parts[0] || "—", risk: parts[1] || "—", ret: parts[2] || "—" };
   };
   const a = parseOption(card.opción_a);
   const b = parseOption(card.opción_b);
+
+  const handleAccept = () => {
+    if (card.swap && onAcceptSwap) {
+      setAccepted(true);
+      onAcceptSwap(card.swap);
+    }
+  };
+
   return (
     <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-card rounded-2xl p-3.5 shadow-sm border border-border mt-2">
       <div className="flex items-center gap-2 mb-2">
         <ArrowRightLeft className="w-3.5 h-3.5 text-accent" />
         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide" style={nunito}>vs</p>
       </div>
-      <div className="grid grid-cols-2 gap-2 mb-2">
+      <div className="grid grid-cols-[1fr_auto_1fr] gap-1.5 mb-2 items-center">
         <div className="rounded-xl p-2 text-center" style={{ backgroundColor: `${CELESTE}10` }}>
           <p className="text-[11px] font-bold text-foreground truncate" style={nunito}>{a.name}</p>
-          <p className="text-[10px] text-muted-foreground" style={nunito}>{a.risk}</p>
-          <p className="text-[11px] font-bold mt-0.5" style={{ color: CELESTE, ...nunito }}>{a.ret}</p>
+          <p className="text-[9px] text-muted-foreground mt-0.5" style={nunito}>📊 {a.risk}</p>
+          <p className="text-[9px] font-bold mt-0.5" style={{ color: CELESTE, ...nunito }}>💰 {a.ret}</p>
         </div>
+        <ArrowRight className="w-3.5 h-3.5 text-muted-foreground/50" />
         <div className="bg-accent/5 rounded-xl p-2 text-center">
           <p className="text-[11px] font-bold text-foreground truncate" style={nunito}>{b.name}</p>
-          <p className="text-[10px] text-muted-foreground" style={nunito}>{b.risk}</p>
-          <p className="text-[11px] text-accent font-bold mt-0.5" style={nunito}>{b.ret}</p>
+          <p className="text-[9px] text-muted-foreground mt-0.5" style={nunito}>📊 {b.risk}</p>
+          <p className="text-[9px] text-accent font-bold mt-0.5" style={nunito}>💰 {b.ret}</p>
         </div>
       </div>
       <p className="text-[10px] text-foreground font-medium bg-muted rounded-lg px-2 py-1.5" style={nunito}>
         {card.veredicto}
       </p>
+      {card.swap && (
+        <motion.button
+          onClick={handleAccept}
+          disabled={accepted}
+          className="w-full mt-2.5 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all"
+          style={{
+            ...nunito,
+            backgroundColor: accepted ? "hsl(var(--primary)/0.1)" : CELESTE,
+            color: accepted ? "hsl(var(--primary))" : "white",
+            cursor: accepted ? "default" : "pointer",
+          }}
+          whileTap={!accepted ? { scale: 0.96 } : {}}
+          animate={accepted ? { scale: [1, 1.05, 1] } : {}}
+          transition={{ duration: 0.3 }}
+        >
+          {accepted ? (
+            <><Check className="w-3.5 h-3.5" /> Change applied!</>
+          ) : (
+            <><ArrowRightLeft className="w-3.5 h-3.5" /> Accept change</>
+          )}
+        </motion.button>
+      )}
     </motion.div>
   );
 }
@@ -139,9 +171,9 @@ function TipCardUI({ card }: { card: TipCard }) {
   );
 }
 
-function VisualCardRenderer({ card }: { card: VisualCard }) {
+function VisualCardRenderer({ card, onAcceptSwap }: { card: VisualCard; onAcceptSwap?: (swap: string) => void }) {
   if (card.type === "strategy") return <StrategyCardUI card={card} />;
-  if (card.type === "comparison") return <ComparisonCardUI card={card} />;
+  if (card.type === "comparison") return <ComparisonCardUI card={card} onAcceptSwap={onAcceptSwap} />;
   if (card.type === "tip") return <TipCardUI card={card} />;
   return null;
 }
