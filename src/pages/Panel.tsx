@@ -459,7 +459,7 @@ const Panel = () => {
     const newAllocations = { ...allocations, [inv.id]: newAlloc };
     setActivePortfolio(next);
     setAllocations(newAllocations);
-    saveProgress({ portfolio: next, allocations: newAllocations });
+    saveNestData({ portfolio: next, allocations: newAllocations });
     const newRisk = Math.round(next.reduce((s, i) => s + i.riskLevel, 0) / next.length * 10);
     if (newRisk > 70) mascotToast(t("panel.riskyBuy"));
     else if (newRisk < 20) mascotToast(t("panel.safeBuy"));
