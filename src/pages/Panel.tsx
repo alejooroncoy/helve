@@ -171,7 +171,7 @@ function NestCard({ inv, overlay }: { inv: Investment; overlay?: boolean }) {
         <div className="flex-1 min-w-0">
           <p className="text-sm font-bold text-foreground truncate" style={nunito}>{inv.name}</p>
           <p className="text-[11px] text-muted-foreground mt-0.5" style={nunito}>
-            {riskWord(inv.riskLevel)} · Earns ~{inv.annualReturn}% per year
+            {riskWord(inv.riskLevel)} · ~{inv.annualReturn}%/año
           </p>
         </div>
         {!overlay && (
@@ -201,47 +201,43 @@ function NestCard({ inv, overlay }: { inv: Investment; overlay?: boolean }) {
 
 function ScoutedCard({ inv, overlay, onAsk }: { inv: Investment; overlay?: boolean; onAsk?: () => void }) {
   return (
-    <div className={`bg-card rounded-2xl p-3.5 shadow-sm border-2 border-dashed border-border ${overlay ? "-rotate-2" : ""} cursor-grab active:cursor-grabbing`} style={overlay ? { boxShadow: `0 0 0 2px ${CELESTE}40`, borderColor: `${CELESTE}60` } : {}}>
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 bg-secondary rounded-xl flex items-center justify-center text-muted-foreground flex-shrink-0">
+    <div className={`bg-card rounded-2xl p-3 shadow-sm border-2 border-dashed border-border ${overlay ? "-rotate-2" : ""} cursor-grab active:cursor-grabbing h-full`} style={overlay ? { boxShadow: `0 0 0 2px ${CELESTE}40`, borderColor: `${CELESTE}60` } : {}}>
+      <div className="flex items-start gap-2">
+        <div className="w-9 h-9 bg-secondary rounded-xl flex items-center justify-center text-muted-foreground flex-shrink-0">
           {getInvestmentIcon(inv)}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-bold text-foreground truncate" style={nunito}>{inv.name} {inv.flag || ""}</p>
-          <p className="text-[11px] text-muted-foreground mt-0.5" style={nunito}>
-            {riskWord(inv.riskLevel)} · Earns ~{inv.annualReturn}% per year
-          </p>
+          <p className="text-xs font-bold text-foreground leading-tight" style={nunito}>{inv.name}</p>
+          {inv.flag && <span className="text-[10px]">{inv.flag}</span>}
         </div>
-        <div className="flex items-center gap-1.5 flex-shrink-0">
+      </div>
+      <p className="text-[10px] text-muted-foreground mt-1.5 leading-tight" style={nunito}>
+        {riskWord(inv.riskLevel)} · ~{inv.annualReturn}%/año
+      </p>
+      <div className="mt-2 flex items-center gap-1.5">
+        <div className="flex-1 h-1 bg-muted rounded-full overflow-hidden">
+          <div className="h-full rounded-full" style={{ width: `${inv.riskLevel * 10}%`, backgroundColor: getRiskBarColor(inv.riskLevel) }} />
+        </div>
+        <span className={`text-[9px] font-bold ${getRiskColor(inv.riskLevel)}`} style={{ ...nunito, ...getRiskInlineColor(inv.riskLevel) }}>{inv.riskLevel}/10</span>
+      </div>
+      <div className="flex items-center justify-between mt-2">
+        {inv.tag && (
+          <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${inv.tag === "HIGH RISK" ? "bg-destructive/10 text-destructive" : ""}`} style={{ ...nunito, ...(inv.tag !== "HIGH RISK" ? { backgroundColor: `${CELESTE}18`, color: CELESTE } : {}) }}>
+            {inv.tag}
+          </span>
+        )}
+        <div className="flex items-center gap-1 ml-auto">
           {!overlay && onAsk && (
             <span
               onClick={(e) => { e.stopPropagation(); e.preventDefault(); onAsk(); }}
               onPointerDown={(e) => e.stopPropagation()}
-              className="w-7 h-7 rounded-full bg-accent/10 text-accent flex items-center justify-center text-xs font-bold cursor-pointer hover:bg-accent/20 transition-colors"
+              className="w-6 h-6 rounded-full bg-accent/10 text-accent flex items-center justify-center text-[10px] font-bold cursor-pointer"
               style={nunito}
-            >
-              ?
-            </span>
+            >?</span>
           )}
-          {!overlay && <span className="text-base font-bold" style={{ color: CELESTE }}>+</span>}
+          {!overlay && <span className="text-sm font-bold" style={{ color: CELESTE }}>+</span>}
         </div>
       </div>
-      <div className="mt-2.5 flex items-center gap-2">
-        <span className="text-[10px] text-muted-foreground font-medium w-8" style={nunito}>Risk</span>
-        <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
-          <div
-            className="h-full rounded-full transition-all"
-            style={{ width: `${inv.riskLevel * 10}%`, backgroundColor: getRiskBarColor(inv.riskLevel) }}
-          />
-        </div>
-        <span className={`text-[10px] font-bold ${getRiskColor(inv.riskLevel)}`} style={{ ...nunito, ...getRiskInlineColor(inv.riskLevel) }}>{inv.riskLevel}/10</span>
-      </div>
-      {inv.tag && (
-        <span className={`inline-flex items-center gap-1 mt-2 text-[10px] font-bold px-2.5 py-0.5 rounded-full ${inv.tag === "HIGH RISK" ? "bg-destructive/10 text-destructive" : ""}`} style={{ ...nunito, ...(inv.tag !== "HIGH RISK" ? { backgroundColor: `${CELESTE}18`, color: CELESTE } : {}) }}>
-          {inv.tag === "HIGH RISK" && <AlertTriangle className="w-3 h-3" />}
-          {inv.tag}
-        </span>
-      )}
     </div>
   );
 }
@@ -382,8 +378,8 @@ const Panel = () => {
       <div className="px-5 pt-6 pb-3">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs text-muted-foreground font-medium tracking-wide uppercase" style={nunito}>My Nest</p>
-            <h1 className="text-2xl text-foreground mt-0.5" style={{ ...nunito, fontWeight: 900 }}>Dashboard</h1>
+            <p className="text-xs text-muted-foreground font-medium tracking-wide uppercase" style={nunito}>Mi Nido</p>
+            <h1 className="text-2xl text-foreground mt-0.5" style={{ ...nunito, fontWeight: 900 }}>Panel</h1>
           </div>
           <div className="flex items-center gap-2">
             <motion.button
@@ -430,13 +426,13 @@ const Panel = () => {
       <div className="px-5 pb-3">
         <div className="grid grid-cols-3 gap-3">
           {[
-            { label: "Balance", value: `€${balance.toLocaleString()}`, sub: `+€${monthlyIncome}/mo`, subStyle: { color: CELESTE } },
-            { label: "Risk Level", value: `${totalRisk}%`, valueStyle: totalRisk > 60 ? { color: "hsl(var(--destructive))" } : totalRisk > 30 ? {} : { color: CELESTE }, valueClass: totalRisk > 30 && totalRisk <= 60 ? "text-accent" : "", sub: getRiskLabel(totalRisk), subStyle: {} },
-            { label: "Avg Return", value: `${avgReturn}%`, valueStyle: { color: CELESTE }, sub: "Annual", subStyle: {} },
+            { label: "Balance", value: `CHF ${balance.toLocaleString()}`, sub: `+CHF ${monthlyIncome}/mes`, subStyle: { color: CELESTE } },
+            { label: "Riesgo", value: `${totalRisk}%`, valueStyle: totalRisk > 60 ? { color: "hsl(var(--destructive))" } : totalRisk > 30 ? {} : { color: CELESTE }, valueClass: totalRisk > 30 && totalRisk <= 60 ? "text-accent" : "", sub: totalRisk <= 30 ? "Bajo" : totalRisk <= 60 ? "Medio" : "Alto", subStyle: {} },
+            { label: "Retorno", value: `${avgReturn}%`, valueStyle: { color: CELESTE }, sub: "Anual", subStyle: {} },
           ].map((stat, i) => (
-            <motion.div key={stat.label} className="bg-card rounded-3xl p-4 shadow-sm" initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 + i * 0.05 }}>
+            <motion.div key={stat.label} className="bg-card rounded-3xl p-3 shadow-sm" initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 + i * 0.05 }}>
               <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium" style={nunito}>{stat.label}</p>
-              <p className={`text-xl font-bold mt-1 ${"valueClass" in stat ? stat.valueClass : "text-foreground"}`} style={{ ...nunito, ...("valueStyle" in stat ? stat.valueStyle : {}) }}>{stat.value}</p>
+              <p className={`text-lg font-bold mt-0.5 ${"valueClass" in stat ? stat.valueClass : "text-foreground"}`} style={{ ...nunito, ...("valueStyle" in stat ? stat.valueStyle : {}) }}>{stat.value}</p>
               <p className="text-[10px] text-muted-foreground font-medium mt-0.5" style={{ ...nunito, ...stat.subStyle }}>{stat.sub}</p>
             </motion.div>
           ))}
@@ -446,42 +442,42 @@ const Panel = () => {
       {/* DnD Content */}
       <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
         <div className="flex-1 overflow-y-auto px-5 pb-4">
-          <div className="flex gap-4 h-full">
-            {/* LEFT: My Nest */}
-            <DropZone id="nest">
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-sm font-bold text-foreground uppercase tracking-wide" style={nunito}>My Nest</h2>
-                <span className="text-xs text-muted-foreground" style={nunito}>{enrichedPortfolio.length}/4</span>
+          {/* My Nest — always full width on top */}
+          <DropZone id="nest">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm font-bold text-foreground uppercase tracking-wide" style={nunito}>Mi Nido</h2>
+              <span className="text-xs text-muted-foreground" style={nunito}>{enrichedPortfolio.length}/4</span>
+            </div>
+            {enrichedPortfolio.length === 0 ? (
+              <div className="bg-card/50 rounded-3xl p-5 text-center border-2 border-dashed border-border flex flex-col items-center justify-center gap-2">
+                <Inbox className="w-8 h-8 text-muted-foreground/50" />
+                <p className="text-sm text-muted-foreground" style={nunito}>¡Tu nido está vacío!</p>
+                <p className="text-xs text-muted-foreground" style={nunito}>Toca una inversión para agregarla</p>
               </div>
-              {enrichedPortfolio.length === 0 ? (
-                <div className="bg-card/50 rounded-3xl p-6 text-center border-2 border-dashed border-border flex-1 flex flex-col items-center justify-center gap-2">
-                  <Inbox className="w-8 h-8 text-muted-foreground/50" />
-                  <p className="text-sm text-muted-foreground" style={nunito}>Your nest is empty!</p>
-                  <p className="text-xs text-muted-foreground" style={nunito}>Drag investments here</p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <AnimatePresence>
-                    {enrichedPortfolio.map((inv) => (
-                      <motion.div key={inv.id} initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }} layout>
-                        <DraggableCard inv={inv} zone="nest" onClick={() => removeInvestment(inv.id)} />
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
-                </div>
-              )}
-            </DropZone>
-
-            {/* RIGHT: Scouted */}
-            <DropZone id="scouted">
-              <h2 className="text-sm font-bold text-foreground uppercase tracking-wide mb-3" style={nunito}>Scouted</h2>
+            ) : (
               <div className="space-y-2">
-                {suggestions.map((inv) => (
-                  <DraggableCard key={inv.id} inv={inv} zone="scouted" onClick={() => addInvestment(inv)} onAsk={() => { setCoachInitQ(`Explain briefly what ${inv.name} is and whether it fits my profile`); setCoachOpen(true); }} />
-                ))}
+                <AnimatePresence>
+                  {enrichedPortfolio.map((inv) => (
+                    <motion.div key={inv.id} initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }} layout>
+                      <DraggableCard inv={inv} zone="nest" onClick={() => removeInvestment(inv.id)} />
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
               </div>
-            </DropZone>
-          </div>
+            )}
+          </DropZone>
+
+          {/* Scouted — horizontal scroll on mobile */}
+          <DropZone id="scouted">
+            <h2 className="text-sm font-bold text-foreground uppercase tracking-wide mb-3 mt-4" style={nunito}>Explorar</h2>
+            <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide" style={{ scrollSnapType: "x mandatory" }}>
+              {suggestions.map((inv) => (
+                <div key={inv.id} className="flex-shrink-0" style={{ width: 200, scrollSnapAlign: "start" }}>
+                  <DraggableCard inv={inv} zone="scouted" onClick={() => addInvestment(inv)} onAsk={() => { setCoachInitQ(`Explica brevemente qué es ${inv.name} y si encaja con mi perfil`); setCoachOpen(true); }} />
+                </div>
+              ))}
+            </div>
+          </DropZone>
         </div>
 
         <DragOverlay>
