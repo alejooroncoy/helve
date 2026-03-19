@@ -416,10 +416,10 @@ const Panel = () => {
   const handleSimulationComplete = useCallback((finalBalance: number, gainPct: number) => {
     setBalance(finalBalance);
     setLastSimGain(gainPct);
-    saveProgress({ simulation_result: finalBalance });
+    saveNestData({ balance: finalBalance });
     if (gainPct > 0) mascotToast(t("panel.nestGrew", { pct: gainPct.toFixed(1) }));
     else mascotToast(t("panel.nestDropped", { pct: Math.abs(gainPct).toFixed(1) }));
-  }, [saveProgress, t]);
+  }, [saveNestData, t]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
