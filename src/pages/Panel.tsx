@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import { toast } from "sonner";
 import { useInstrumentStats } from "@/hooks/useMarketData";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
@@ -409,9 +410,6 @@ const Panel = () => {
   const [profile, setProfile] = useState("balanced");
   const [balance, setBalance] = useState(1000);
   const [lastSimGain, setLastSimGain] = useState<number | null>(null);
-  const [mascotMessage, setMascotMessage] = useState(
-    "¡Arrastra una inversión a tu nido o tócala!"
-  );
   const [draggedItem, setDraggedItem] = useState<{ inv: Investment; zone: string } | null>(null);
   const [buyDialogInv, setBuyDialogInv] = useState<Investment | null>(null);
   const [skipBuyDialog, setSkipBuyDialog] = useState(() => localStorage.getItem("helve_skip_buy_dialog") === "1");
@@ -459,9 +457,9 @@ const Panel = () => {
     setLastSimGain(gainPct);
     saveProgress({ simulation_result: finalBalance });
     if (gainPct > 0) {
-      setMascotMessage(`¡Genial! Tu nido creció ${gainPct.toFixed(1)}% 🎉`);
+      toast(`¡Genial! Tu nido creció ${gainPct.toFixed(1)}% 🎉`, { icon: "🦉", duration: 3000 });
     } else {
-      setMascotMessage(`Tu nido bajó ${Math.abs(gainPct).toFixed(1)}%, pero aprendiste 💪`);
+      toast(`Tu nido bajó ${Math.abs(gainPct).toFixed(1)}%, pero aprendiste 💪`, { icon: "🦉", duration: 3000 });
     }
   }, [saveProgress]);
 
@@ -480,7 +478,7 @@ const Panel = () => {
 
   const executeBuy = useCallback((inv: Investment) => {
     if (activePortfolio.length >= 4) {
-      setMascotMessage("🪺 ¡Tu nido está lleno! Vende un huevo para hacer espacio.");
+      toast("🪺 ¡Tu nido está lleno! Vende un huevo para hacer espacio.", { icon: "🦉", duration: 3000 });
       return;
     }
     if (activePortfolio.find((i) => i.id === inv.id)) return;
@@ -488,14 +486,14 @@ const Panel = () => {
     setActivePortfolio(next);
     saveProgress({ portfolio: next });
     const newRisk = Math.round(next.reduce((s, i) => s + i.riskLevel, 0) / next.length * 10);
-    if (newRisk > 70) setMascotMessage("🦉 ¡Cuidado! Compraste algo arriesgado. Tu nido tiembla un poco...");
-    else if (newRisk < 20) setMascotMessage("🦉 ¡Buena compra! Un huevito muy seguro para tu nido.");
-    else setMascotMessage("🦉 ¡Comprado! Buen ojo, ese huevo se ve prometedor.");
+    if (newRisk > 70) toast("🦉 ¡Cuidado! Compraste algo arriesgado. Tu nido tiembla un poco...", { icon: "🦉", duration: 3000 });
+    else if (newRisk < 20) toast("🦉 ¡Buena compra! Un huevito muy seguro para tu nido.", { icon: "🦉", duration: 3000 });
+    else toast("🦉 ¡Comprado! Buen ojo, ese huevo se ve prometedor.", { icon: "🦉", duration: 3000 });
   }, [activePortfolio, saveProgress]);
 
   const tryBuyInvestment = useCallback((inv: Investment) => {
     if (activePortfolio.length >= 4) {
-      setMascotMessage("🪺 ¡Tu nido está lleno! Vende un huevo para hacer espacio.");
+      toast("🪺 ¡Tu nido está lleno! Vende un huevo para hacer espacio.", { icon: "🦉", duration: 3000 });
       return;
     }
     if (activePortfolio.find((i) => i.id === inv.id)) return;
@@ -523,9 +521,9 @@ const Panel = () => {
       return next;
     });
     if (sold) {
-      setMascotMessage(`🦉 ¡Vendiste ${sold.name}! A veces soltar un huevo es la mejor decisión.`);
+      toast(`🦉 ¡Vendiste ${sold.name}! A veces soltar un huevo es la mejor decisión.`, { icon: "🦉", duration: 3000 });
     } else {
-      setMascotMessage("🦉 Huevo vendido. Tu nido se siente más ligero.");
+      toast("🦉 Huevo vendido. Tu nido se siente más ligero.", { icon: "🦉", duration: 3000 });
     }
   };
 
@@ -623,28 +621,6 @@ const Panel = () => {
           ))}
         </div>
       </div>
-      {/* Mascot message */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={mascotMessage}
-          className="px-5 pb-3 flex items-start gap-2"
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 10 }}
-          transition={{ duration: 0.3 }}
-        >
-          <motion.img
-            src="/perspectiva1.png"
-            alt="Búho"
-            className="w-8 h-8 rounded-full flex-shrink-0 shadow-sm"
-            animate={{ rotate: [0, -5, 5, -3, 0] }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-          />
-          <div className="bg-card rounded-2xl rounded-tl-sm px-3 py-2 shadow-sm flex-1">
-            <p className="text-xs text-foreground leading-relaxed" style={nunito}>{mascotMessage}</p>
-          </div>
-        </motion.div>
-      </AnimatePresence>
 
       {/* DnD Content */}
       <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
