@@ -763,13 +763,12 @@ const Panel = () => {
   }, [enrichInvestment]);
 
   const executeBuy = useCallback(
-    (inv: Investment) => {
-      if (activePortfolio.find((i) => i.id === inv.id)) return;
+    (inv: Investment, customPct?: number) => {
       if (activePortfolio.find((i) => i.id === inv.id)) return;
       const next = [...activePortfolio, inv];
       const currentTotal = Object.values(allocations).reduce((s, v) => s + v, 0);
       const remaining = 100 - currentTotal;
-      const newAlloc = Math.min(25, remaining);
+      const newAlloc = customPct != null ? Math.min(customPct, remaining) : Math.min(25, remaining);
       const newAllocations = { ...allocations, [inv.id]: newAlloc };
       setActivePortfolio(next);
       setAllocations(newAllocations);
