@@ -509,7 +509,7 @@ const Panel = () => {
       delete newAllocations[removeId];
       newAllocations[addId] = removedAlloc;
       setAllocations(newAllocations);
-      saveProgress({ portfolio: next, allocations: newAllocations });
+      saveNestData({ portfolio: next, allocations: newAllocations });
       return next;
     });
     const removeName = t(`allocation.classes.${removeId}`, { defaultValue: toRemove?.name || removeId });
