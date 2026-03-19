@@ -725,8 +725,6 @@ export default function TimeSimulation({
   const isPositive = lastValue >= startBalance;
   const totalDecisions = aiDecisions.current.length;
   const goodDecisions = aiDecisions.current.filter((decision) => decision.isGood).length;
-  const decisionsByStep = new Map(aiDecisions.current.map((decision) => [decision.step, decision]));
-  const showCategorySnapshots = !showAIEvent && !showAIFeedback && !isFinished;
 
   if (pricesLoading) {
     return (
