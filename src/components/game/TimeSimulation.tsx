@@ -1,12 +1,13 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, FastForward, Pause, Play, TrendingUp, TrendingDown, AlertTriangle, Loader2 } from "lucide-react";
+import { X, FastForward, Pause, Play, TrendingUp, TrendingDown, AlertTriangle, Loader2, ShieldCheck, ShieldAlert, Zap } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, ReferenceDot } from "recharts";
 import type { Investment } from "@/game/types";
 import { ASSET_CLASSES } from "@/game/types";
 import { useMonthlyPrices } from "@/hooks/useMarketData";
 import { useTranslation } from "react-i18next";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { supabase } from "@/integrations/supabase/client";
 
 const CELESTE = "#5BB8F5";
 const nunito = { fontFamily: "'Nunito', sans-serif" };
