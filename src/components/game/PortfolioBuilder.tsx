@@ -232,6 +232,7 @@ const PortfolioBuilder = ({ profile, onComplete }: Props) => {
                             </span>
                           )}
                         </span>
+                      )}
                     </div>
                     <div className="flex items-center gap-4 mt-2">
                       <div>
