@@ -7,6 +7,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserProgress } from "@/hooks/useUserProgress";
 import CoachChat from "@/components/CoachChat";
+import TimeSimulation from "@/components/game/TimeSimulation";
 import {
   DndContext,
   DragOverlay,
@@ -196,6 +197,7 @@ const Panel = () => {
   );
   const [draggedItem, setDraggedItem] = useState<{ inv: Investment; zone: string } | null>(null);
   const [coachOpen, setCoachOpen] = useState(false);
+  const [simulationOpen, setSimulationOpen] = useState(false);
   const isMobile = useIsMobile();
 
   // Load saved progress on mount
@@ -282,7 +284,11 @@ const Panel = () => {
 
   const handleSimulate = () => {
     saveProgress({ portfolio: activePortfolio });
-    navigate("/");
+    setSimulationOpen(true);
+  };
+
+  const handleSimSell = (id: string) => {
+    removeInvestment(id);
   };
 
   const handleSignOut = async () => {
@@ -437,6 +443,16 @@ const Panel = () => {
           </p>
         )}
       </div>
+      {/* Time Simulation */}
+      <AnimatePresence>
+        {simulationOpen && (
+          <TimeSimulation
+            portfolio={activePortfolio}
+            onClose={() => setSimulationOpen(false)}
+            onSellInvestment={handleSimSell}
+          />
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };
