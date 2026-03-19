@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, FastForward, Pause, Play, TrendingUp, TrendingDown, AlertTriangle } from "lucide-react";
+import { X, FastForward, Pause, Play, TrendingUp, TrendingDown, AlertTriangle, Loader2 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, ReferenceDot } from "recharts";
 import type { Investment } from "@/game/types";
+import { useMonthlyPrices } from "@/hooks/useMarketData";
 
 interface TimeSimulationProps {
   portfolio: Investment[];
@@ -24,9 +25,30 @@ interface MarketEvent {
   emoji: string;
   title: string;
   description: string;
-  impact: number; // multiplier, e.g. 0.85 = -15%, 1.15 = +15%
+  impact: number;
   type: "positive" | "negative" | "neutral";
 }
+
+// Map game investment IDs to DB instrument IDs
+const investmentToDbId: Record<string, string> = {
+  "ch-bond-aaa": "ch-bond-aaa",
+  "global-bond": "global-bond-agg",
+  "ch-govt-10y": "ch-govt-10y",
+  "smi-index": "smi-index",
+  "eurostoxx50": "eurostoxx50",
+  "gold-chf": "gold-chf",
+  "nestle": "nesn-ch",
+  "novartis": "novn-ch",
+  "djia-index": "djia-index",
+  "dax-index": "dax-index",
+  "apple": "aapl-us",
+  "microsoft": "msft-us",
+  "nvidia": "nvda-us",
+  "logitech": "logn-ch",
+  "ubs": "ubsg-ch",
+  "amazon": "amzn-us",
+  "green-energy": "smi-index",
+};
 
 const marketEvents: MarketEvent[] = [
   { id: "boom", emoji: "☀️", title: "¡Primavera financiera!", description: "El mercado florece. Tu nido brilla.", impact: 1.12, type: "positive" },
@@ -73,6 +95,43 @@ function pickRandom<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
+/**
+ * Pre-compute portfolio multipliers from real DB monthly prices.
+ * For each time step (month index), returns the equal-weighted portfolio multiplier
+ * relative to the start, using the LAST N months of real historical data.
+ */
+function computeRealMultipliers(
+  prices: Record<string, { date: string; price: number }[]>,
+  investmentIds: string[],
+  months: number[]
+): number[] {
+  const dbIds = investmentIds.map(id => investmentToDbId[id] || id);
+  const available = dbIds.filter(id => prices[id] && prices[id].length > 1);
+
+  if (available.length === 0) return months.map(() => 1);
+
+  const maxMonth = Math.max(...months);
+
+  return months.map(month => {
+    if (month === 0) return 1;
+
+    const instrumentMultipliers = available.map(instrumentId => {
+      const data = prices[instrumentId]!;
+      const totalMonths = data.length;
+      // Take the last maxMonth+1 data points as our window
+      const startIdx = Math.max(0, totalMonths - maxMonth - 1);
+      const basePrice = data[startIdx]?.price || 1;
+      // Target index for this month
+      const targetIdx = Math.min(startIdx + month, totalMonths - 1);
+      const targetPrice = data[targetIdx]?.price || basePrice;
+      return basePrice > 0 ? targetPrice / basePrice : 1;
+    });
+
+    // Equal-weighted average
+    return instrumentMultipliers.reduce((sum, m) => sum + m, 0) / instrumentMultipliers.length;
+  });
+}
+
 export default function TimeSimulation({ portfolio, initialMonths = 12, onClose, onSellInvestment, onAskCoach }: TimeSimulationProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [playing, setPlaying] = useState(false);
@@ -84,6 +143,13 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, onClose,
   const [totalGain, setTotalGain] = useState(0);
   const [currentPortfolio, setCurrentPortfolio] = useState(portfolio);
   const intervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Fetch real market data from DB
+  const dbIds = useMemo(
+    () => portfolio.map(inv => investmentToDbId[inv.id] || inv.id).filter(Boolean),
+    [portfolio]
+  );
+  const { prices, loading: pricesLoading } = useMonthlyPrices(dbIds);
 
   // Filter timeline steps based on selected period
   const filteredIndices = useMemo(() => {
@@ -97,75 +163,74 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, onClose,
   const filteredLabels = filteredIndices.map(i => timeLabels[i]);
   const totalSteps = filteredMonths.length - 1;
 
-  const startBalance = 1000;
+  // Pre-compute real multipliers for the entire timeline from DB data
+  const realMultipliers = useMemo(() => {
+    if (pricesLoading || Object.keys(prices).length === 0) return null;
+    return computeRealMultipliers(prices, currentPortfolio.map(i => i.id), filteredMonths);
+  }, [prices, pricesLoading, currentPortfolio, filteredMonths]);
 
-  // Calculate base monthly return from portfolio
-  const getMonthlyReturn = useCallback(() => {
-    if (currentPortfolio.length === 0) return 0;
-    const avgAnnual = currentPortfolio.reduce((s, i) => s + i.annualReturn, 0) / currentPortfolio.length;
-    // Add some randomness: ±30% of expected return
-    const randomFactor = 0.7 + Math.random() * 0.6;
-    return (avgAnnual / 100 / 12) * randomFactor;
-  }, [currentPortfolio]);
+  const startBalance = 1000;
 
   // Initialize first data point
   useEffect(() => {
     setData([{ month: 0, label: "Hoy", value: startBalance }]);
   }, []);
 
-  // Advance one step
+  // Advance one step using real data
   const advanceStep = useCallback(() => {
-    if (currentStep >= totalSteps) {
+    if (currentStep >= totalSteps || !realMultipliers) {
       setPlaying(false);
       return;
     }
 
     const nextStep = currentStep + 1;
-    const monthsDiff = filteredMonths[nextStep] - filteredMonths[currentStep];
 
-    // Should an event happen? (40% chance per step)
-    const eventHappens = Math.random() < 0.4 && nextStep > 1;
-    const event = eventHappens ? pickRandom(marketEvents) : null;
+    // Real portfolio value from historical data
+    const realValue = startBalance * realMultipliers[nextStep];
+    const newValue = Math.round(realValue * 100) / 100;
 
-    setData((prev) => {
-      const lastValue = prev[prev.length - 1]?.value || startBalance;
-      const monthlyReturn = getMonthlyReturn();
-      let newValue = lastValue * Math.pow(1 + monthlyReturn, monthsDiff);
+    const gain = ((newValue - startBalance) / startBalance) * 100;
+    setTotalGain(Math.round(gain * 10) / 10);
 
-      if (event) {
-        newValue *= event.impact;
-      }
+    // Detect if this step had a significant move → show contextual event
+    const prevMultiplier = realMultipliers[currentStep] || 1;
+    const stepReturn = (realMultipliers[nextStep] / prevMultiplier) - 1;
 
-      newValue = Math.round(newValue * 100) / 100;
-      const gain = ((newValue - startBalance) / startBalance) * 100;
-      setTotalGain(Math.round(gain * 10) / 10);
+    let event: MarketEvent | null = null;
+    if (stepReturn < -0.08) {
+      // Big drop — pick a negative event
+      event = pickRandom(marketEvents.filter(e => e.type === "negative"));
+      event = { ...event, impact: 1 + stepReturn }; // use real impact
+    } else if (stepReturn > 0.10) {
+      // Big gain — pick a positive event
+      event = pickRandom(marketEvents.filter(e => e.type === "positive"));
+      event = { ...event, impact: 1 + stepReturn };
+    }
 
-      const point: TimePoint = {
-        month: filteredMonths[nextStep],
-        label: filteredLabels[nextStep],
-        value: Math.round(newValue),
-        event: event || undefined,
-      };
+    const point: TimePoint = {
+      month: filteredMonths[nextStep],
+      label: filteredLabels[nextStep],
+      value: Math.round(newValue),
+      event: event || undefined,
+    };
 
-      return [...prev, point];
-    });
+    setData(prev => [...prev, point]);
 
     if (event) {
       setCurrentEvent(event);
       setShowEvent(true);
-      setPlaying(false); // Pause on events
+      setPlaying(false);
       setBirdMsg(pickRandom(birdMessages[event.type]));
-
-      // Show sell prompt on negative events
       if (event.type === "negative") {
         setShowSellPrompt(true);
       }
     } else {
-      setBirdMsg(pickRandom(birdMessages.neutral));
+      const msgType = stepReturn > 0.02 ? "positive" : stepReturn < -0.02 ? "negative" : "neutral";
+      setBirdMsg(pickRandom(birdMessages[msgType]));
     }
 
     setCurrentStep(nextStep);
-  }, [currentStep, getMonthlyReturn, totalSteps, filteredMonths, filteredLabels]);
+  }, [currentStep, totalSteps, realMultipliers, filteredMonths, filteredLabels]);
 
   // Auto-play timer
   useEffect(() => {
@@ -203,6 +268,26 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, onClose,
   const lastValue = data[data.length - 1]?.value || startBalance;
   const isPositive = lastValue >= startBalance;
 
+  // Loading state
+  if (pricesLoading) {
+    return (
+      <motion.div
+        className="fixed inset-0 bg-background z-50 flex flex-col items-center justify-center gap-4"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+      >
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <p className="text-sm text-muted-foreground font-medium">Cargando datos reales del mercado...</p>
+      </motion.div>
+    );
+  }
+
+  const periodLabel = initialMonths <= 6
+    ? `${initialMonths} meses`
+    : initialMonths === 12
+    ? "1 año"
+    : "5 años";
+
   return (
     <motion.div
       className="fixed inset-0 bg-background z-50 flex flex-col"
@@ -213,7 +298,9 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, onClose,
       {/* Header */}
       <div className="px-5 pt-5 pb-3 flex items-center justify-between">
         <div>
-          <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Simulación</p>
+          <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
+            Simulación · {periodLabel} · datos reales
+          </p>
           <h1 className="text-xl font-bold text-foreground mt-0.5">
             {isFinished ? "¡Vuelo completado!" : "Tu nido en el tiempo"}
           </h1>
@@ -227,12 +314,12 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, onClose,
       <div className="px-5 pb-3 grid grid-cols-3 gap-3">
         <div className="bg-card rounded-2xl p-3 shadow-sm text-center">
           <p className="text-[10px] text-muted-foreground uppercase">Invertido</p>
-          <p className="text-lg font-bold text-foreground">€{startBalance}</p>
+          <p className="text-lg font-bold text-foreground">CHF {startBalance}</p>
         </div>
         <div className="bg-card rounded-2xl p-3 shadow-sm text-center">
           <p className="text-[10px] text-muted-foreground uppercase">Valor actual</p>
           <p className={`text-lg font-bold ${isPositive ? "text-primary" : "text-destructive"}`}>
-            €{lastValue.toLocaleString()}
+            CHF {lastValue.toLocaleString()}
           </p>
         </div>
         <div className="bg-card rounded-2xl p-3 shadow-sm text-center">
@@ -407,8 +494,8 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, onClose,
               className={`text-center py-3 rounded-2xl text-sm font-bold ${isPositive ? "bg-primary/10 text-primary" : "bg-destructive/10 text-destructive"}`}
             >
               {isPositive
-                ? `🎉 ¡Tu nido creció! Ganaste €${(lastValue - startBalance).toFixed(0)} en 5 años`
-                : `😅 Tu nido se encogió €${(startBalance - lastValue).toFixed(0)}. ¡Pero aprendiste!`
+                ? `🎉 ¡Tu nido creció! Ganaste CHF ${(lastValue - startBalance).toFixed(0)} en ${periodLabel}`
+                : `😅 Tu nido se encogió CHF ${(startBalance - lastValue).toFixed(0)} en ${periodLabel}. ¡Pero aprendiste!`
               }
             </motion.div>
             <motion.button
@@ -422,13 +509,14 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, onClose,
         ) : (
           <div className="flex gap-3">
             <motion.button
-              onClick={() => setPlaying(!playing)}
+              onClick={() => realMultipliers && setPlaying(!playing)}
               className="flex-1 bg-card text-foreground py-3.5 rounded-2xl text-sm font-bold shadow-sm flex items-center justify-center gap-2"
+              style={{ opacity: realMultipliers ? 1 : 0.5 }}
               whileTap={{ scale: 0.95 }}
             >
               {playing ? <><Pause className="w-4 h-4" /> Pausar</> : <><Play className="w-4 h-4" /> {currentStep === 0 ? "Empezar" : "Continuar"}</>}
             </motion.button>
-            {!playing && (
+            {!playing && realMultipliers && (
               <motion.button
                 onClick={advanceStep}
                 className="flex-1 bg-primary text-primary-foreground py-3.5 rounded-2xl text-sm font-bold shadow-sm flex items-center justify-center gap-2"
