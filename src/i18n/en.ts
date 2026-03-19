@@ -317,25 +317,25 @@ const en = {
   // Bird messages
   birdMessages: {
     positive: [
-      "Your nest shines! 🌟",
-      "The eggs are warm! 🥚✨",
-      "Great flight! You're on the right path 🐦",
+      "Your nest shines!",
+      "The eggs are warm!",
+      "Great flight! You're on the right path.",
     ],
     negative: [
-      "Hold on! Storms pass 🌧️",
-      "Strong birds resist the wind 💪",
-      "Not every flight is smooth, but you're still flying! 🦅",
+      "Hold on! Storms pass.",
+      "Strong birds resist the wind.",
+      "Not every flight is smooth, but you're still flying!",
     ],
     neutral: [
-      "Easy does it, your nest grows slowly but surely 🪺",
-      "Patience, little bird. Time is your friend ⏳",
-      "Step by step you build the best nest 🐣",
+      "Easy does it, your nest grows slowly but surely.",
+      "Patience, little bird. Time is your friend.",
+      "Step by step you build the best nest.",
     ],
     sell: [
-      "Sold! Sometimes it's good to lighten the nest 🍃",
-      "Egg out. Was it a good decision? We'll see... 🤔",
+      "Sold! Sometimes it's good to lighten the nest.",
+      "Egg out. Was it a good decision? We'll see...",
     ],
-    held: "You held! Brave birds weather the storm 💪",
+    held: "You held! Brave birds weather the storm.",
   },
 
   // Coach chat
@@ -420,26 +420,48 @@ const en = {
 
   // Multiplayer market events pool
   marketEventsPool: {
-    crash: { title: "📉 Stock Market Crash", desc: "Global stocks plunge. Panic spreads across markets." },
-    rateHike: { title: "🏦 Interest Rate Hike", desc: "Central banks raise rates. Bonds and currencies react." },
-    goldRush: { title: "🥇 Gold Rush", desc: "Investors flock to gold as a safe haven. Prices soar." },
-    pandemic: { title: "🦠 Global Pandemic", desc: "A health crisis disrupts economies. Markets tumble." },
-    cryptoBoom: { title: "🚀 Crypto Boom", desc: "Digital currencies surge. Early adopters celebrate." },
-    cryptoCrash: { title: "💥 Crypto Crash", desc: "Crypto bubble bursts. Values collapse overnight." },
-    inflation: { title: "🔥 Inflation Surge", desc: "Consumer prices spike. Purchasing power erodes." },
-    greenBoom: { title: "🌍 Green Energy Boom", desc: "Renewable energy sector surges on new policies." },
-    currencyWar: { title: "💱 Currency War", desc: "Countries devalue currencies. FX markets go haywire." },
-    dividend: { title: "🎁 Dividend Season", desc: "Top companies announce record dividends." },
-    recession: { title: "❄️ Global Recession", desc: "Economic slowdown hits all sectors. Markets freeze." },
-    oilSpike: { title: "🛢️ Oil Price Spike", desc: "Oil prices surge due to supply disruptions." },
-    regulation: { title: "⚖️ New Regulations", desc: "Governments tighten rules on crypto and green energy." },
-    aiRevolution: { title: "🤖 AI Revolution", desc: "Artificial intelligence transforms industries. Tech stocks rally." },
-    swissFrancSurge: { title: "🇨🇭 Swiss Franc Surge", desc: "The franc strengthens sharply. Swiss exporters feel the pinch." },
-    bondDefault: { title: "📜 Major Bond Default", desc: "A large issuer defaults. Bond markets tremble." },
-    greenCrash: { title: "🍂 Clean Energy Crash", desc: "Green energy subsidies cut. Sector takes a hit." },
-    bullRun: { title: "🐂 Bull Market Run", desc: "Optimism drives stocks to new all-time highs." },
-    geopolitics: { title: "🌐 Geopolitical Crisis", desc: "International tensions escalate. Markets seek safety." },
-    stablePeriod: { title: "☀️ Stable Growth Period", desc: "Economy grows steadily. Low volatility, steady gains." },
+    crash: { title: "Stock Market Crash", desc: "Global stocks plunge. Panic spreads across markets." },
+    rateHike: { title: "Interest Rate Hike", desc: "Central banks raise rates. Bonds and currencies react." },
+    goldRush: { title: "Gold Rush", desc: "Investors flock to gold as a safe haven. Prices soar." },
+    pandemic: { title: "Global Pandemic", desc: "A health crisis disrupts economies. Markets tumble." },
+    cryptoBoom: { title: "Crypto Boom", desc: "Digital currencies surge. Early adopters celebrate." },
+    cryptoCrash: { title: "Crypto Crash", desc: "Crypto bubble bursts. Values collapse overnight." },
+    inflation: { title: "Inflation Surge", desc: "Consumer prices spike. Purchasing power erodes." },
+    greenBoom: { title: "Green Energy Boom", desc: "Renewable energy sector surges on new policies." },
+    currencyWar: { title: "Currency War", desc: "Countries devalue currencies. FX markets go haywire." },
+    dividend: { title: "Dividend Season", desc: "Top companies announce record dividends." },
+    recession: { title: "Global Recession", desc: "Economic slowdown hits all sectors. Markets freeze." },
+    oilSpike: { title: "Oil Price Spike", desc: "Oil prices surge due to supply disruptions." },
+    regulation: { title: "New Regulations", desc: "Governments tighten rules on crypto and green energy." },
+    aiRevolution: { title: "AI Revolution", desc: "Artificial intelligence transforms industries. Tech stocks rally." },
+    swissFrancSurge: { title: "Swiss Franc Surge", desc: "The franc strengthens sharply. Swiss exporters feel the pinch." },
+    bondDefault: { title: "Major Bond Default", desc: "A large issuer defaults. Bond markets tremble." },
+    greenCrash: { title: "Clean Energy Crash", desc: "Green energy subsidies cut. Sector takes a hit." },
+    bullRun: { title: "Bull Market Run", desc: "Optimism drives stocks to new all-time highs." },
+    geopolitics: { title: "Geopolitical Crisis", desc: "International tensions escalate. Markets seek safety." },
+    stablePeriod: { title: "Stable Growth Period", desc: "Economy grows steadily. Low volatility, steady gains." },
+  },
+
+  // Hub screen
+  hub: {
+    greeting: "Welcome back",
+    subtitle: "Choose your adventure",
+    portfolio: {
+      title: "My Portfolio",
+      desc: "Build and simulate your investment nest",
+    },
+    multiplayer: {
+      title: "Multiplayer",
+      desc: "Compete with friends in real-time",
+    },
+    multiplayerSteps: [
+      { title: "Create or Join", description: "Start a room and invite friends with a code or QR. Up to 4 players can compete." },
+      { title: "Pick Your Assets", description: "Each player picks up to 5 asset categories. Your money is split equally across them." },
+      { title: "Survive the Market", description: "Watch 10 years unfold with real market events. Hold or sell — the best portfolio wins!" },
+    ],
+    next: "Next",
+    letsPlay: "Let's play!",
+    footer: "HELVE - Learn investing by playing",
   },
 
   // Common

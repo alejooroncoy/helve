@@ -317,25 +317,25 @@ const es = {
   // Bird messages
   birdMessages: {
     positive: [
-      "¡Tu nido brilla! 🌟",
-      "¡Los huevos están calentitos! 🥚✨",
-      "¡Buen vuelo! Vas por buen camino 🐦",
+      "Tu nido brilla!",
+      "Los huevos estan calentitos!",
+      "Buen vuelo! Vas por buen camino.",
     ],
     negative: [
-      "¡Aguanta! Las tormentas pasan 🌧️",
-      "Los pájaros fuertes resisten el viento 💪",
-      "No todo vuelo es suave, ¡pero sigues volando! 🦅",
+      "Aguanta! Las tormentas pasan.",
+      "Los pajaros fuertes resisten el viento.",
+      "No todo vuelo es suave, pero sigues volando!",
     ],
     neutral: [
-      "Tranquilo, tu nido crece despacio pero seguro 🪺",
-      "Paciencia, pajarito. El tiempo es tu amigo ⏳",
-      "Paso a paso se construye el mejor nido 🐣",
+      "Tranquilo, tu nido crece despacio pero seguro.",
+      "Paciencia, pajarito. El tiempo es tu amigo.",
+      "Paso a paso se construye el mejor nido.",
     ],
     sell: [
-      "¡Vendiste! A veces es bueno aligerar el nido 🍃",
-      "Huevo fuera. ¿Fue buena decisión? Lo veremos... 🤔",
+      "Vendiste! A veces es bueno aligerar el nido.",
+      "Fuera. Fue buena decision? Lo veremos...",
     ],
-    held: "¡Mantuviste! Los pájaros valientes aguantan la tormenta 💪",
+    held: "Mantuviste! Los pajaros valientes aguantan la tormenta.",
   },
 
   // Coach chat
@@ -420,35 +420,57 @@ const es = {
 
   // Multiplayer market events pool
   marketEventsPool: {
-    crash: { title: "📉 Caída Bursátil", desc: "Las acciones globales se desploman. El pánico se extiende." },
-    rateHike: { title: "🏦 Subida de Tasas", desc: "Los bancos centrales suben tasas. Bonos y divisas reaccionan." },
-    goldRush: { title: "🥇 Fiebre del Oro", desc: "Inversores buscan refugio en el oro. Los precios se disparan." },
-    pandemic: { title: "🦠 Pandemia Global", desc: "Una crisis de salud sacude las economías. Los mercados caen." },
-    cryptoBoom: { title: "🚀 Boom Crypto", desc: "Las monedas digitales se disparan. Los early adopters celebran." },
-    cryptoCrash: { title: "💥 Crash Crypto", desc: "La burbuja crypto explota. Los valores colapsan de la noche a la mañana." },
-    inflation: { title: "🔥 Inflación Alta", desc: "Los precios al consumidor se disparan. El poder adquisitivo se erosiona." },
-    greenBoom: { title: "🌍 Boom de Energía Verde", desc: "El sector renovable se dispara con nuevas políticas." },
-    currencyWar: { title: "💱 Guerra de Divisas", desc: "Los países devalúan sus monedas. Los mercados FX se descontrolan." },
-    dividend: { title: "🎁 Temporada de Dividendos", desc: "Las principales empresas anuncian dividendos récord." },
-    recession: { title: "❄️ Recesión Global", desc: "La desaceleración económica golpea todos los sectores. Los mercados se congelan." },
-    oilSpike: { title: "🛢️ Alza del Petróleo", desc: "Los precios del petróleo se disparan por problemas de suministro." },
-    regulation: { title: "⚖️ Nuevas Regulaciones", desc: "Los gobiernos endurecen las normas sobre crypto y energía verde." },
-    aiRevolution: { title: "🤖 Revolución IA", desc: "La inteligencia artificial transforma industrias. Las acciones tech suben." },
-    swissFrancSurge: { title: "🇨🇭 Alza del Franco Suizo", desc: "El franco se fortalece fuertemente. Los exportadores suizos sufren." },
-    bondDefault: { title: "📜 Impago de Bonos", desc: "Un gran emisor incumple. Los mercados de bonos tiemblan." },
-    greenCrash: { title: "🍂 Caída Energía Limpia", desc: "Recortes de subsidios a energía verde. El sector sufre." },
-    bullRun: { title: "🐂 Mercado Alcista", desc: "El optimismo lleva las acciones a nuevos máximos históricos." },
-    geopolitics: { title: "🌐 Crisis Geopolítica", desc: "Las tensiones internacionales escalan. Los mercados buscan refugio." },
-    stablePeriod: { title: "☀️ Período de Estabilidad", desc: "La economía crece de forma estable. Baja volatilidad, ganancias constantes." },
+    crash: { title: "Caida Bursatil", desc: "Las acciones globales se desploman. El panico se extiende." },
+    rateHike: { title: "Subida de Tasas", desc: "Los bancos centrales suben tasas. Bonos y divisas reaccionan." },
+    goldRush: { title: "Fiebre del Oro", desc: "Inversores buscan refugio en el oro. Los precios se disparan." },
+    pandemic: { title: "Pandemia Global", desc: "Una crisis de salud sacude las economias. Los mercados caen." },
+    cryptoBoom: { title: "Boom Crypto", desc: "Las monedas digitales se disparan. Los early adopters celebran." },
+    cryptoCrash: { title: "Crash Crypto", desc: "La burbuja crypto explota. Los valores colapsan de la noche a la manana." },
+    inflation: { title: "Inflacion Alta", desc: "Los precios al consumidor se disparan. El poder adquisitivo se erosiona." },
+    greenBoom: { title: "Boom de Energia Verde", desc: "El sector renovable se dispara con nuevas politicas." },
+    currencyWar: { title: "Guerra de Divisas", desc: "Los paises devaluan sus monedas. Los mercados FX se descontrolan." },
+    dividend: { title: "Temporada de Dividendos", desc: "Las principales empresas anuncian dividendos record." },
+    recession: { title: "Recesion Global", desc: "La desaceleracion economica golpea todos los sectores. Los mercados se congelan." },
+    oilSpike: { title: "Alza del Petroleo", desc: "Los precios del petroleo se disparan por problemas de suministro." },
+    regulation: { title: "Nuevas Regulaciones", desc: "Los gobiernos endurecen las normas sobre crypto y energia verde." },
+    aiRevolution: { title: "Revolucion IA", desc: "La inteligencia artificial transforma industrias. Las acciones tech suben." },
+    swissFrancSurge: { title: "Alza del Franco Suizo", desc: "El franco se fortalece fuertemente. Los exportadores suizos sufren." },
+    bondDefault: { title: "Impago de Bonos", desc: "Un gran emisor incumple. Los mercados de bonos tiemblan." },
+    greenCrash: { title: "Caida Energia Limpia", desc: "Recortes de subsidios a energia verde. El sector sufre." },
+    bullRun: { title: "Mercado Alcista", desc: "El optimismo lleva las acciones a nuevos maximos historicos." },
+    geopolitics: { title: "Crisis Geopolitica", desc: "Las tensiones internacionales escalan. Los mercados buscan refugio." },
+    stablePeriod: { title: "Periodo de Estabilidad", desc: "La economia crece de forma estable. Baja volatilidad, ganancias constantes." },
+  },
+
+  // Hub screen
+  hub: {
+    greeting: "Bienvenido de vuelta",
+    subtitle: "Elige tu aventura",
+    portfolio: {
+      title: "Mi Portafolio",
+      desc: "Construye y simula tu nido de inversiones",
+    },
+    multiplayer: {
+      title: "Multiplayer",
+      desc: "Compite con amigos en tiempo real",
+    },
+    multiplayerSteps: [
+      { title: "Crea o Unete", description: "Crea una sala e invita amigos con un codigo o QR. Hasta 4 jugadores pueden competir." },
+      { title: "Elige tus activos", description: "Cada jugador elige hasta 5 categorias de activos. Tu dinero se reparte equitativamente." },
+      { title: "Sobrevive al mercado", description: "Mira 10 anos de mercado con eventos reales. Manten o vende - el mejor portafolio gana!" },
+    ],
+    next: "Siguiente",
+    letsPlay: "A jugar!",
+    footer: "HELVE - Aprende a invertir jugando",
   },
 
   // Common
   common: {
     loading: "Cargando...",
-    perYear: "/año",
+    perYear: "/ano",
     notFound: {
       title: "404",
-      message: "¡Ups! Página no encontrada",
+      message: "Ups! Pagina no encontrada",
       backHome: "Volver al inicio",
     },
   },
