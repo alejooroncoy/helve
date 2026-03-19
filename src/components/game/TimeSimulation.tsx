@@ -1,12 +1,13 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, FastForward, Pause, Play, TrendingUp, TrendingDown, AlertTriangle, Loader2 } from "lucide-react";
+import { X, FastForward, Pause, Play, TrendingUp, TrendingDown, AlertTriangle, Loader2, ShieldCheck, ShieldAlert, Zap } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, ReferenceDot } from "recharts";
 import type { Investment } from "@/game/types";
 import { ASSET_CLASSES } from "@/game/types";
 import { useMonthlyPrices } from "@/hooks/useMarketData";
 import { useTranslation } from "react-i18next";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { supabase } from "@/integrations/supabase/client";
 
 const CELESTE = "#5BB8F5";
 const nunito = { fontFamily: "'Nunito', sans-serif" };
@@ -37,6 +38,20 @@ interface MarketEvent {
   type: "positive" | "negative" | "neutral";
 }
 
+interface AIScenarioOption {
+  action: "hold" | "sell" | "buy";
+  label: string;
+  is_best: boolean;
+  feedback_good: string;
+  feedback_bad: string;
+}
+
+interface AIScenario {
+  title: string;
+  description: string;
+  options: AIScenarioOption[];
+}
+
 // Map category keys to their representative DB IDs
 const categoryToDbIds: Record<string, string[]> = {};
 ASSET_CLASSES.forEach(cls => {
@@ -55,6 +70,30 @@ const marketEvents: MarketEvent[] = [
   { id: "stable", emoji: "", title: "Nido estable", description: "Sin sorpresas. Tu nido se mantiene firme.", impact: 1.01, type: "neutral" },
   { id: "war", emoji: "", title: "Tension global", description: "El mundo se sacude. Los mercados tiemblan.", impact: 0.85, type: "negative" },
 ];
+
+const ACTION_ICONS = {
+  hold: ShieldCheck,
+  sell: TrendingDown,
+  buy: Zap,
+};
+
+const ACTION_COLORS = {
+  hold: CELESTE,
+  sell: "hsl(var(--destructive))",
+  buy: "hsl(var(--primary))",
+};
+
+async function fetchAIScenario(portfolio: Investment[], balance: number, monthLabel: string, language: string): Promise<AIScenario | null> {
+  try {
+    const { data, error } = await supabase.functions.invoke("sim-event", {
+      body: { portfolio, balance, monthLabel, language },
+    });
+    if (error || !data || !data.options) return null;
+    return data as AIScenario;
+  } catch {
+    return null;
+  }
+}
 
 const timeLabels = [
   "Hoy", "1 mes", "2 meses", "3 meses", "6 meses",
@@ -119,7 +158,7 @@ function computeRealMultipliers(
 }
 
 export default function TimeSimulation({ portfolio, initialMonths = 12, initialBalance = 1000, onClose, onComplete, onSellInvestment, onAskCoach }: TimeSimulationProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [currentStep, setCurrentStep] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [data, setData] = useState<TimePoint[]>([]);
@@ -130,6 +169,25 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, initialB
   const [totalGain, setTotalGain] = useState(0);
   const [currentPortfolio, setCurrentPortfolio] = useState(portfolio);
   const intervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // AI Battle Royale state
+  const [aiScenario, setAiScenario] = useState<AIScenario | null>(null);
+  const [showAIEvent, setShowAIEvent] = useState(false);
+  const [aiFeedback, setAiFeedback] = useState<{ text: string; isGood: boolean } | null>(null);
+  const [showAIFeedback, setShowAIFeedback] = useState(false);
+  const aiScenarioCache = useRef<Record<number, AIScenario | null>>({});
+  const aiFetchingRef = useRef<Set<number>>(new Set());
+
+  // Pick 2 random steps for AI events (not first or last)
+  const aiEventSteps = useMemo(() => {
+    const filteredCount = Math.max(0, initialMonths <= 6 ? 3 : initialMonths <= 12 ? 5 : 9);
+    if (filteredCount < 4) return [];
+    const candidates = [];
+    for (let i = 2; i < filteredCount - 1; i++) candidates.push(i);
+    // Shuffle and pick 2
+    const shuffled = [...candidates].sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, Math.min(2, shuffled.length)).sort((a, b) => a - b);
+  }, [initialMonths]);
 
   const dbIds = useMemo(
     () => portfolio.flatMap(inv => categoryToDbIds[inv.id] || []).filter(Boolean),
@@ -159,6 +217,20 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, initialB
     setData([{ month: 0, label: t("timeSim.today"), value: startBalance }]);
   }, []);
 
+  // Pre-fetch AI scenarios 1 step before they're needed
+  useEffect(() => {
+    for (const eventStep of aiEventSteps) {
+      const prefetchAt = Math.max(0, eventStep - 1);
+      if (currentStep >= prefetchAt && !aiScenarioCache.current[eventStep] && !aiFetchingRef.current.has(eventStep)) {
+        aiFetchingRef.current.add(eventStep);
+        const lastValue = data[data.length - 1]?.value || startBalance;
+        fetchAIScenario(currentPortfolio, lastValue, filteredLabels[eventStep] || "", i18n.language).then(scenario => {
+          aiScenarioCache.current[eventStep] = scenario;
+        });
+      }
+    }
+  }, [currentStep, aiEventSteps, currentPortfolio, data, filteredLabels, i18n.language, startBalance]);
+
   const advanceStep = useCallback(() => {
     if (currentStep >= totalSteps || !realMultipliers) {
       setPlaying(false);
@@ -166,6 +238,27 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, initialB
     }
 
     const nextStep = currentStep + 1;
+
+    // Check if this step has an AI event ready
+    if (aiEventSteps.includes(nextStep) && aiScenarioCache.current[nextStep]) {
+      setAiScenario(aiScenarioCache.current[nextStep]!);
+      setShowAIEvent(true);
+      setPlaying(false);
+      // Still advance data
+      const realValue = startBalance * realMultipliers[nextStep];
+      const newValue = Math.round(realValue * 100) / 100;
+      const gain = ((newValue - startBalance) / startBalance) * 100;
+      setTotalGain(Math.round(gain * 10) / 10);
+      const point: TimePoint = {
+        month: filteredMonths[nextStep],
+        label: filteredLabels[nextStep],
+        value: Math.round(newValue),
+      };
+      setData(prev => [...prev, point]);
+      setCurrentStep(nextStep);
+      return;
+    }
+
     const realValue = startBalance * realMultipliers[nextStep];
     const newValue = Math.round(realValue * 100) / 100;
     const gain = ((newValue - startBalance) / startBalance) * 100;
@@ -206,7 +299,23 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, initialB
     }
 
     setCurrentStep(nextStep);
-  }, [currentStep, totalSteps, realMultipliers, filteredMonths, filteredLabels]);
+  }, [currentStep, totalSteps, realMultipliers, filteredMonths, filteredLabels, aiEventSteps, startBalance]);
+
+  const handleAIChoice = (option: AIScenarioOption) => {
+    setShowAIEvent(false);
+    setAiFeedback({
+      text: option.is_best ? option.feedback_good : option.feedback_bad,
+      isGood: option.is_best,
+    });
+    setShowAIFeedback(true);
+  };
+
+  const dismissAIFeedback = () => {
+    setShowAIFeedback(false);
+    setAiFeedback(null);
+    setAiScenario(null);
+    setPlaying(true);
+  };
 
   useEffect(() => {
     if (playing && currentStep < totalSteps) {
@@ -460,6 +569,107 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, initialB
                   </motion.button>
                 </div>
               )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* AI Battle Royale Event overlay */}
+      <AnimatePresence>
+        {showAIEvent && aiScenario && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-background/80 backdrop-blur-sm z-20 flex items-center justify-center px-6"
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0, y: 30 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ type: "spring", damping: 20 }}
+              className="bg-card rounded-3xl p-6 shadow-xl max-w-sm w-full text-center"
+            >
+              <div className="w-12 h-12 rounded-full mx-auto mb-3 flex items-center justify-center" style={{ backgroundColor: `${CELESTE}15` }}>
+                <AlertTriangle className="w-6 h-6" style={{ color: CELESTE }} />
+              </div>
+              <h2 className="text-lg font-bold text-foreground mb-1" style={nunito}>{aiScenario.title}</h2>
+              <p className="text-sm text-muted-foreground mb-5" style={nunito}>{aiScenario.description}</p>
+
+              <div className="space-y-2.5">
+                {aiScenario.options.map((option) => {
+                  const Icon = ACTION_ICONS[option.action];
+                  const color = ACTION_COLORS[option.action];
+                  return (
+                    <motion.button
+                      key={option.action}
+                      onClick={() => handleAIChoice(option)}
+                      className="w-full py-3.5 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 border"
+                      style={{ ...nunito, borderColor: `${typeof color === 'string' && color.startsWith('#') ? color : CELESTE}30`, color }}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.97 }}
+                    >
+                      <Icon className="w-4 h-4" />
+                      {option.label}
+                    </motion.button>
+                  );
+                })}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* AI Feedback overlay */}
+      <AnimatePresence>
+        {showAIFeedback && aiFeedback && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-background/80 backdrop-blur-sm z-20 flex items-center justify-center px-6"
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0, y: 30 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ type: "spring", damping: 20 }}
+              className="bg-card rounded-3xl p-6 shadow-xl max-w-sm w-full text-center"
+            >
+              <div
+                className="w-14 h-14 rounded-full mx-auto mb-3 flex items-center justify-center"
+                style={{
+                  backgroundColor: aiFeedback.isGood ? "hsl(var(--primary)/0.1)" : "hsl(var(--destructive)/0.1)",
+                }}
+              >
+                {aiFeedback.isGood
+                  ? <ShieldCheck className="w-7 h-7" style={{ color: "hsl(var(--primary))" }} />
+                  : <ShieldAlert className="w-7 h-7" style={{ color: "hsl(var(--destructive))" }} />
+                }
+              </div>
+              <h3
+                className="text-base font-bold mb-2"
+                style={{
+                  ...nunito,
+                  color: aiFeedback.isGood ? "hsl(var(--primary))" : "hsl(var(--destructive))",
+                }}
+              >
+                {aiFeedback.isGood
+                  ? (i18n.language === "es" ? "Buena decisión" : "Great call!")
+                  : (i18n.language === "es" ? "No te preocupes" : "Don't worry!")
+                }
+              </h3>
+              <p className="text-sm text-muted-foreground mb-5 leading-relaxed" style={nunito}>
+                {aiFeedback.text}
+              </p>
+              <motion.button
+                onClick={dismissAIFeedback}
+                className="w-full py-3.5 rounded-2xl text-sm font-bold text-white"
+                style={{ ...nunito, backgroundColor: CELESTE }}
+                whileTap={{ scale: 0.97 }}
+              >
+                {i18n.language === "es" ? "Continuar" : "Continue"}
+              </motion.button>
             </motion.div>
           </motion.div>
         )}
