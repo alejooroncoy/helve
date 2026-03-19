@@ -410,9 +410,6 @@ const Panel = () => {
   const [profile, setProfile] = useState("balanced");
   const [balance, setBalance] = useState(1000);
   const [lastSimGain, setLastSimGain] = useState<number | null>(null);
-  const [mascotMessage, setMascotMessage] = useState(
-    "¡Arrastra una inversión a tu nido o tócala!"
-  );
   const [draggedItem, setDraggedItem] = useState<{ inv: Investment; zone: string } | null>(null);
   const [buyDialogInv, setBuyDialogInv] = useState<Investment | null>(null);
   const [skipBuyDialog, setSkipBuyDialog] = useState(() => localStorage.getItem("helve_skip_buy_dialog") === "1");
