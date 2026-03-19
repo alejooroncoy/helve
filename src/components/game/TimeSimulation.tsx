@@ -501,7 +501,11 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, initialB
               }
             </motion.div>
             <motion.button
-              onClick={onClose}
+              onClick={() => {
+                const finalVal = data.length > 0 ? data[data.length - 1].value : startBalance;
+                onComplete?.(Math.round(finalVal), totalGain);
+                onClose();
+              }}
               className="w-full bg-primary text-primary-foreground py-4 rounded-3xl text-base font-bold"
               whileTap={{ scale: 0.97 }}
             >
