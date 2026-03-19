@@ -718,6 +718,10 @@ const Panel = () => {
                             onSell={() => removeInvestment(inv.id)}
                             onAsk={() => { setCoachInitQ(`Tengo ${inv.name} en mi nido. ¿Es buena inversión? ¿Debería venderla o mantenerla?`); setCoachOpen(true); }}
                             onInfo={() => { setCoachInitQ(`Dame un análisis detallado de ${inv.name}: riesgo, retorno histórico, y perspectiva futura.`); setCoachOpen(true); }}
+                            allocation={allocations[inv.id] ?? 0}
+                            onAllocationChange={(pct) => handleAllocationChange(inv.id, pct)}
+                            maxAllocation={cashRemaining}
+                            balance={balance}
                           />
                         </motion.div>
                       ))}
