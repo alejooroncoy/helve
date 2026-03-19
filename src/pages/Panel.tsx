@@ -420,19 +420,7 @@ const Panel = () => {
       </DndContext>
 
       {/* Bottom Actions */}
-      <div className="px-5 pb-6 pt-3 space-y-3 bg-gradient-to-t from-background via-background to-transparent">
-        <div className="flex gap-2">
-          <motion.button className="flex-1 bg-card text-foreground py-3 rounded-2xl text-xs font-bold shadow-sm" whileTap={{ scale: 0.95 }} onClick={() => { setActivePortfolio([]); setMascotMessage("Empty nest! 🪹 Let's scout fresh investments."); }}>
-            🔄 Reset
-          </motion.button>
-          <motion.button className="flex-1 bg-card text-foreground py-3 rounded-2xl text-xs font-bold shadow-sm" whileTap={{ scale: 0.95 }} onClick={() => setMascotMessage("The wisest birds stay perched during storms! 🦉 Patience builds the strongest nests.")}>
-            🦉 Wisdom
-          </motion.button>
-          <motion.button className="flex-1 bg-card text-foreground py-3 rounded-2xl text-xs font-bold shadow-sm" whileTap={{ scale: 0.95 }} onClick={() => setMascotMessage("Mix high-flyers with steady perchers! 🐦 A diverse flock weathers any storm.")}>
-            💬 Ask Me
-          </motion.button>
-        </div>
-
+      <div className="px-5 pb-6 pt-3 bg-gradient-to-t from-background via-background to-transparent">
         <motion.button
           className={`w-full py-4 rounded-3xl text-base font-bold shadow-lg transition-all flex items-center justify-center gap-2 ${
             activePortfolio.length > 0 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground cursor-not-allowed"
@@ -441,9 +429,13 @@ const Panel = () => {
           whileHover={activePortfolio.length > 0 ? { scale: 1.02 } : {}}
           whileTap={activePortfolio.length > 0 ? { scale: 0.97 } : {}}
         >
-          <img src="/face.png" alt="" className="w-6 h-6 rounded-full" />
-          Take Flight 🦅
+          ⏩ Simular 1 año
         </motion.button>
+        {activePortfolio.length === 0 && (
+          <p className="text-[10px] text-muted-foreground text-center mt-2">
+            Añade inversiones a tu nido para simular el paso del tiempo
+          </p>
+        )}
       </div>
     </motion.div>
   );
