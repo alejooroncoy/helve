@@ -190,6 +190,8 @@ const Panel = () => {
     "Hey there! 👋 Drag an investment into your nest — or just tap it!"
   );
   const [draggedItem, setDraggedItem] = useState<{ inv: Investment; zone: string } | null>(null);
+  const [coachOpen, setCoachOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
