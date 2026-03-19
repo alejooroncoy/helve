@@ -51,8 +51,8 @@ function generateRoomCode(): string {
 }
 
 function pickRandomAssets(count: number): Investment[] {
-  const shuffled = [...availableInvestments].sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, count);
+  // Now we use all 8 categories as available assets
+  return [...availableInvestments];
 }
 
 export function useMultiplayer() {
