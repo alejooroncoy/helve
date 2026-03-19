@@ -623,28 +623,6 @@ const Panel = () => {
           ))}
         </div>
       </div>
-      {/* Mascot message */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={mascotMessage}
-          className="px-5 pb-3 flex items-start gap-2"
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 10 }}
-          transition={{ duration: 0.3 }}
-        >
-          <motion.img
-            src="/perspectiva1.png"
-            alt="Búho"
-            className="w-8 h-8 rounded-full flex-shrink-0 shadow-sm"
-            animate={{ rotate: [0, -5, 5, -3, 0] }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-          />
-          <div className="bg-card rounded-2xl rounded-tl-sm px-3 py-2 shadow-sm flex-1">
-            <p className="text-xs text-foreground leading-relaxed" style={nunito}>{mascotMessage}</p>
-          </div>
-        </motion.div>
-      </AnimatePresence>
 
       {/* DnD Content */}
       <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
