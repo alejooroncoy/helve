@@ -642,23 +642,19 @@ export default function TimeSimulation({
 
     const scheduledEvent = aiEventMap[nextStep];
     if (scheduledEvent) {
-      setCurrentStep(nextStep);
-      setPlaying(false);
-      setLoadingDecisionStep(nextStep);
-      setBirdMsg(
-        i18n.language === "es"
-          ? `${scheduledEvent.investmentName} está moviéndose fuerte...`
-          : `${scheduledEvent.investmentName} is moving sharply...`,
-      );
-
+      // Fetch in background — simulation keeps playing
       void ensureScenario(scheduledEvent, newValue).then((scenario) => {
-        setLoadingDecisionStep(null);
         if (!scenario) return;
+        setPlaying(false);
         setActiveAIEvent(scheduledEvent);
         setAiScenario(scenario);
         setShowAIEvent(true);
+        setBirdMsg(
+          i18n.language === "es"
+            ? `${scheduledEvent.investmentName} está moviéndose fuerte...`
+            : `${scheduledEvent.investmentName} is moving sharply...`,
+        );
       });
-      return;
     }
 
     const previousValue = data[data.length - 1]?.value || startBalance;
