@@ -162,15 +162,12 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, initialB
   const [currentStep, setCurrentStep] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [data, setData] = useState<TimePoint[]>([]);
-  const [currentEvent, setCurrentEvent] = useState<MarketEvent | null>(null);
   const [birdMsg, setBirdMsg] = useState(t("timeSim.letsStart"));
-  const [showEvent, setShowEvent] = useState(false);
-  const [showSellPrompt, setShowSellPrompt] = useState(false);
   const [totalGain, setTotalGain] = useState(0);
   const [currentPortfolio, setCurrentPortfolio] = useState(portfolio);
   const intervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // AI Battle Royale state
+  // AI decision state
   const [aiScenario, setAiScenario] = useState<AIScenario | null>(null);
   const [showAIEvent, setShowAIEvent] = useState(false);
   const [aiFeedback, setAiFeedback] = useState<{ text: string; isGood: boolean } | null>(null);
@@ -178,13 +175,16 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, initialB
   const aiScenarioCache = useRef<Record<number, AIScenario | null>>({});
   const aiFetchingRef = useRef<Set<number>>(new Set());
 
+  // Cumulative multiplier from AI decisions (hold=1, sell=0.85, buy=1.10 or inverse if wrong)
+  const decisionMultiplier = useRef(1);
+  const aiDecisions = useRef<{ action: string; isGood: boolean }[]>([]);
+
   // Pick 2 random steps for AI events (not first or last)
   const aiEventSteps = useMemo(() => {
     const filteredCount = Math.max(0, initialMonths <= 6 ? 3 : initialMonths <= 12 ? 5 : 9);
     if (filteredCount < 4) return [];
     const candidates = [];
     for (let i = 2; i < filteredCount - 1; i++) candidates.push(i);
-    // Shuffle and pick 2
     const shuffled = [...candidates].sort(() => Math.random() - 0.5);
     return shuffled.slice(0, Math.min(2, shuffled.length)).sort((a, b) => a - b);
   }, [initialMonths]);
