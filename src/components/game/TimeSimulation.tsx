@@ -22,6 +22,7 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { supabase } from "@/integrations/supabase/client";
 import TimeSimulationCategoryCharts, {
   type CategoryTrendSnapshot,
+  type EventMarker,
   getCategoryColor,
 } from "./TimeSimulationCategoryCharts";
 
