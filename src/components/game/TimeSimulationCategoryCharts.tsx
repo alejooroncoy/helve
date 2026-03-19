@@ -20,12 +20,11 @@ export interface CategoryTrendSnapshot {
 }
 
 export interface EventMarker {
-  /** index in the points array where the event fires */
   pointIndex: number;
-  /** short label shown on the chart */
   label?: string;
-  /** time label like "6 meses", "1 año" */
   timeLabel?: string;
+  /** Pre-computed change % at the event step */
+  changePct?: number;
   direction?: "drop" | "surge" | "shake";
 }
 
