@@ -554,10 +554,9 @@ const Panel = () => {
   return (
     <motion.div className="min-h-screen bg-background flex flex-col overflow-y-auto" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
       {/* Header */}
-      <div className="px-5 pt-6 pb-3">
+      <div className="px-5 pt-6 pb-2">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs text-muted-foreground font-medium tracking-wide uppercase" style={nunito}>{t("panel.myNest")}</p>
             <h1 className="text-2xl text-foreground mt-0.5" style={{ ...nunito, fontWeight: 900 }}>{t("panel.panelTitle")}</h1>
           </div>
           <div className="flex items-center gap-2">
@@ -589,6 +588,73 @@ const Panel = () => {
               </Popover>
             )}
           </div>
+        </div>
+      </div>
+
+      {/* Nest Tabs */}
+      <div className="px-5 pb-3">
+        <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-1">
+          {nests.map((nest) => (
+            <div key={nest.id} className="flex-shrink-0 relative group">
+              {renamingNest === nest.id ? (
+                <form
+                  onSubmit={(e) => { e.preventDefault(); handleRenameNest(nest.id, renameValue); }}
+                  className="flex items-center"
+                >
+                  <input
+                    autoFocus
+                    value={renameValue}
+                    onChange={(e) => setRenameValue(e.target.value)}
+                    onBlur={() => handleRenameNest(nest.id, renameValue)}
+                    className="text-xs font-bold px-3 py-2 rounded-2xl bg-card border-2 outline-none w-24"
+                    style={{ ...nunito, borderColor: CELESTE }}
+                  />
+                </form>
+              ) : (
+                <button
+                  onClick={() => handleTabClick(nest)}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-2xl text-xs font-bold transition-all border-2"
+                  style={{
+                    ...nunito,
+                    borderColor: activeNestId === nest.id ? CELESTE : "hsl(var(--border))",
+                    backgroundColor: activeNestId === nest.id ? CELESTE + "15" : "hsl(var(--card))",
+                    color: activeNestId === nest.id ? CELESTE : "hsl(var(--muted-foreground))",
+                  }}
+                >
+                  <span>{nest.name}</span>
+                  {activeNestId === nest.id && (
+                    <span className="flex items-center gap-0.5 ml-1">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setRenamingNest(nest.id); setRenameValue(nest.name); }}
+                        className="p-0.5 rounded hover:bg-black/10 transition-colors"
+                      >
+                        <Pencil className="w-3 h-3" />
+                      </button>
+                      {nests.length > 1 && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleDeleteNest(nest.id); }}
+                          className="p-0.5 rounded hover:bg-destructive/20 text-destructive/70 hover:text-destructive transition-colors"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      )}
+                    </span>
+                  )}
+                </button>
+              )}
+            </div>
+          ))}
+          {nests.length < 4 && (
+            <motion.button
+              onClick={handleCreateNest}
+              className="flex-shrink-0 w-8 h-8 rounded-full border-2 border-dashed flex items-center justify-center transition-colors"
+              style={{ borderColor: "hsl(var(--border))", color: "hsl(var(--muted-foreground))" }}
+              whileHover={{ scale: 1.1, borderColor: CELESTE }}
+              whileTap={{ scale: 0.9 }}
+            >
+              <Plus className="w-4 h-4" />
+            </motion.button>
+          )}
         </div>
       </div>
 
