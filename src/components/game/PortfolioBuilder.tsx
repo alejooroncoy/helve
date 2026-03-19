@@ -32,16 +32,7 @@ function getRecommended(profile: RiskProfile): Investment[] {
   return [all.find(i => i.id === "bonds")!, all.find(i => i.id === "equity")!, all.find(i => i.id === "swissStocks")!];
 }
 
-function getRecommended(profile: RiskProfile): Investment[] {
-  const all = availableInvestments;
-  if (profile === "conservative") {
-    return [all.find(i => i.id === "ch-bond-aaa")!, all.find(i => i.id === "global-bond")!, all.find(i => i.id === "gold-chf")!];
-  }
-  if (profile === "growth") {
-    return [all.find(i => i.id === "smi-index")!, all.find(i => i.id === "apple")!, all.find(i => i.id === "nvidia")!];
-  }
-  return [all.find(i => i.id === "ch-bond-aaa")!, all.find(i => i.id === "smi-index")!, all.find(i => i.id === "djia-index")!];
-}
+
 
 function getRiskColor(risk: number): string {
   if (risk <= 3) return "#22c55e";
