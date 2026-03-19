@@ -10,6 +10,7 @@ import OnboardingGate from "@/components/OnboardingGate";
 import Index from "./pages/Index.tsx";
 import Panel from "./pages/Panel.tsx";
 import Auth from "./pages/Auth.tsx";
+import Multiplayer from "./pages/Multiplayer.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import SplashScreen from "./components/SplashScreen.tsx";
 
@@ -38,6 +39,11 @@ const App = () => {
               <Route path="/panel" element={
                 <ProtectedRoute>
                   <Panel />
+                </ProtectedRoute>
+              } />
+              <Route path="/multiplayer" element={
+                <ProtectedRoute>
+                  <Multiplayer />
                 </ProtectedRoute>
               } />
               <Route path="*" element={<NotFound />} />
