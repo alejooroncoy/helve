@@ -18,6 +18,7 @@ import {
   useDraggable,
   useDroppable,
   PointerSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   type DragStartEvent,
@@ -445,7 +446,10 @@ const Panel = () => {
     }
   }, [saveProgress, t]);
 
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
+  );
   const suggestions = useMemo(() => getSuggestions(profile, enrichedPortfolio), [profile, enrichedPortfolio]);
 
   const totalAllocated = useMemo(() => {
@@ -724,7 +728,7 @@ const Panel = () => {
                 {/* Mobile: horizontal scroll */}
                 <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide items-stretch md:hidden" style={{ scrollSnapType: "x mandatory" }}>
                   {suggestions.map((inv) => (
-                    <div key={inv.id} className="flex-shrink-0 flex" style={{ width: 190, scrollSnapAlign: "start" }}>
+                    <div key={inv.id} className="flex-shrink-0 flex" style={{ width: 180, minWidth: 170, scrollSnapAlign: "start" }}>
                       <DraggableCard inv={inv} zone="scouted" onClick={() => tryBuyInvestment(inv)} onAsk={() => { setCoachInitQ(`Explica brevemente qué es ${inv.name} y si encaja con mi perfil`); setCoachOpen(true); }} />
                     </div>
                   ))}
@@ -742,9 +746,11 @@ const Panel = () => {
           </div>
         </div>
 
-        <DragOverlay>
+        <DragOverlay dropAnimation={null}>
           {draggedItem ? (
-            draggedItem.zone === "nest" ? <NestCard inv={draggedItem.inv} overlay /> : <ScoutedCard inv={draggedItem.inv} overlay />
+            <div style={{ width: draggedItem.zone === "scouted" ? 170 : "auto", maxWidth: 340 }}>
+              {draggedItem.zone === "nest" ? <NestCard inv={draggedItem.inv} overlay /> : <ScoutedCard inv={draggedItem.inv} overlay />}
+            </div>
           ) : null}
         </DragOverlay>
       </DndContext>
