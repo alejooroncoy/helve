@@ -435,6 +435,7 @@ const es = {
     backToNest: "Volver a My Nest",
     eventHistory: "HISTORIAL DE EVENTOS",
     recommended: "Recomendado",
+    buy: "Comprar",
   },
 
   // Multiplayer market events pool
