@@ -108,7 +108,7 @@ export default function TimeSimulationCategoryCharts({
                       color: recentPositive ? "hsl(var(--primary))" : "hsl(var(--destructive))",
                     }}
                   >
-                    {recentPositive ? "+" : ""}{recentChange.toFixed(1)}% hoy
+                    {recentPositive ? "+" : ""}{recentChange.toFixed(1)}% {eventMarker?.timeLabel || "hoy"}
                   </span>
                 )}
                 {/* Total cumulative */}
