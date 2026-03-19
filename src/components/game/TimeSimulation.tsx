@@ -72,6 +72,8 @@ interface ScheduledAIEvent {
   investmentName: string;
   riskLevel: number;
   direction: EventDirection;
+  /** The exact % impact to show and tell the AI about */
+  impactPct: number;
 }
 
 const categoryToDbIds: Record<string, string[]> = {};
