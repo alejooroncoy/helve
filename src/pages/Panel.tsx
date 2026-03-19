@@ -145,7 +145,6 @@ function NestCard({ inv, overlay, onSell, onAsk, onInfo, allocation, balance, t,
         </div>
         <div className="flex-1 min-w-0" onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }} onPointerDown={(e) => e.stopPropagation()}>
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-base">{inv.emoji}</span>
             <p className="text-sm font-bold text-foreground" style={nunito}>{displayName}</p>
           </div>
           <div className="flex items-center gap-2 mt-1 flex-wrap">
