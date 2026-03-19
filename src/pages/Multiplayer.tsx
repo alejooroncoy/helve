@@ -12,7 +12,9 @@ const Multiplayer = () => {
 
   return (
     <div className="min-h-screen bg-background relative">
-      <LanguageSwitcher className="absolute top-4 right-4 z-50" />
+      {mp.room && mp.room.status !== "waiting" && mp.room.status !== "picking" && (
+        <LanguageSwitcher className="absolute top-4 right-4 z-50" />
+      )}
       <AnimatePresence mode="wait">
         {(!mp.room || mp.room.status === "waiting") && (
           <MultiplayerLobby key="lobby" mp={mp} />

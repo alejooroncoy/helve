@@ -1,24 +1,45 @@
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { motion } from "framer-motion";
 import { Globe } from "lucide-react";
+
+const nunito = { fontFamily: "'Nunito', sans-serif" };
 
 export default function LanguageSwitcher({ className = "" }: { className?: string }) {
   const { i18n } = useTranslation();
-  const current = i18n.language?.startsWith("es") ? "es" : "en";
+  const [current, setCurrent] = useState(
+    i18n.language?.startsWith("es") ? "es" : "en"
+  );
 
-  const toggle = () => {
-    const next = current === "en" ? "es" : "en";
-    i18n.changeLanguage(next);
+  useEffect(() => {
+    const onLangChange = (lng: string) => {
+      setCurrent(lng.startsWith("es") ? "es" : "en");
+    };
+    i18n.on("languageChanged", onLangChange);
+    return () => i18n.off("languageChanged", onLangChange);
+  }, [i18n]);
+
+  const handleChange = (lang: string) => {
+    i18n.changeLanguage(lang);
+    setCurrent(lang);
   };
 
   return (
-    <motion.button
-      onClick={toggle}
-      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-card shadow-sm border border-border text-xs font-bold text-muted-foreground hover:text-foreground transition-colors ${className}`}
-      whileTap={{ scale: 0.95 }}
-    >
-      <Globe className="w-3.5 h-3.5" />
-      {current === "en" ? "ES" : "EN"}
-    </motion.button>
+    <div className={`flex items-center gap-1 bg-card shadow-sm border border-border rounded-full px-2 py-1 ${className}`}>
+      <Globe className="w-3.5 h-3.5 text-muted-foreground ml-1" />
+      {["en", "es"].map((lang) => (
+        <button
+          key={lang}
+          onClick={() => handleChange(lang)}
+          className="px-2 py-0.5 rounded-full text-xs font-bold transition-colors"
+          style={{
+            ...nunito,
+            backgroundColor: current === lang ? "#5BB8F5" : "transparent",
+            color: current === lang ? "white" : "hsl(var(--muted-foreground))",
+          }}
+        >
+          {lang.toUpperCase()}
+        </button>
+      ))}
+    </div>
   );
 }

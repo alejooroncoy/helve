@@ -47,15 +47,16 @@ const Hub = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
     >
-      <LanguageSwitcher className="absolute top-4 right-4 z-50" />
-
       {/* Header */}
-      <div className="px-6 pt-12 pb-4">
-        <div className="flex items-center gap-3 mb-1">
+      <div className="px-6 pt-6 pb-4">
+        <div className="flex justify-center mb-3">
+          <LanguageSwitcher />
+        </div>
+        <div className="flex items-center gap-3">
           <img
             src="/mascot-owl.png"
             alt="mascot"
-            className="w-10 h-10 rounded-full object-cover"
+            className="w-10 h-10 rounded-full object-cover flex-shrink-0"
           />
           <div>
             {(() => {

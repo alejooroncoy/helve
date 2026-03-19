@@ -2,10 +2,11 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
-import { Check, Users } from "lucide-react";
+import { Check, Users, Building2, TrendingUp, Gem, ArrowLeftRight, Mountain, Landmark, Zap, Leaf } from "lucide-react";
 import { ASSET_CLASSES } from "@/game/types";
 import type { AssetClass } from "@/game/types";
 import type { useMultiplayer } from "@/hooks/useMultiplayer";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 const nunito = { fontFamily: "'Nunito', sans-serif" };
 const MAX_PICKS = 5;
@@ -14,6 +15,17 @@ const CLASS_COLORS: Record<AssetClass, string> = {
   bonds: "hsl(210, 60%, 55%)", equity: "hsl(145, 58%, 36%)", gold: "hsl(38, 92%, 50%)",
   fx: "hsl(200, 70%, 50%)", swissStocks: "hsl(0, 72%, 51%)", usStocks: "hsl(220, 70%, 50%)",
   crypto: "hsl(270, 60%, 55%)", cleanEnergy: "hsl(150, 60%, 45%)",
+};
+
+const CLASS_ICONS: Record<AssetClass, React.ElementType> = {
+  bonds: Building2,
+  equity: TrendingUp,
+  gold: Gem,
+  fx: ArrowLeftRight,
+  swissStocks: Mountain,
+  usStocks: Landmark,
+  crypto: Zap,
+  cleanEnergy: Leaf,
 };
 
 interface Props { mp: ReturnType<typeof useMultiplayer>; }
@@ -42,7 +54,11 @@ const MultiplayerPicking = ({ mp }: Props) => {
 
   return (
     <motion.div className="min-h-screen flex flex-col px-5 py-6" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+      {/* Header: language switcher centered, then title + desc */}
       <div className="text-center mb-5">
+        <div className="flex justify-center mb-3">
+          <LanguageSwitcher />
+        </div>
         <h1 className="text-xl font-black text-foreground" style={nunito}>{t("multiplayer.pickAssets")}</h1>
         <p className="text-xs text-muted-foreground mt-1" style={nunito}>{t("multiplayer.pickCategoriesDesc", { max: MAX_PICKS })}</p>
       </div>
@@ -60,39 +76,55 @@ const MultiplayerPicking = ({ mp }: Props) => {
         ))}
       </div>
 
-      {/* Category grid */}
+      {/* Category list */}
       <div className="flex-1 space-y-2 mb-4">
         {ASSET_CLASSES.map((cls, i) => {
           const isSelected = selected.includes(cls.key);
+          const color = CLASS_COLORS[cls.key];
+          const Icon = CLASS_ICONS[cls.key];
           return (
-            <motion.button key={cls.key} className="w-full flex items-center gap-3 p-3 rounded-2xl text-left transition-all"
+            <motion.button key={cls.key}
+              className="w-full flex items-center gap-3 p-3 rounded-2xl text-left"
               style={{
-                background: isSelected ? "hsl(var(--primary) / 0.1)" : "hsl(var(--card))",
-                border: isSelected ? "2px solid hsl(var(--primary))" : "2px solid transparent",
-                boxShadow: isSelected ? "0 4px 12px hsl(var(--primary) / 0.15)" : "0 2px 8px hsl(0 0% 0% / 0.05)",
+                background: isSelected ? `${color}18` : "hsl(var(--card))",
+                border: `2px solid ${isSelected ? color : "transparent"}`,
+                boxShadow: "0 2px 8px hsl(0 0% 0% / 0.05)",
               }}
               onClick={() => !mp.myPlayer?.is_ready && toggleCategory(cls.key)}
               initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.04 }}>
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${CLASS_COLORS?.[cls.key] || "hsl(var(--muted))"}20` }} />
-              <div className="flex-1 min-w-0">
-                <span className="text-sm font-bold text-foreground" style={nunito}>{t(`allocation.classes.${cls.key}`)}</span>
-                <p className="text-[10px] text-muted-foreground leading-tight" style={nunito}>{t(`allocation.classDesc.${cls.key}`)}</p>
+
+              {/* Icon */}
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                style={{ backgroundColor: `${color}20` }}>
+                <Icon className="w-5 h-5" style={{ color }} />
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-bold" style={{ color: CLASS_COLORS[cls.key] }}>
-                  {t("portfolio.risk")} {cls.riskWeight}/10
+
+              {/* Text */}
+              <div className="flex-1 min-w-0">
+                <span className="text-sm font-bold text-foreground block" style={nunito}>
+                  {t(`allocation.classes.${cls.key}`)}
                 </span>
-                <div className="w-6 h-6 rounded-full border-2 flex items-center justify-center"
-                  style={{ borderColor: isSelected ? "hsl(var(--primary))" : "hsl(var(--border))", background: isSelected ? "hsl(var(--primary))" : "transparent" }}>
-                  {isSelected && <Check className="w-3 h-3 text-primary-foreground" />}
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="text-[10px] font-bold flex-shrink-0" style={{ color }}>
+                    {t("portfolio.risk")} {cls.riskWeight}/10
+                  </span>
+                  <div className="flex-1 h-1 rounded-full overflow-hidden" style={{ background: "hsl(var(--muted))" }}>
+                    <div className="h-full rounded-full" style={{ width: `${cls.riskWeight * 10}%`, backgroundColor: color }} />
+                  </div>
                 </div>
+              </div>
+
+              {/* Checkbox */}
+              <div className="w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0"
+                style={{ borderColor: isSelected ? color : "hsl(var(--border))", background: isSelected ? color : "transparent" }}>
+                {isSelected && <Check className="w-3 h-3 text-white" />}
               </div>
             </motion.button>
           );
         })}
       </div>
 
-      {/* Players */}
+      {/* Players status */}
       <div className="flex items-center gap-2 mb-3 justify-center">
         <Users className="w-3 h-3 text-muted-foreground" />
         {mp.players.map(p => (

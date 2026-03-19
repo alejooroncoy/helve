@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import type { RiskProfile } from "@/game/types";
 import { useTranslation } from "react-i18next";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 interface Props {
   profile: RiskProfile;
@@ -16,11 +17,18 @@ const mascotImages: Record<RiskProfile, string> = {
   growth: "/mascot-growth.png",
 };
 
+const riskBlocks: Record<RiskProfile, { filled: number; color: string; label: string }> = {
+  conservative: { filled: 1, color: "#3fb074", label: "Low" },
+  balanced:     { filled: 2, color: "#facc15", label: "Moderate" },
+  growth:       { filled: 3, color: "#f87171", label: "High" },
+};
+
 const ProfileResult = ({ profile, onContinue }: Props) => {
   const { t } = useTranslation();
   const title = t(`profile.${profile}.title`);
   const card = t(`profile.${profile}.card`);
   const mascot = mascotImages[profile];
+  const { filled, color, label } = riskBlocks[profile];
 
   return (
     <motion.div
@@ -29,6 +37,34 @@ const ProfileResult = ({ profile, onContinue }: Props) => {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
     >
+      {/* Language switcher */}
+      <div className="flex justify-end px-6 pt-6">
+        <LanguageSwitcher />
+      </div>
+
+      {/* Risk bar */}
+      <div className="px-6 pt-4 flex gap-2">
+        {[1, 2, 3].map((block) => (
+          <motion.div
+            key={block}
+            className="flex-1 h-2.5 rounded-full"
+            style={{ backgroundColor: block <= filled ? color : "hsl(var(--muted))" }}
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: 1 }}
+            transition={{ delay: 0.2 + block * 0.1, duration: 0.4, type: "spring" }}
+          />
+        ))}
+      </div>
+      <motion.p
+        className="px-6 mt-3 text-base text-center text-muted-foreground"
+        style={nunito}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.6 }}
+      >
+        Risk profile: <span style={{ color, fontWeight: 900 }}>{label}</span>
+      </motion.p>
+
       <div className="flex-1 flex flex-col items-center justify-center px-6 gap-5">
         <motion.img
           src={mascot}
