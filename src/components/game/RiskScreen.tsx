@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Sprout, TreePine, Mountain } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 interface RiskOption {
   label: string;
   score: number;
-  emoji: string;
+  icon: React.ReactNode;
 }
 
 interface Props {
@@ -16,8 +16,14 @@ interface Props {
 }
 
 const CELESTE = "#5BB8F5";
-const emojis = ["🟢", "🟡", "🔴"];
 const scores = [0, 1, 2];
+
+// Per-question icons that hint at the concept without revealing risk level
+const questionIcons = [
+  [<Sprout key="a" className="w-5 h-5" />, <TreePine key="b" className="w-5 h-5" />, <Mountain key="c" className="w-5 h-5" />],
+  [<Sprout key="a" className="w-5 h-5" />, <TreePine key="b" className="w-5 h-5" />, <Mountain key="c" className="w-5 h-5" />],
+  [<Sprout key="a" className="w-5 h-5" />, <TreePine key="b" className="w-5 h-5" />, <Mountain key="c" className="w-5 h-5" />],
+];
 
 const RiskScreen = ({ questionIndex, onAnswer, onBack }: Props) => {
   const [selected, setSelected] = useState<number | null>(null);
@@ -30,7 +36,7 @@ const RiskScreen = ({ questionIndex, onAnswer, onBack }: Props) => {
   const options: RiskOption[] = q.options.map((label, i) => ({
     label,
     score: scores[i],
-    emoji: emojis[i],
+    icon: questionIcons[questionIndex]?.[i] ?? <Sprout className="w-5 h-5" />,
   }));
 
   const handleContinue = () => {
@@ -99,7 +105,7 @@ const RiskScreen = ({ questionIndex, onAnswer, onBack }: Props) => {
               transition={{ delay: 0.1 + i * 0.08 }}
               whileTap={{ scale: 0.97 }}
             >
-              <span className="text-2xl">{opt.emoji}</span>
+              <span className="text-muted-foreground">{opt.icon}</span>
               <span
                 className="text-foreground text-base"
                 style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 600, color: isSelected ? CELESTE : undefined }}
