@@ -12,7 +12,7 @@ interface Props {
   mp: ReturnType<typeof useMultiplayer>;
 }
 
-const RANK_ICONS = ["🥇", "🥈", "🥉", "4️⃣"];
+const RANK_LABELS = ["1st", "2nd", "3rd", "4th"];
 const RANK_COLORS = [
   "hsl(38, 92%, 50%)", // gold
   "hsl(0, 0%, 70%)",   // silver
