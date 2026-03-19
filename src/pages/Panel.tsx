@@ -857,102 +857,96 @@ const Panel = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
     >
-      {/* Header — Global Balance + Per-Nest Risk/Return */}
+      {/* Header — actions row */}
       <div className="px-5 pt-5 pb-2">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-baseline gap-5">
-            {/* Balance */}
-            <div>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium" style={nunito}>
-                {t("panel.balance")}
-              </p>
-              <h1 className="text-3xl text-foreground" style={{ ...nunito, fontWeight: 900 }}>
-                CHF {balance.toLocaleString()}
-              </h1>
-              <p className="text-xs mt-0.5" style={{ ...nunito, color: lastSimGain !== null ? (lastSimGain >= 0 ? CELESTE : "hsl(var(--destructive))") : CELESTE }}>
-                {lastSimGain !== null
-                  ? `${lastSimGain > 0 ? "+" : ""}${lastSimGain.toFixed(1)}% ${t("panel.lastSim")}`
-                  : `+CHF ${monthlyIncome}${t("panel.perMonth")}`}
-              </p>
-            </div>
-            {/* Risk & Return — per nest */}
-            {enrichedPortfolio.length > 0 && (
-              <div className="flex gap-4">
-                <div>
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium" style={nunito}>
-                    {t("panel.risk")}
-                  </p>
-                  <p className="text-xl font-bold" style={{ ...nunito, color: totalRisk > 60 ? "hsl(var(--destructive))" : totalRisk > 30 ? "hsl(var(--accent-foreground))" : CELESTE }}>
-                    {totalRisk}%
-                  </p>
-                  <p className="text-[10px] text-muted-foreground" style={nunito}>{getRiskLabelLocal(totalRisk)}</p>
-                </div>
-                <div>
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium" style={nunito}>
-                    {t("panel.returnLabel")}
-                  </p>
-                  <p className="text-xl font-bold" style={{ ...nunito, color: CELESTE }}>
-                    {avgReturn}%
-                  </p>
-                  <p className="text-[10px] text-muted-foreground" style={nunito}>{t("panel.annual")}</p>
-                </div>
-              </div>
-            )}
+        <div className="flex items-center justify-end mb-3 gap-2">
+          <LanguageSwitcher />
+          <motion.button
+            onClick={handleSignOut}
+            className="w-9 h-9 rounded-full bg-card shadow-sm flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors"
+            whileTap={{ scale: 0.9 }}
+          >
+            <LogOut className="w-4 h-4" />
+          </motion.button>
+          {isMobile ? (
+            <Drawer open={coachOpen} onOpenChange={setCoachOpen}>
+              <DrawerTrigger asChild>
+                <motion.button
+                  className="w-11 h-11 rounded-full bg-card shadow-md overflow-hidden border-2"
+                  style={{ borderColor: `${CELESTE}40` }}
+                  whileTap={{ scale: 0.9 }}
+                >
+                  <img src="/perspectiva1.png" alt="Coach" className="w-full h-full object-cover" />
+                </motion.button>
+              </DrawerTrigger>
+              <DrawerContent className="h-[80vh] p-0">
+                <CoachChat
+                  onClose={() => { setCoachOpen(false); setCoachInitQ(undefined); }}
+                  portfolio={enrichedPortfolio}
+                  onAddInvestment={(id) => { const inv = enrichedAvailable.find((i) => i.id === id); if (inv) tryBuyInvestment(inv); }}
+                  onRemoveInvestment={(id) => removeInvestment(id)}
+                  initialQuestion={coachInitQ}
+                  onSwapAccepted={handleSwapFromCoach}
+                />
+              </DrawerContent>
+            </Drawer>
+          ) : (
+            <Popover open={coachOpen} onOpenChange={setCoachOpen}>
+              <PopoverTrigger asChild>
+                <motion.button
+                  className="w-11 h-11 rounded-full bg-card shadow-md overflow-hidden border-2"
+                  style={{ borderColor: `${CELESTE}40` }}
+                  whileTap={{ scale: 0.9 }}
+                >
+                  <img src="/perspectiva1.png" alt="Coach" className="w-full h-full object-cover" />
+                </motion.button>
+              </PopoverTrigger>
+              <PopoverContent side="bottom" align="end" className="w-[380px] h-[500px] p-0 rounded-2xl overflow-hidden">
+                <CoachChat
+                  onClose={() => { setCoachOpen(false); setCoachInitQ(undefined); }}
+                  portfolio={enrichedPortfolio}
+                  onAddInvestment={(id) => { const inv = enrichedAvailable.find((i) => i.id === id); if (inv) tryBuyInvestment(inv); }}
+                  onRemoveInvestment={(id) => removeInvestment(id)}
+                  initialQuestion={coachInitQ}
+                  onSwapAccepted={handleSwapFromCoach}
+                />
+              </PopoverContent>
+            </Popover>
+          )}
+        </div>
+
+        {/* Stat Cards — Balance (global), Risk & Return (per nest) */}
+        <div className="grid grid-cols-3 gap-2.5">
+          <div className="bg-card rounded-2xl p-3 shadow-sm">
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium" style={nunito}>
+              {t("panel.balance")}
+            </p>
+            <p className="text-lg font-bold text-foreground mt-0.5" style={nunito}>
+              CHF {balance.toLocaleString()}
+            </p>
+            <p className="text-[10px] mt-0.5" style={{ ...nunito, color: lastSimGain !== null ? (lastSimGain >= 0 ? CELESTE : "hsl(var(--destructive))") : CELESTE }}>
+              {lastSimGain !== null
+                ? `${lastSimGain > 0 ? "+" : ""}${lastSimGain.toFixed(1)}% ${t("panel.lastSim")}`
+                : `+CHF ${monthlyIncome}${t("panel.perMonth")}`}
+            </p>
           </div>
-          <div className="flex items-center gap-2">
-            <LanguageSwitcher />
-            <motion.button
-              onClick={handleSignOut}
-              className="w-9 h-9 rounded-full bg-card shadow-sm flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors"
-              whileTap={{ scale: 0.9 }}
-            >
-              <LogOut className="w-4 h-4" />
-            </motion.button>
-            {isMobile ? (
-              <Drawer open={coachOpen} onOpenChange={setCoachOpen}>
-                <DrawerTrigger asChild>
-                  <motion.button
-                    className="w-11 h-11 rounded-full bg-card shadow-md overflow-hidden border-2"
-                    style={{ borderColor: `${CELESTE}40` }}
-                    whileTap={{ scale: 0.9 }}
-                  >
-                    <img src="/perspectiva1.png" alt="Coach" className="w-full h-full object-cover" />
-                  </motion.button>
-                </DrawerTrigger>
-                <DrawerContent className="h-[80vh] p-0">
-                  <CoachChat
-                    onClose={() => { setCoachOpen(false); setCoachInitQ(undefined); }}
-                    portfolio={enrichedPortfolio}
-                    onAddInvestment={(id) => { const inv = enrichedAvailable.find((i) => i.id === id); if (inv) tryBuyInvestment(inv); }}
-                    onRemoveInvestment={(id) => removeInvestment(id)}
-                    initialQuestion={coachInitQ}
-                    onSwapAccepted={handleSwapFromCoach}
-                  />
-                </DrawerContent>
-              </Drawer>
-            ) : (
-              <Popover open={coachOpen} onOpenChange={setCoachOpen}>
-                <PopoverTrigger asChild>
-                  <motion.button
-                    className="w-11 h-11 rounded-full bg-card shadow-md overflow-hidden border-2"
-                    style={{ borderColor: `${CELESTE}40` }}
-                    whileTap={{ scale: 0.9 }}
-                  >
-                    <img src="/perspectiva1.png" alt="Coach" className="w-full h-full object-cover" />
-                  </motion.button>
-                </PopoverTrigger>
-                <PopoverContent side="bottom" align="end" className="w-[380px] h-[500px] p-0 rounded-2xl overflow-hidden">
-                  <CoachChat
-                    onClose={() => { setCoachOpen(false); setCoachInitQ(undefined); }}
-                    portfolio={enrichedPortfolio}
-                    onAddInvestment={(id) => { const inv = enrichedAvailable.find((i) => i.id === id); if (inv) tryBuyInvestment(inv); }}
-                    onRemoveInvestment={(id) => removeInvestment(id)}
-                    initialQuestion={coachInitQ}
-                    onSwapAccepted={handleSwapFromCoach}
-                  />
-                </PopoverContent>
-              </Popover>
-            )}
+          <div className="bg-card rounded-2xl p-3 shadow-sm">
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium" style={nunito}>
+              {t("panel.risk")}
+            </p>
+            <p className="text-lg font-bold mt-0.5" style={{ ...nunito, color: totalRisk > 60 ? "hsl(var(--destructive))" : totalRisk > 30 ? "hsl(var(--accent-foreground))" : CELESTE }}>
+              {totalRisk}%
+            </p>
+            <p className="text-[10px] text-muted-foreground" style={nunito}>{getRiskLabelLocal(totalRisk)}</p>
+          </div>
+          <div className="bg-card rounded-2xl p-3 shadow-sm">
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium" style={nunito}>
+              {t("panel.returnLabel")}
+            </p>
+            <p className="text-lg font-bold mt-0.5" style={{ ...nunito, color: CELESTE }}>
+              {avgReturn}%
+            </p>
+            <p className="text-[10px] text-muted-foreground" style={nunito}>{t("panel.annual")}</p>
           </div>
         </div>
       </div>
