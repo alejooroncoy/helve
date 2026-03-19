@@ -14,7 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      user_progress: {
+        Row: {
+          created_at: string | null
+          game_step: string | null
+          id: string
+          onboarding_completed: boolean | null
+          portfolio: Json | null
+          risk_profile: string | null
+          risk_score: number | null
+          risk_scores: Json | null
+          simulation_result: number | null
+          storm_choice: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          game_step?: string | null
+          id?: string
+          onboarding_completed?: boolean | null
+          portfolio?: Json | null
+          risk_profile?: string | null
+          risk_score?: number | null
+          risk_scores?: Json | null
+          simulation_result?: number | null
+          storm_choice?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          game_step?: string | null
+          id?: string
+          onboarding_completed?: boolean | null
+          portfolio?: Json | null
+          risk_profile?: string | null
+          risk_score?: number | null
+          risk_scores?: Json | null
+          simulation_result?: number | null
+          storm_choice?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

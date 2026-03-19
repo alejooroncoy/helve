@@ -1,9 +1,11 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Drawer, DrawerTrigger, DrawerContent } from "@/components/ui/drawer";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useAuth } from "@/hooks/useAuth";
+import { useUserProgress } from "@/hooks/useUserProgress";
 import CoachChat from "@/components/CoachChat";
 import {
   DndContext,
@@ -18,6 +20,7 @@ import {
 } from "@dnd-kit/core";
 import type { Investment } from "@/game/types";
 import { availableInvestments } from "@/game/types";
+import { LogOut } from "lucide-react";
 
 function getRiskColor(risk: number): string {
   if (risk <= 3) return "text-primary";
@@ -184,14 +187,28 @@ function DropZone({
 /* ---- Main Panel ---- */
 const Panel = () => {
   const navigate = useNavigate();
-  const profile = (sessionStorage.getItem("helve-profile") as string) || "balanced";
+  const { signOut } = useAuth();
+  const { loadProgress, saveProgress } = useUserProgress();
   const [activePortfolio, setActivePortfolio] = useState<Investment[]>([]);
+  const [profile, setProfile] = useState("balanced");
   const [mascotMessage, setMascotMessage] = useState(
     "Hey there! 👋 Drag an investment into your nest — or just tap it!"
   );
   const [draggedItem, setDraggedItem] = useState<{ inv: Investment; zone: string } | null>(null);
   const [coachOpen, setCoachOpen] = useState(false);
   const isMobile = useIsMobile();
+
+  // Load saved progress on mount
+  useEffect(() => {
+    loadProgress().then((p) => {
+      if (p) {
+        setProfile(p.risk_profile);
+        if (p.portfolio && p.portfolio.length > 0) {
+          setActivePortfolio(p.portfolio);
+        }
+      }
+    });
+  }, [loadProgress]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
@@ -224,6 +241,7 @@ const Panel = () => {
     if (activePortfolio.find((i) => i.id === inv.id)) return;
     const next = [...activePortfolio, inv];
     setActivePortfolio(next);
+    saveProgress({ portfolio: next });
     const newRisk = Math.round(next.reduce((s, i) => s + i.riskLevel, 0) / next.length * 10);
     if (newRisk > 70) setMascotMessage("Careful! Risky airspace! 🦅 Maybe add something steadier?");
     else if (newRisk < 20) setMascotMessage("Very cozy nest! 🪺 Safe and warm.");
@@ -231,7 +249,11 @@ const Panel = () => {
   };
 
   const removeInvestment = (id: string) => {
-    setActivePortfolio((prev) => prev.filter((i) => i.id !== id));
+    setActivePortfolio((prev) => {
+      const next = prev.filter((i) => i.id !== id);
+      saveProgress({ portfolio: next });
+      return next;
+    });
     setMascotMessage("Egg removed! 🥚 Pick a new one from Scouted.");
   };
 
@@ -259,10 +281,13 @@ const Panel = () => {
   };
 
   const handleSimulate = () => {
-    const slots = activePortfolio.map((i) => i.type);
-    sessionStorage.setItem("helve-portfolio-slots", JSON.stringify(slots));
-    sessionStorage.setItem("helve-portfolio", JSON.stringify(activePortfolio));
+    saveProgress({ portfolio: activePortfolio });
     navigate("/");
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/auth");
   };
 
   return (
@@ -278,6 +303,14 @@ const Panel = () => {
             <p className="text-xs text-muted-foreground font-medium tracking-wide uppercase">My Nest</p>
             <h1 className="text-2xl font-bold text-foreground mt-0.5">Dashboard</h1>
           </div>
+          <div className="flex items-center gap-2">
+            <motion.button
+              onClick={handleSignOut}
+              className="w-10 h-10 rounded-full bg-card shadow-sm flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors"
+              whileTap={{ scale: 0.9 }}
+            >
+              <LogOut className="w-4 h-4" />
+            </motion.button>
           {isMobile ? (
             <Drawer open={coachOpen} onOpenChange={setCoachOpen}>
               <DrawerTrigger asChild>
@@ -307,6 +340,7 @@ const Panel = () => {
               </PopoverContent>
             </Popover>
           )}
+          </div>
         </div>
       </div>
 
