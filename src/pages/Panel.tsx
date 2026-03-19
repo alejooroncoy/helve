@@ -7,6 +7,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserProgress } from "@/hooks/useUserProgress";
 import CoachChat from "@/components/CoachChat";
+import TimeSimulation from "@/components/game/TimeSimulation";
 import {
   DndContext,
   DragOverlay,
