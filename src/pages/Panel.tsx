@@ -31,6 +31,12 @@ import {
 const nunito = { fontFamily: "'Nunito', sans-serif" };
 const CELESTE = "#5BB8F5";
 
+const MascotIcon = () => (
+  <img src="/mascot-owl.png" alt="mascot" className="w-6 h-6 rounded-full object-cover" />
+);
+
+const mascotToast = (msg: string) => toast(msg, { icon: <MascotIcon />, duration: 3000 });
+
 // Map game IDs to DB instrument IDs
 const investmentToDbId: Record<string, string> = {
   "ch-bond-aaa": "ch-bond-aaa",
@@ -457,9 +463,9 @@ const Panel = () => {
     setLastSimGain(gainPct);
     saveProgress({ simulation_result: finalBalance });
     if (gainPct > 0) {
-      toast(`¡Genial! Tu nido creció ${gainPct.toFixed(1)}% 🎉`, { icon: "🦉", duration: 3000 });
+      mascotToast(`¡Genial! Tu nido creció ${gainPct.toFixed(1)}% 🎉`);
     } else {
-      toast(`Tu nido bajó ${Math.abs(gainPct).toFixed(1)}%, pero aprendiste 💪`, { icon: "🦉", duration: 3000 });
+      mascotToast(`Tu nido bajó ${Math.abs(gainPct).toFixed(1)}%, pero aprendiste 💪`);
     }
   }, [saveProgress]);
 
@@ -478,7 +484,7 @@ const Panel = () => {
 
   const executeBuy = useCallback((inv: Investment) => {
     if (activePortfolio.length >= 4) {
-      toast("🪺 ¡Tu nido está lleno! Vende un huevo para hacer espacio.", { icon: "🦉", duration: 3000 });
+      mascotToast("🪺 ¡Tu nido está lleno! Vende un huevo para hacer espacio.");
       return;
     }
     if (activePortfolio.find((i) => i.id === inv.id)) return;
@@ -486,14 +492,14 @@ const Panel = () => {
     setActivePortfolio(next);
     saveProgress({ portfolio: next });
     const newRisk = Math.round(next.reduce((s, i) => s + i.riskLevel, 0) / next.length * 10);
-    if (newRisk > 70) toast("🦉 ¡Cuidado! Compraste algo arriesgado. Tu nido tiembla un poco...", { icon: "🦉", duration: 3000 });
-    else if (newRisk < 20) toast("🦉 ¡Buena compra! Un huevito muy seguro para tu nido.", { icon: "🦉", duration: 3000 });
-    else toast("🦉 ¡Comprado! Buen ojo, ese huevo se ve prometedor.", { icon: "🦉", duration: 3000 });
+    if (newRisk > 70) mascotToast("🦉 ¡Cuidado! Compraste algo arriesgado. Tu nido tiembla un poco...");
+    else if (newRisk < 20) mascotToast("🦉 ¡Buena compra! Un huevito muy seguro para tu nido.");
+    else mascotToast("🦉 ¡Comprado! Buen ojo, ese huevo se ve prometedor.");
   }, [activePortfolio, saveProgress]);
 
   const tryBuyInvestment = useCallback((inv: Investment) => {
     if (activePortfolio.length >= 4) {
-      toast("🪺 ¡Tu nido está lleno! Vende un huevo para hacer espacio.", { icon: "🦉", duration: 3000 });
+      mascotToast("🪺 ¡Tu nido está lleno! Vende un huevo para hacer espacio.");
       return;
     }
     if (activePortfolio.find((i) => i.id === inv.id)) return;
@@ -521,9 +527,9 @@ const Panel = () => {
       return next;
     });
     if (sold) {
-      toast(`🦉 ¡Vendiste ${sold.name}! A veces soltar un huevo es la mejor decisión.`, { icon: "🦉", duration: 3000 });
+      mascotToast(`🦉 ¡Vendiste ${sold.name}! A veces soltar un huevo es la mejor decisión.`);
     } else {
-      toast("🦉 Huevo vendido. Tu nido se siente más ligero.", { icon: "🦉", duration: 3000 });
+      mascotToast("🦉 Huevo vendido. Tu nido se siente más ligero.");
     }
   };
 
