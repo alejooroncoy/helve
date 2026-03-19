@@ -16,6 +16,7 @@ const riskSteps: GameStep[] = ["risk-1", "risk-2", "risk-3"];
 
 const GameFlow = () => {
   const [state, setState] = useState<GameState>(initialGameState);
+  const navigate = useNavigate();
 
   const go = useCallback((step: GameStep, patch?: Partial<GameState>) => {
     setState((prev) => ({ ...prev, ...patch, step }));
