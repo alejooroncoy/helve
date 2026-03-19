@@ -278,12 +278,35 @@ const Panel = () => {
             <p className="text-xs text-muted-foreground font-medium tracking-wide uppercase">My Nest</p>
             <h1 className="text-2xl font-bold text-foreground mt-0.5">Dashboard</h1>
           </div>
-          <motion.div
-            className="w-12 h-12 rounded-full bg-card shadow-md overflow-hidden border-2 border-primary/20"
-            whileTap={{ scale: 0.9 }}
-          >
-            <img src="/face.png" alt="Helve mascot" className="w-full h-full object-cover" />
-          </motion.div>
+          {isMobile ? (
+            <Drawer open={coachOpen} onOpenChange={setCoachOpen}>
+              <DrawerTrigger asChild>
+                <motion.button
+                  className="w-12 h-12 rounded-full bg-card shadow-md overflow-hidden border-2 border-primary/20"
+                  whileTap={{ scale: 0.9 }}
+                >
+                  <img src="/face.png" alt="Coach IA" className="w-full h-full object-cover" />
+                </motion.button>
+              </DrawerTrigger>
+              <DrawerContent className="h-[80vh] p-0">
+                <CoachChat onClose={() => setCoachOpen(false)} />
+              </DrawerContent>
+            </Drawer>
+          ) : (
+            <Popover open={coachOpen} onOpenChange={setCoachOpen}>
+              <PopoverTrigger asChild>
+                <motion.button
+                  className="w-12 h-12 rounded-full bg-card shadow-md overflow-hidden border-2 border-primary/20"
+                  whileTap={{ scale: 0.9 }}
+                >
+                  <img src="/face.png" alt="Coach IA" className="w-full h-full object-cover" />
+                </motion.button>
+              </PopoverTrigger>
+              <PopoverContent side="bottom" align="end" className="w-[380px] h-[500px] p-0 rounded-2xl overflow-hidden">
+                <CoachChat onClose={() => setCoachOpen(false)} />
+              </PopoverContent>
+            </Popover>
+          )}
         </div>
       </div>
 
