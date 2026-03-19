@@ -716,14 +716,14 @@ export default function TimeSimulation({
   };
 
   useEffect(() => {
-    if (playing && currentStep < totalSteps && loadingDecisionStep === null) {
+    if (playing && currentStep < totalSteps) {
       intervalRef.current = setTimeout(advanceStep, 1300);
     }
 
     return () => {
       if (intervalRef.current) clearTimeout(intervalRef.current);
     };
-  }, [playing, currentStep, totalSteps, advanceStep, loadingDecisionStep]);
+  }, [playing, currentStep, totalSteps, advanceStep]);
 
   const isFinished = currentStep >= totalSteps;
   const lastValue = data[data.length - 1]?.value || startBalance;
