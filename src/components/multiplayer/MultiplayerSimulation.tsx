@@ -34,7 +34,7 @@ interface Props {
 const MultiplayerSimulation = ({ mp }: Props) => {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const myCategories = (mp.myPlayer?.portfolio || []) as string[]; // array of AssetClass keys
+  const myCategories = ((mp.myPlayer?.portfolio || []) as unknown as string[]);
 
   // Get all DB IDs for the selected categories
   const dbIds = useMemo(() => {
