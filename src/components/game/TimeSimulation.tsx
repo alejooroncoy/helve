@@ -386,7 +386,7 @@ export default function TimeSimulation({ portfolio, initialMonths = 12, initialB
               exit={{ scale: 0.8, opacity: 0 }}
               className="bg-card rounded-3xl p-6 shadow-xl max-w-sm w-full text-center"
             >
-              <span className="text-5xl block mb-3">{currentEvent.emoji}</span>
+              <h2 className="text-lg font-bold text-foreground mb-1" style={nunito}>{currentEvent.title}</h2>
               <h2 className="text-lg font-bold text-foreground mb-1" style={nunito}>{currentEvent.title}</h2>
               <p className="text-sm text-muted-foreground mb-4" style={nunito}>{currentEvent.description}</p>
 
