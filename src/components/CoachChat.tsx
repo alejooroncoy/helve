@@ -440,7 +440,7 @@ export default function CoachChat({ onClose, portfolio, onAddInvestment, onRemov
                     className="mt-1.5 flex items-center gap-1 text-[10px] text-muted-foreground transition-colors"
                     style={nunito}
                   >
-                    {playingIdx === i ? <><VolumeX className="w-3 h-3" /> Stop</> : <><Volume2 className="w-3 h-3" /> Listen</>}
+                    {playingIdx === i ? <><VolumeX className="w-3 h-3" /> {t("coach.stop")}</> : <><Volume2 className="w-3 h-3" /> {t("coach.listen")}</>}
                   </motion.button>
                 )}
               </div>
