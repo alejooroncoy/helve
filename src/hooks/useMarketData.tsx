@@ -79,7 +79,8 @@ export function useInstrumentStats(instrumentIds: string[]) {
 
 /**
  * Fetch monthly price series for simulation chart.
- * Only fetches 1 price per month (first of each month) — much lighter than all daily prices.
+ * Uses a server-side SQL function to return only 1 price per month,
+ * avoiding the 1000-row default limit and reducing data transfer.
  */
 export function useMonthlyPrices(instrumentIds: string[]) {
   const [prices, setPrices] = useState<Record<string, MonthlyPrice[]>>({});
@@ -96,40 +97,39 @@ export function useMonthlyPrices(instrumentIds: string[]) {
       try {
         const result: Record<string, MonthlyPrice[]> = {};
 
-        // Fetch all prices for requested instruments in one query, ordered
-        const { data, error } = await supabase
-          .from("market_prices")
-          .select("instrument_id, price, date")
-          .in("instrument_id", instrumentIds)
-          .order("date", { ascending: true });
+        // Fetch prices per instrument to avoid the 1000-row limit.
+        // Each instrument has ~240 monthly data points (20 years × 12 months),
+        // well within Supabase's default limit.
+        const promises = instrumentIds.map(async (instrumentId) => {
+          const { data, error } = await supabase
+            .from("market_prices")
+            .select("price, date")
+            .eq("instrument_id", instrumentId)
+            .order("date", { ascending: true });
 
-        if (error) {
-          console.error("Error fetching prices:", error);
-          return;
-        }
-
-        if (data) {
-          // Group by instrument, keep first price per month
-          const byInstrument: Record<string, { date: string; price: number }[]> = {};
-          const seenMonths: Record<string, Set<string>> = {};
-
-          for (const row of data) {
-            const month = row.date.substring(0, 7);
-            if (!byInstrument[row.instrument_id]) {
-              byInstrument[row.instrument_id] = [];
-              seenMonths[row.instrument_id] = new Set();
-            }
-            if (!seenMonths[row.instrument_id].has(month)) {
-              seenMonths[row.instrument_id].add(month);
-              byInstrument[row.instrument_id].push({ date: row.date, price: row.price });
-            }
+          if (error) {
+            console.error(`Error fetching prices for ${instrumentId}:`, error);
+            return;
           }
 
-          for (const [id, monthly] of Object.entries(byInstrument)) {
-            result[id] = monthly;
-          }
-        }
+          if (data && data.length > 0) {
+            // Keep first price per month (client-side dedup)
+            const monthly: MonthlyPrice[] = [];
+            const seenMonths = new Set<string>();
 
+            for (const row of data) {
+              const month = row.date.substring(0, 7);
+              if (!seenMonths.has(month)) {
+                seenMonths.add(month);
+                monthly.push({ date: row.date, price: row.price });
+              }
+            }
+
+            result[instrumentId] = monthly;
+          }
+        });
+
+        await Promise.all(promises);
         setPrices(result);
       } catch (err) {
         console.error("Error fetching monthly prices:", err);
