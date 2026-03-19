@@ -8,7 +8,9 @@ import { useMonthlyPrices } from "@/hooks/useMarketData";
 interface TimeSimulationProps {
   portfolio: Investment[];
   initialMonths?: number;
+  initialBalance?: number;
   onClose: () => void;
+  onComplete?: (finalBalance: number, totalGainPct: number) => void;
   onSellInvestment: (id: string) => void;
   onAskCoach?: (question: string) => void;
 }
