@@ -66,7 +66,7 @@ const ProfileResult = ({ profile, onContinue }: Props) => {
         whileHover={{ scale: 1.03 }}
         whileTap={{ scale: 0.97 }}
       >
-        Start Building Your Nest
+        Construir su Nido
       </motion.button>
     </motion.div>
   );
