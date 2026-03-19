@@ -614,6 +614,8 @@ export default function TimeSimulation({
       return aiScenarioPromises.current[event.step];
     },
     [currentPortfolio, filteredLabels, i18n.language],
+  );
+
   useEffect(() => {
     for (const event of aiEventPlan) {
       const prefetchAt = Math.max(0, event.step - 1);
