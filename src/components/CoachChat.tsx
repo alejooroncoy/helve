@@ -288,8 +288,20 @@ export default function CoachChat({ onClose, portfolio, onAddInvestment, onRemov
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [initSent, setInitSent] = useState(false);
   const [playingIdx, setPlayingIdx] = useState<number | null>(null);
+  const [pendingActions, setPendingActions] = useState<CoachAction[]>([]);
+  const [actionsApplied, setActionsApplied] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const applyPendingActions = useCallback(() => {
+    for (const action of pendingActions) {
+      if (action.type === "add" && onAddInvestment) onAddInvestment(action.investmentId);
+      else if (action.type === "remove" && onRemoveInvestment) onRemoveInvestment(action.investmentId);
+    }
+    setActionsApplied(true);
+    setPendingActions([]);
+    setTimeout(() => onClose(), 800);
+  }, [pendingActions, onAddInvestment, onRemoveInvestment, onClose]);
 
   // Load chat history from DB
   useEffect(() => {
