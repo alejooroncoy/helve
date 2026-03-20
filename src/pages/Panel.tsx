@@ -386,7 +386,7 @@ function ScoutedCard({
             </p>
           </div>
         </div>
-        {!overlay && isMobile && dragHandleProps && (
+        {!overlay && !isMobile && dragHandleProps && (
           <button
             type="button"
             {...dragHandleProps}
