@@ -886,59 +886,14 @@ const Panel = () => {
             onClick={() => navigate("/panel")}
             className="w-8 h-8 rounded-full bg-card shadow-sm flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
             whileTap={{ scale: 0.9 }}>
-            
             <ChevronLeft className="w-4 h-4" />
           </motion.button>
           <div className="flex items-center gap-1.5">
-            {isMobile ?
-            <Drawer open={coachOpen} onOpenChange={setCoachOpen}>
-                <DrawerTrigger asChild>
-                  <motion.button
-                  className="w-8 h-8 rounded-full bg-card shadow-sm flex items-center justify-center"
-                  whileTap={{ scale: 0.95 }}>
-                  
-                    <img src="/perspectiva1.png" alt="Coach" className="w-5 h-5 rounded object-cover" />
-                  </motion.button>
-                </DrawerTrigger>
-                <DrawerContent className="h-[80vh] p-0">
-                  <CoachChat
-                  onClose={() => {setCoachOpen(false);setCoachInitQ(undefined);}}
-                  portfolio={enrichedPortfolio}
-                  onAddInvestment={(id) => {const inv = enrichedAvailable.find((i) => i.id === id);if (inv) tryBuyInvestment(inv);}}
-                  onRemoveInvestment={(id) => removeInvestment(id)}
-                  initialQuestion={coachInitQ}
-                  onSwapAccepted={handleSwapFromCoach} />
-                
-                </DrawerContent>
-              </Drawer> :
-
-            <Popover open={coachOpen} onOpenChange={setCoachOpen}>
-                <PopoverTrigger asChild>
-                  <motion.button
-                  className="w-8 h-8 rounded-full bg-card shadow-sm flex items-center justify-center"
-                  whileTap={{ scale: 0.95 }}>
-                  
-                    <img src="/perspectiva1.png" alt="Coach" className="w-5 h-5 rounded object-cover" />
-                  </motion.button>
-                </PopoverTrigger>
-                <PopoverContent side="bottom" align="start" className="w-[380px] h-[500px] p-0 rounded-2xl overflow-hidden">
-                  <CoachChat
-                  onClose={() => {setCoachOpen(false);setCoachInitQ(undefined);}}
-                  portfolio={enrichedPortfolio}
-                  onAddInvestment={(id) => {const inv = enrichedAvailable.find((i) => i.id === id);if (inv) tryBuyInvestment(inv);}}
-                  onRemoveInvestment={(id) => removeInvestment(id)}
-                  initialQuestion={coachInitQ}
-                  onSwapAccepted={handleSwapFromCoach} />
-                
-                </PopoverContent>
-              </Popover>
-            }
             <LanguageSwitcher />
             <motion.button
               onClick={handleSignOut}
               className="w-8 h-8 rounded-full bg-card shadow-sm flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors"
               whileTap={{ scale: 0.9 }}>
-              
               <LogOut className="w-4 h-4" />
             </motion.button>
           </div>
@@ -965,6 +920,60 @@ const Panel = () => {
             <p className="text-[10px] text-muted-foreground" style={nunito}>Annual</p>
           </div>
         </div>
+
+        {/* Coach CTA button */}
+        {isMobile ?
+          <Drawer open={coachOpen} onOpenChange={setCoachOpen}>
+            <DrawerTrigger asChild>
+              <motion.button
+                className="w-full flex items-center gap-3 bg-card rounded-2xl px-4 py-3 shadow-sm mt-2 border border-border hover:border-primary/30 transition-colors"
+                whileTap={{ scale: 0.97 }}
+                style={nunito}
+              >
+                <img src="/perspectiva1.png" alt="Coach" className="w-10 h-10 rounded-full object-cover shadow-sm flex-shrink-0" />
+                <div className="flex-1 text-left">
+                  <p className="text-sm font-bold text-foreground">{t("panel.coachCTA", { defaultValue: "Talk to your Coach" })}</p>
+                  <p className="text-[11px] text-muted-foreground">{t("panel.coachCTASub", { defaultValue: "Get personalized advice" })}</p>
+                </div>
+                <MessageCircle className="w-5 h-5 text-primary flex-shrink-0" />
+              </motion.button>
+            </DrawerTrigger>
+            <DrawerContent className="h-[80vh] p-0">
+              <CoachChat
+                onClose={() => {setCoachOpen(false);setCoachInitQ(undefined);}}
+                portfolio={enrichedPortfolio}
+                onAddInvestment={(id) => {const inv = enrichedAvailable.find((i) => i.id === id);if (inv) tryBuyInvestment(inv);}}
+                onRemoveInvestment={(id) => removeInvestment(id)}
+                initialQuestion={coachInitQ}
+                onSwapAccepted={handleSwapFromCoach} />
+            </DrawerContent>
+          </Drawer> :
+          <Popover open={coachOpen} onOpenChange={setCoachOpen}>
+            <PopoverTrigger asChild>
+              <motion.button
+                className="w-full flex items-center gap-3 bg-card rounded-2xl px-4 py-3 shadow-sm mt-2 border border-border hover:border-primary/30 transition-colors"
+                whileTap={{ scale: 0.97 }}
+                style={nunito}
+              >
+                <img src="/perspectiva1.png" alt="Coach" className="w-10 h-10 rounded-full object-cover shadow-sm flex-shrink-0" />
+                <div className="flex-1 text-left">
+                  <p className="text-sm font-bold text-foreground">{t("panel.coachCTA", { defaultValue: "Talk to your Coach" })}</p>
+                  <p className="text-[11px] text-muted-foreground">{t("panel.coachCTASub", { defaultValue: "Get personalized advice" })}</p>
+                </div>
+                <MessageCircle className="w-5 h-5 text-primary flex-shrink-0" />
+              </motion.button>
+            </PopoverTrigger>
+            <PopoverContent side="bottom" align="start" className="w-[380px] h-[500px] p-0 rounded-2xl overflow-hidden">
+              <CoachChat
+                onClose={() => {setCoachOpen(false);setCoachInitQ(undefined);}}
+                portfolio={enrichedPortfolio}
+                onAddInvestment={(id) => {const inv = enrichedAvailable.find((i) => i.id === id);if (inv) tryBuyInvestment(inv);}}
+                onRemoveInvestment={(id) => removeInvestment(id)}
+                initialQuestion={coachInitQ}
+                onSwapAccepted={handleSwapFromCoach} />
+            </PopoverContent>
+          </Popover>
+        }
       </div>
 
       {/* Nest Tabs */}
