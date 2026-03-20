@@ -553,6 +553,7 @@ export default function CoachChat({ onClose, portfolio, onAddInvestment, onRemov
           </motion.div>
         )}
 
+        {loading && messages[messages.length - 1]?.role !== "assistant" && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start">
             <div className="bg-muted rounded-2xl rounded-bl-md px-4 py-3">
               <div className="flex gap-1">
