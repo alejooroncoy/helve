@@ -369,7 +369,7 @@ function ScoutedCard({
 
   return (
     <div
-      className={`bg-card rounded-2xl p-3 shadow-sm border-2 border-dashed border-border ${overlay ? "-rotate-2 cursor-grabbing" : isMobile ? "" : "cursor-grab active:cursor-grabbing"} min-h-[110px] h-full flex flex-col`}
+      className={`bg-card rounded-2xl p-3 shadow-sm border-2 border-dashed border-border ${overlay ? "-rotate-2 cursor-grabbing" : isMobile ? "" : "cursor-grab active:cursor-grabbing"} ${isMobile ? "min-h-0" : "min-h-[110px]"} h-full flex flex-col`}
       style={overlay ? { boxShadow: `0 0 0 2px ${color}40`, borderColor: `${color}60` } : {}}
     >
       <div className="flex items-start gap-2">
@@ -385,6 +385,9 @@ function ScoutedCard({
               {displayName}
             </p>
           </div>
+          <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-2 leading-tight" style={nunito}>
+            {t(`allocation.classDesc.${inv.id}`, { defaultValue: "" })}
+          </p>
         </div>
         {!overlay && !isMobile && dragHandleProps && (
           <button
@@ -398,7 +401,7 @@ function ScoutedCard({
           </button>
         )}
       </div>
-      <div className="flex-grow" />
+      {!isMobile && <div className="flex-grow" />}
       <div className="flex items-center gap-2 mt-2">
         <span className="text-[10px] text-muted-foreground" style={nunito}>
           {t("panel.riskLabel")}
