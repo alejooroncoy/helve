@@ -1,11 +1,14 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { Trophy, ArrowLeft, Lightbulb, X, TrendingUp, TrendingDown, Minus, ChevronRight, Info } from "lucide-react";
+import { Trophy, ArrowLeft, Lightbulb, X, TrendingUp, TrendingDown, Minus, ChevronRight, Info, Loader2 } from "lucide-react";
 import type { useMultiplayer } from "@/hooks/useMultiplayer";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+
+const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/coach-chat`;
+const ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
 const nunito = { fontFamily: "'Nunito', sans-serif" };
 const CELESTE = "#5BB8F5";
@@ -40,12 +43,49 @@ interface Props {
 }
 
 const MultiplayerResults = ({ mp }: Props) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [openMyDecisions, setOpenMyDecisions] = useState(false);
   const [showInsight, setShowInsight] = useState(false);
   const [openTipIndex, setOpenTipIndex] = useState<number | null>(null);
+  const [coachFeedback, setCoachFeedback] = useState<string | null>(null);
+  const [coachLoading, setCoachLoading] = useState(false);
+
+  // Call coach once with a summary of the game to get personalized feedback
+  useEffect(() => {
+    const myP = mp.players.find(p => p.user_id === user?.id);
+    if (!myP) return;
+    setCoachLoading(true);
+    const decisions = (myP.decisions as any[] || []);
+    const finalScore = myP.final_score || INITIAL;
+    const pctChange = ((finalScore - INITIAL) / INITIAL * 100).toFixed(1);
+    const portfolio = (myP.portfolio as string[] || []).join(", ") || "unknown";
+    const totalPlayers = mp.players.length;
+    const myRank = [...mp.players]
+      .sort((a, b) => (b.final_score || 0) - (a.final_score || 0))
+      .findIndex(p => p.user_id === user?.id) + 1;
+    const decisionSummary = decisions
+      .map((d: any) => `${d.title ? d.title.split(".").pop() : "event"}: ${d.decision} → CHF ${d.balanceAfter != null && d.balanceBefore != null ? Math.round(d.balanceAfter - d.balanceBefore) >= 0 ? "+" : "" : ""}${d.balanceAfter != null && d.balanceBefore != null ? Math.round(d.balanceAfter - d.balanceBefore) : "?"}`)
+      .join("; ");
+    const prompt = `Multiplayer investment game ended. My portfolio: ${portfolio}. Started: CHF ${INITIAL}, finished: CHF ${Math.round(finalScore)} (${Number(pctChange) >= 0 ? "+" : ""}${pctChange}%). Ranked ${myRank} of ${totalPlayers}. My decisions: ${decisionSummary || "none recorded"}. Give me 2-3 sentences of honest, personalized feedback about my investment strategy and what I could learn from this. Be direct and educational.`;
+    fetch(CHAT_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${ANON_KEY}`,
+        apikey: ANON_KEY,
+      },
+      body: JSON.stringify({
+        messages: [{ role: "user", content: prompt }],
+        language: i18n.language,
+      }),
+    })
+      .then(r => r.json())
+      .then(data => setCoachFeedback(data.text || null))
+      .catch(() => setCoachFeedback(null))
+      .finally(() => setCoachLoading(false));
+  }, []);
 
   const ranked = useMemo(() =>
     [...mp.players]
@@ -200,9 +240,18 @@ const MultiplayerResults = ({ mp }: Props) => {
                   <X className="w-4 h-4 text-muted-foreground" />
                 </button>
               </div>
-              <p className="text-xs text-muted-foreground leading-relaxed" style={nunito}>
-                {t("multiplayer.insightText")}
-              </p>
+              {coachLoading ? (
+                <div className="flex items-center justify-center gap-2 py-3">
+                  <Loader2 className="w-4 h-4 animate-spin" style={{ color: CELESTE }} />
+                  <span className="text-xs text-muted-foreground" style={nunito}>
+                    {t("multiplayer.coachThinking")}
+                  </span>
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground leading-relaxed" style={nunito}>
+                  {coachFeedback || t("multiplayer.insightText")}
+                </p>
+              )}
             </motion.div>
           </motion.div>
         )}

@@ -211,27 +211,34 @@ const MultiplayerSimulation = ({ mp }: Props) => {
 
     const holdImpact = activeEvent.holdImpact;
     const sellImpact = activeEvent.sellImpact;
+    const affectedClasses = (activeEvent.affectedClasses ?? []) as string[];
 
+    // Compute new allocations synchronously so balanceAfter is available for saveDecision
+    const share = INITIAL_BALANCE / myCategories.length;
+    const extraPerCat = decision === "buy" ? BUY_AMOUNT / myCategories.length : 0;
+    const newAllocations: Record<string, number> = {};
     let balanceBefore = 0;
     let balanceAfter = 0;
 
-    setCategoryAllocations(prev => {
-      const share = INITIAL_BALANCE / myCategories.length;
-      const extraPerCat = decision === "buy" ? BUY_AMOUNT / myCategories.length : 0;
-      const impact = decision === "sell" ? sellImpact : holdImpact;
-      const next: Record<string, number> = {};
-      for (const key of myCategories) {
-        const base = prev[key] ?? share;
-        balanceBefore += base;
-        next[key] = (base + extraPerCat) * impact - extraPerCat;
-        balanceAfter += next[key];
-      }
-      setCategoryHistories(prevH => {
-        const nextH = { ...prevH };
-        for (const key of myCategories) nextH[key] = [...(prevH[key] ?? [share]), next[key]];
-        return nextH;
-      });
-      return next;
+    for (const key of myCategories) {
+      const base = categoryAllocations[key] ?? share;
+      balanceBefore += base;
+      // Only apply event impact to the categories it actually affects.
+      // Unaffected categories stay at 1.0 (neutral) — this is what makes
+      // a safe portfolio behave differently from a risky one.
+      const isAffected = affectedClasses.includes(key);
+      const catImpact = isAffected
+        ? (decision === "sell" ? sellImpact : holdImpact)
+        : 1.0;
+      newAllocations[key] = (base + extraPerCat) * catImpact - extraPerCat;
+      balanceAfter += newAllocations[key];
+    }
+
+    setCategoryAllocations(newAllocations);
+    setCategoryHistories(prevH => {
+      const nextH = { ...prevH };
+      for (const key of myCategories) nextH[key] = [...(prevH[key] ?? [share]), newAllocations[key]];
+      return nextH;
     });
 
     setEventHistory(prev => [...prev, { event: activeEvent, decision, tick: currentTick }]);
@@ -239,14 +246,12 @@ const MultiplayerSimulation = ({ mp }: Props) => {
       title: activeEvent.title,
       holdImpact,
       sellImpact,
-      balanceBefore: Math.round(balance),
-      balanceAfter: Math.round(decision === "buy"
-        ? (balance + BUY_AMOUNT) * holdImpact - BUY_AMOUNT
-        : balance * (decision === "sell" ? sellImpact : holdImpact)),
+      balanceBefore: Math.round(balanceBefore),
+      balanceAfter: Math.round(balanceAfter),
     });
 
     setTimeout(() => { setActiveEvent(null); setPaused(false); }, 1200);
-  }, [activeEvent, eventDecided, eventsTriggered, mp, currentTick, balance, myCategories]);
+  }, [activeEvent, eventDecided, eventsTriggered, mp, currentTick, categoryAllocations, myCategories]);
 
   useEffect(() => {
     if (finished && mp.myPlayer) mp.saveFinalScore(Math.round(balance));
