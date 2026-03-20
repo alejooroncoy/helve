@@ -14,6 +14,31 @@ interface CoachAction {
   investmentId: string;
 }
 
+// Map investment IDs to display names
+const INVESTMENT_NAMES: Record<string, string> = {
+  "ch-bond-aaa": "Swiss Bond AAA-BBB",
+  "global-bond": "Bloomberg Global Bond",
+  "ch-govt-10y": "Swiss Govt Bond 10Y",
+  "smi-index": "SMI Index",
+  "eurostoxx50": "EuroStoxx 50",
+  "gold-chf": "Gold (CHF)",
+  "nestle": "Nestlé S.A.",
+  "novartis": "Novartis AG",
+  "green-energy": "Green Energy Fund",
+  "djia-index": "Dow Jones",
+  "dax-index": "DAX",
+  "apple": "Apple Inc.",
+  "microsoft": "Microsoft Corp.",
+  "nvidia": "NVIDIA Corp.",
+  "logitech": "Logitech",
+  "ubs": "UBS Group AG",
+  "amazon": "Amazon.com",
+  "retirement-low": "Retirement Insurance",
+  "nikkei225": "Nikkei 225",
+  "roche": "Roche Holding",
+  "jpmorgan": "JPMorgan Chase",
+};
+
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/coach-chat`;
 const TTS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/coach-tts`;
 const CELESTE = "#5BB8F5";
