@@ -1261,6 +1261,39 @@ const Panel = () => {
 
         }
       </AnimatePresence>
+
+      {/* Risk alignment warning dialog */}
+      <Dialog open={riskWarningOpen} onOpenChange={setRiskWarningOpen}>
+        <DialogContent className="max-w-xs rounded-3xl p-5 border-0 bg-card shadow-xl">
+          <div className="flex flex-col items-center text-center gap-3">
+            <motion.img
+              src="/perspectiva1.png"
+              alt="Coach"
+              className="w-20 h-20 rounded-full shadow-md object-cover"
+              animate={{ rotate: [0, -10, 10, -5, 0] }}
+              transition={{ duration: 0.8 }}
+            />
+            <div>
+              <p className="text-base font-extrabold text-foreground" style={nunito}>
+                {riskWarningType === "tooHigh" ? t("panel.riskWarning.tooHighTitle") : t("panel.riskWarning.tooLowTitle")}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed" style={nunito}>
+                {riskWarningType === "tooHigh"
+                  ? t("panel.riskWarning.tooHighDesc", { profile: t(`portfolio.profileLabels.${profile}.name`, { defaultValue: profile }) })
+                  : t("panel.riskWarning.tooLowDesc", { profile: t(`portfolio.profileLabels.${profile}.name`, { defaultValue: profile }) })}
+              </p>
+            </div>
+            <motion.button
+              onClick={() => setRiskWarningOpen(false)}
+              className="w-full py-3 rounded-2xl text-sm font-bold text-white mt-1"
+              style={{ ...nunito, backgroundColor: CELESTE }}
+              whileTap={{ scale: 0.97 }}
+            >
+              {t("panel.riskWarning.gotIt")}
+            </motion.button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </motion.div>);
 
 
