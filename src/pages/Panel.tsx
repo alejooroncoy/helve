@@ -723,7 +723,28 @@ const Panel = () => {
   ) :
   0;
 
-  const monthlyIncome = enrichedPortfolio.reduce((s, i) => {
+  // Risk alignment warning — check if portfolio risk is outside profile range
+  useEffect(() => {
+    if (enrichedPortfolio.length === 0 || totalAllocated === 0) return;
+    const profileRanges: Record<string, [number, number]> = {
+      conservative: [10, 35],
+      balanced: [30, 55],
+      growth: [50, 90],
+    };
+    const range = profileRanges[profile] || [30, 55];
+    const warningKey = `${profile}-${totalRisk}`;
+    if (riskWarningShownRef.current === warningKey) return;
+    if (totalRisk > range[1]) {
+      setRiskWarningType("tooHigh");
+      setRiskWarningOpen(true);
+      riskWarningShownRef.current = warningKey;
+    } else if (totalRisk < range[0]) {
+      setRiskWarningType("tooLow");
+      setRiskWarningOpen(true);
+      riskWarningShownRef.current = warningKey;
+    }
+  }, [totalRisk, profile, enrichedPortfolio.length, totalAllocated]);
+
     const pct = allocations[i.id] ?? 0;
     return s + Math.round(balance * pct / 100 * i.annualReturn / 100 / 12);
   }, 0);
