@@ -279,6 +279,13 @@ const en = {
     maxNests: "You can have up to 4 nests",
     renameNest: "Rename",
     talkCoach: "Talk to Coach",
+    riskWarning: {
+      tooHighTitle: "Be careful!",
+      tooHighDesc: "Your portfolio risk is above what's recommended for your {{profile}} profile. You might be taking on more risk than you should.",
+      tooLowTitle: "You can do more!",
+      tooLowDesc: "Your portfolio risk is below your {{profile}} profile's range. You could afford to take a bit more risk (responsibly!).",
+      gotIt: "Got it",
+    },
   },
 
   // Time simulation

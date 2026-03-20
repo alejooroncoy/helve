@@ -279,6 +279,13 @@ const es = {
     maxNests: "Puedes tener hasta 4 nidos",
     renameNest: "Renombrar",
     talkCoach: "Hablar con Coach",
+    riskWarning: {
+      tooHighTitle: "¡Ten cuidadito!",
+      tooHighDesc: "El riesgo de tu portafolio está por encima de lo recomendado para tu perfil {{profile}}. Podrías estar tomando más riesgo del que deberías.",
+      tooLowTitle: "¡Puedes arriesgar más!",
+      tooLowDesc: "El riesgo de tu portafolio está por debajo del rango de tu perfil {{profile}}. Podrías permitirte tomar un poco más de riesgo (¡con responsabilidad!).",
+      gotIt: "Entendido",
+    },
   },
 
   // Time simulation

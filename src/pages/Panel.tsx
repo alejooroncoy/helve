@@ -6,6 +6,7 @@ import { useInstrumentStats } from "@/hooks/useMarketData";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Drawer, DrawerTrigger, DrawerContent } from "@/components/ui/drawer";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/hooks/useAuth";
@@ -583,6 +584,9 @@ const Panel = () => {
   const [simMonths, setSimMonths] = useState(12);
   const [renamingNest, setRenamingNest] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
+  const [riskWarningOpen, setRiskWarningOpen] = useState(false);
+  const [riskWarningType, setRiskWarningType] = useState<"tooHigh" | "tooLow" | null>(null);
+  const riskWarningShownRef = useRef<string | null>(null);
   const isMobile = useIsMobile();
 
   const { stats, loading: statsLoading } = useInstrumentStats(allDbIds);
@@ -718,6 +722,28 @@ const Panel = () => {
     enrichedPortfolio.reduce((s, i) => s + i.riskLevel, 0) / enrichedPortfolio.length * 10
   ) :
   0;
+
+  // Risk alignment warning — check if portfolio risk is outside profile range
+  useEffect(() => {
+    if (enrichedPortfolio.length === 0 || totalAllocated === 0) return;
+    const profileRanges: Record<string, [number, number]> = {
+      conservative: [10, 35],
+      balanced: [30, 55],
+      growth: [50, 90],
+    };
+    const range = profileRanges[profile] || [30, 55];
+    const warningKey = `${profile}-${totalRisk}`;
+    if (riskWarningShownRef.current === warningKey) return;
+    if (totalRisk > range[1]) {
+      setRiskWarningType("tooHigh");
+      setRiskWarningOpen(true);
+      riskWarningShownRef.current = warningKey;
+    } else if (totalRisk < range[0]) {
+      setRiskWarningType("tooLow");
+      setRiskWarningOpen(true);
+      riskWarningShownRef.current = warningKey;
+    }
+  }, [totalRisk, profile, enrichedPortfolio.length, totalAllocated]);
 
   const monthlyIncome = enrichedPortfolio.reduce((s, i) => {
     const pct = allocations[i.id] ?? 0;
@@ -1236,6 +1262,39 @@ const Panel = () => {
 
         }
       </AnimatePresence>
+
+      {/* Risk alignment warning dialog */}
+      <Dialog open={riskWarningOpen} onOpenChange={setRiskWarningOpen}>
+        <DialogContent className="max-w-xs rounded-3xl p-5 border-0 bg-card shadow-xl">
+          <div className="flex flex-col items-center text-center gap-3">
+            <motion.img
+              src="/perspectiva1.png"
+              alt="Coach"
+              className="w-20 h-20 rounded-full shadow-md object-cover"
+              animate={{ rotate: [0, -10, 10, -5, 0] }}
+              transition={{ duration: 0.8 }}
+            />
+            <div>
+              <p className="text-base font-extrabold text-foreground" style={nunito}>
+                {riskWarningType === "tooHigh" ? t("panel.riskWarning.tooHighTitle") : t("panel.riskWarning.tooLowTitle")}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed" style={nunito}>
+                {riskWarningType === "tooHigh"
+                  ? t("panel.riskWarning.tooHighDesc", { profile: t(`portfolio.profileLabels.${profile}.name`, { defaultValue: profile }) })
+                  : t("panel.riskWarning.tooLowDesc", { profile: t(`portfolio.profileLabels.${profile}.name`, { defaultValue: profile }) })}
+              </p>
+            </div>
+            <motion.button
+              onClick={() => setRiskWarningOpen(false)}
+              className="w-full py-3 rounded-2xl text-sm font-bold text-white mt-1"
+              style={{ ...nunito, backgroundColor: CELESTE }}
+              whileTap={{ scale: 0.97 }}
+            >
+              {t("panel.riskWarning.gotIt")}
+            </motion.button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </motion.div>);
 
 
