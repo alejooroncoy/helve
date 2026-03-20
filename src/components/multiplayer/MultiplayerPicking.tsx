@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import { Check, Users, Building2, TrendingUp, Gem, ArrowLeftRight, Mountain, Landmark, Zap, Leaf } from "lucide-react";
-import { ASSET_CLASSES } from "@/game/types";
+import { ASSET_CLASSES, availableInvestments } from "@/game/types";
 import type { AssetClass } from "@/game/types";
 import type { useMultiplayer } from "@/hooks/useMultiplayer";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
@@ -91,6 +91,7 @@ const MultiplayerPicking = ({ mp }: Props) => {
           const color = CLASS_COLORS[cls.key];
           const Icon = CLASS_ICONS[cls.key];
           const risk = (asset as any).riskLevel ?? cls.riskWeight;
+          const annualReturn = availableInvestments.find(inv => inv.id === cls.key)?.annualReturn ?? 5.0;
           return (
             <motion.button key={cls.key}
               className="w-full flex items-center gap-3 p-3 rounded-2xl text-left"
@@ -120,6 +121,9 @@ const MultiplayerPicking = ({ mp }: Props) => {
                   <div className="flex-1 h-1 rounded-full overflow-hidden" style={{ background: "hsl(var(--muted))" }}>
                     <div className="h-full rounded-full" style={{ width: `${risk * 10}%`, backgroundColor: color }} />
                   </div>
+                  <span className="text-[10px] font-bold flex-shrink-0" style={{ color: "#22c55e" }}>
+                    +{annualReturn}%/yr
+                  </span>
                 </div>
               </div>
 
