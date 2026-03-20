@@ -1006,15 +1006,15 @@ const Panel = () => {
           className="w-full rounded-xl px-3 py-1.5 text-center border"
           style={{
             ...nunito,
-            borderColor: profile === "conservative" ? CELESTE : profile === "growth" ? "hsl(var(--destructive) / 0.4)" : "hsl(var(--accent) / 0.5)",
-            backgroundColor: profile === "conservative" ? `${CELESTE}10` : profile === "growth" ? "hsl(var(--destructive) / 0.06)" : "hsl(var(--accent) / 0.08)",
+            borderColor: profile === "conservative" ? "hsl(145, 58%, 36%, 0.4)" : profile === "growth" ? "hsl(var(--destructive) / 0.4)" : "hsl(var(--accent) / 0.5)",
+            backgroundColor: profile === "conservative" ? "hsl(145, 58%, 36%, 0.06)" : profile === "growth" ? "hsl(var(--destructive) / 0.06)" : "hsl(var(--accent) / 0.08)",
           }}
         >
           <p className="text-[11px] font-semibold text-foreground" style={nunito}>
             {t("panel.riskProfileIs")}{" "}
             <span style={{
               fontWeight: 800,
-              color: profile === "conservative" ? CELESTE : profile === "growth" ? "hsl(var(--destructive))" : "hsl(var(--accent-foreground))",
+              color: profile === "conservative" ? "hsl(145, 58%, 36%)" : profile === "growth" ? "hsl(0, 72%, 51%)" : "hsl(38, 92%, 50%)",
             }}>
               {profile === "conservative" ? t("portfolio.low") : profile === "growth" ? t("portfolio.high") : t("portfolio.medium")}
             </span>
