@@ -493,7 +493,66 @@ export default function CoachChat({ onClose, portfolio, onAddInvestment, onRemov
           );
         })}
 
-        {loading && messages[messages.length - 1]?.role !== "assistant" && (
+        {/* Pending actions card */}
+        {pendingActions.length > 0 && !actionsApplied && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex justify-start"
+          >
+            <div className="max-w-[90%]">
+              <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-7 h-7 rounded-full flex items-center justify-center" style={{ backgroundColor: `${CELESTE}15` }}>
+                    <Package className="w-3.5 h-3.5" style={{ color: CELESTE }} />
+                  </div>
+                  <p className="text-xs font-bold text-foreground" style={nunito}>
+                    {t("coach.proposedChanges", "Proposed Changes")}
+                  </p>
+                </div>
+                <div className="space-y-1.5 mb-3">
+                  {pendingActions.map((action, i) => (
+                    <div key={i} className="flex items-center gap-2 text-xs" style={nunito}>
+                      {action.type === "add" ? (
+                        <Plus className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                      ) : (
+                        <Minus className="w-3.5 h-3.5 text-destructive flex-shrink-0" />
+                      )}
+                      <span className={action.type === "add" ? "text-foreground" : "text-muted-foreground line-through"}>
+                        {INVESTMENT_NAMES[action.investmentId] || action.investmentId}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <motion.button
+                  onClick={applyPendingActions}
+                  className="w-full py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5"
+                  style={{ backgroundColor: CELESTE, color: "white", ...nunito }}
+                  whileTap={{ scale: 0.96 }}
+                >
+                  <Check className="w-3.5 h-3.5" />
+                  {t("coach.applyChanges", "Apply Changes")}
+                </motion.button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {actionsApplied && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="flex justify-start"
+          >
+            <div className="rounded-2xl bg-primary/10 px-4 py-2.5 flex items-center gap-2">
+              <Check className="w-4 h-4 text-primary" />
+              <span className="text-xs font-medium text-primary" style={nunito}>
+                {t("coach.changesApplied", "Changes applied!")}
+              </span>
+            </div>
+          </motion.div>
+        )}
+
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start">
             <div className="bg-muted rounded-2xl rounded-bl-md px-4 py-3">
               <div className="flex gap-1">
