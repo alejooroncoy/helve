@@ -15,7 +15,8 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
-  const redirectTo = searchParams.get("redirect") ? decodeURIComponent(searchParams.get("redirect")!) : "/";
+  const rawRedirect = searchParams.get("redirect") ? decodeURIComponent(searchParams.get("redirect")!) : "/";
+  const redirectTo = (rawRedirect.startsWith('/') && !rawRedirect.startsWith('//')) ? rawRedirect : "/";
 
   const handleGoogle = async () => {
     setLoading(true);

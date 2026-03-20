@@ -29,9 +29,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setLoading(false);
         if (event === "SIGNED_IN") {
           const redirect = localStorage.getItem("helve_post_login_redirect");
-          if (redirect) {
+          if (redirect && redirect.startsWith('/') && !redirect.startsWith('//')) {
             localStorage.removeItem("helve_post_login_redirect");
             window.location.replace(redirect);
+          } else if (redirect) {
+            localStorage.removeItem("helve_post_login_redirect");
           }
         }
       }
