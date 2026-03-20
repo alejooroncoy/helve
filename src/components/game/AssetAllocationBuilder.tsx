@@ -1,7 +1,8 @@
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
-import { AlertTriangle, CheckCircle, RotateCcw } from "lucide-react";
+import { AlertTriangle, CheckCircle, RotateCcw, ChevronLeft } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import type { RiskProfile, AssetClass, AssetAllocation } from "@/game/types";
 import {
@@ -17,6 +18,7 @@ interface Props {
 }
 
 const nunito = { fontFamily: "'Nunito', sans-serif" };
+const CELESTE = "hsl(var(--primary))";
 
 const CLASS_COLORS: Record<AssetClass, string> = {
   bonds: "hsl(210, 60%, 55%)",
@@ -81,6 +83,7 @@ function getAlignment(profile: RiskProfile, alloc: AssetAllocation): AlignmentLe
 
 const AssetAllocationBuilder = ({ profile, onComplete }: Props) => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const recommended = RECOMMENDED_ALLOCATIONS[profile];
   const [alloc, setAlloc] = useState<AssetAllocation>({ ...recommended });
 
@@ -108,6 +111,14 @@ const AssetAllocationBuilder = ({ profile, onComplete }: Props) => {
     >
       {/* Header */}
       <div className="px-5 pt-8 pb-2">
+        <button
+          onClick={() => navigate("/panel")}
+          className="mb-3 p-2 rounded-lg transition-colors flex items-center gap-2"
+          style={{ color: "hsl(var(--muted-foreground))" }}
+        >
+          <ChevronLeft size={20} />
+          <span className="text-sm" style={nunito}>{t("common.back") || "Back"}</span>
+        </button>
         <div className="flex items-center gap-3 mb-2">
           <div>
             <h2 className="text-xl text-foreground" style={{ ...nunito, fontWeight: 800 }}>{pLabel.name}</h2>
