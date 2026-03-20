@@ -370,29 +370,27 @@ function ScoutedCard({
 
   return (
     <div
-      className={`bg-card rounded-2xl p-3 shadow-sm border-2 border-dashed border-border ${overlay ? "-rotate-2 cursor-grabbing" : isMobile ? "" : "cursor-grab active:cursor-grabbing"} h-full flex flex-col`}
+      className={`bg-card rounded-2xl p-3.5 shadow-sm border-2 border-dashed border-border ${overlay ? "-rotate-2 cursor-grabbing" : isMobile ? "" : "cursor-grab active:cursor-grabbing"} h-full flex flex-col`}
       style={overlay ? { boxShadow: `0 0 0 2px ${color}40`, borderColor: `${color}60` } : {}}
     >
-      <div className="flex items-center gap-2.5">
+      <div className="flex items-center gap-3">
         <div
-          className="w-9 h-9 bg-secondary rounded-xl flex items-center justify-center flex-shrink-0"
-          style={{ color }}
+          className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+          style={{ backgroundColor: `${color}18`, color }}
         >
           {getCategoryIcon(inv.id)}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-bold text-foreground leading-snug" style={nunito}>
+          <p className="text-sm font-bold text-foreground" style={nunito}>
             {displayName}
           </p>
-          <div className="flex items-center gap-1.5 mt-0.5">
-            <span
-              className="text-[10px] font-bold"
-              style={{ color: getRiskBarColor(inv.riskLevel) }}
-            >
-              {t("panel.riskLabel")} {inv.riskLevel}/10
+          <div className="flex items-center gap-2 mt-1 flex-wrap">
+            <span className="text-xs text-muted-foreground" style={nunito}>
+              {t("panel.riskLabel")}{" "}
+              <span style={{ color: getRiskBarColor(inv.riskLevel), fontWeight: 700 }}>{inv.riskLevel}/10</span>
             </span>
-            <span className="text-[10px] font-bold" style={{ color }}>
-              {inv.annualReturn}% {t("common.perYear")}
+            <span className="text-xs" style={{ ...nunito, color, fontWeight: 700 }}>
+              {inv.annualReturn}%{t("common.perYear")}
             </span>
           </div>
         </div>
