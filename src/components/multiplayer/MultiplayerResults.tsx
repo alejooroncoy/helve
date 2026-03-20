@@ -1,9 +1,9 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { Trophy, ArrowLeft, Lightbulb, X, TrendingUp, TrendingDown, Minus, ChevronRight, Info } from "lucide-react";
+import { Trophy, ArrowLeft, Lightbulb, X, TrendingUp, TrendingDown, Minus, ChevronRight, Info, CheckCircle2, AlertCircle, XCircle, Flame } from "lucide-react";
 import type { useMultiplayer } from "@/hooks/useMultiplayer";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 
@@ -39,6 +39,21 @@ interface Props {
   mp: ReturnType<typeof useMultiplayer>;
 }
 
+// Helper to get icon and color based on feedback sentiment
+function getDecisionIcon(feedback: string): { Icon: any; color: string } {
+  const lower = feedback.toLowerCase();
+  if (lower.includes("good") || lower.includes("buena") || lower.includes("smart") || lower.includes("inteligente") || lower.includes("best")) {
+    return { Icon: CheckCircle2, color: "#10b981" }; // emerald - good decision
+  } else if (lower.includes("bad") || lower.includes("mala") || lower.includes("painful") || lower.includes("dolorosa") || lower.includes("hurt")) {
+    return { Icon: XCircle, color: "#ef4444" }; // red - bad decision
+  } else if (lower.includes("bold") || lower.includes("atrevido") || lower.includes("profitable") || lower.includes("rentable")) {
+    return { Icon: Flame, color: "#f59e0b" }; // amber - bold/risky
+  } else if (lower.includes("tough") || lower.includes("difícil") || lower.includes("risky") || lower.includes("riesgo")) {
+    return { Icon: AlertCircle, color: "#f59e0b" }; // amber - tough call
+  }
+  return { Icon: Lightbulb, color: CELESTE };
+}
+
 const MultiplayerResults = ({ mp }: Props) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -46,6 +61,8 @@ const MultiplayerResults = ({ mp }: Props) => {
   const [openMyDecisions, setOpenMyDecisions] = useState(false);
   const [showInsight, setShowInsight] = useState(false);
   const [openTipIndex, setOpenTipIndex] = useState<number | null>(null);
+  const [feedbackByIndex, setFeedbackByIndex] = useState<Record<number, string>>({});
+  const [loadingFeedback, setLoadingFeedback] = useState<Record<number, boolean>>({});
 
   const ranked = useMemo(() =>
     [...mp.players]
@@ -57,6 +74,55 @@ const MultiplayerResults = ({ mp }: Props) => {
   const winner = ranked[0];
   const myPlayer = ranked.find(p => p.user_id === user?.id);
   const myDecisions: DecisionMeta[] = (myPlayer?.decisions as any[]) || [];
+
+  // Auto-open decisions drawer on results load
+  useEffect(() => {
+    if (myPlayer && myDecisions.length > 0) {
+      setOpenMyDecisions(true);
+    }
+  }, [myPlayer?.id]);
+
+  // Get dynamic feedback from AI
+  const getFeedback = useCallback(async (decisionIndex: number, decision: DecisionMeta, eventTitle?: string, eventDesc?: string) => {
+    if (feedbackByIndex[decisionIndex]) return feedbackByIndex[decisionIndex];
+
+    setLoadingFeedback(prev => ({ ...prev, [decisionIndex]: true }));
+    try {
+      const lang = document.documentElement.lang || localStorage.getItem("i18nextLng") || "en";
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/decision-feedback`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({
+            language: lang,
+            eventTitle: eventTitle || `Event ${decision.eventIndex + 1}`,
+            eventDesc: eventDesc || "",
+            decision: decision.decision,
+            holdImpact: decision.holdImpact ?? 1,
+            sellImpact: decision.sellImpact ?? 1,
+            balanceBefore: decision.balanceBefore ?? 0,
+            balanceAfter: decision.balanceAfter ?? 0,
+          }),
+        }
+      );
+
+      if (!response.ok) throw new Error("Failed to get feedback");
+      const data = await response.json();
+      const feedback = data.feedback || "";
+
+      setFeedbackByIndex(prev => ({ ...prev, [decisionIndex]: feedback }));
+      return feedback;
+    } catch (e) {
+      console.error("Error getting feedback:", e);
+      return "";
+    } finally {
+      setLoadingFeedback(prev => ({ ...prev, [decisionIndex]: false }));
+    }
+  }, [feedbackByIndex]);
 
   return (
     <motion.div
@@ -83,9 +149,19 @@ const MultiplayerResults = ({ mp }: Props) => {
           {t("multiplayer.gameOver")}
         </h1>
         {winner && (
-          <p className="text-sm text-muted-foreground mt-1" style={nunito}>
-            {winner.display_name} {t("multiplayer.wins")}!
-          </p>
+          <div className="mt-2">
+            <p className="text-sm text-muted-foreground" style={nunito}>
+              {winner.display_name}{" "}
+              {(winner.final_score ?? INITIAL) > INITIAL
+                ? `${t("multiplayer.wins")}! 🏆`
+                : t("multiplayer.winsWithLoss")}
+            </p>
+            {(winner.final_score ?? INITIAL) <= INITIAL && (
+              <p className="text-[10px] text-muted-foreground mt-1" style={nunito}>
+                {t("multiplayer.winWithLoss")}
+              </p>
+            )}
+          </div>
         )}
       </motion.div>
 
@@ -250,16 +326,6 @@ const MultiplayerResults = ({ mp }: Props) => {
                     : d.decision === "buy" ? "Buy" : "Sell";
                   const isRec = choseAction === recommended;
 
-                  // Tip key logic
-                  let tipKey = "";
-                  if (d.decision === "buy") {
-                    tipKey = buyImpact >= holdImpact ? "tipBuyWin" : "tipBuyBad";
-                  } else if (d.decision === "hold") {
-                    tipKey = holdImpact >= sellImpact ? "tipHoldWin" : "tipSellBad";
-                  } else {
-                    tipKey = sellImpact >= holdImpact ? "tipSellWin" : "tipHoldOk";
-                  }
-
                   // Colors
                   const dotColor = d.decision === "hold" ? HOLD_COLOR
                     : d.decision === "buy" ? "#a78bfa" : SELL_COLOR;
@@ -289,7 +355,12 @@ const MultiplayerResults = ({ mp }: Props) => {
                             {choseAction}
                           </span>
                           <button
-                            onClick={() => setOpenTipIndex(tipOpen ? null : i)}
+                            onClick={() => {
+                              if (!tipOpen && !feedbackByIndex[i]) {
+                                getFeedback(i, d, d.title, "");
+                              }
+                              setOpenTipIndex(tipOpen ? null : i);
+                            }}
                             className="flex-shrink-0 ml-1">
                             <Info className="w-3.5 h-3.5" style={{ color: tipOpen ? CELESTE : "hsl(var(--muted-foreground))" }} />
                           </button>
@@ -314,24 +385,34 @@ const MultiplayerResults = ({ mp }: Props) => {
                         </div>
                       </div>
 
-                      {/* Expandable tip */}
+                      {/* Expandable dynamic feedback */}
                       <AnimatePresence>
-                        {tipOpen && (
-                          <motion.div
-                            className="px-3 pb-3 pt-0"
-                            initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }}>
-                            <div className="rounded-xl p-3 mt-1"
-                              style={{ backgroundColor: `${CELESTE}0E` }}>
-                              <div className="flex items-start gap-2">
-                                <Lightbulb className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: CELESTE }} />
-                                <p className="text-[11px] text-muted-foreground leading-relaxed" style={nunito}>
-                                  {t(`multiplayer.${tipKey}`)}
-                                </p>
+                        {tipOpen && (() => {
+                          const feedback = feedbackByIndex[i];
+                          const isLoading = loadingFeedback[i];
+                          const { Icon, color } = feedback ? getDecisionIcon(feedback) : { Icon: Lightbulb, color: CELESTE };
+
+                          return (
+                            <motion.div
+                              className="px-3 pb-3 pt-0"
+                              initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }}>
+                              <div className="rounded-xl p-3 mt-1"
+                                style={{ backgroundColor: `${color}15` }}>
+                                <div className="flex items-start gap-2">
+                                  {isLoading ? (
+                                    <div className="w-4 h-4 rounded-full border-2 border-transparent border-t-current animate-spin flex-shrink-0 mt-0.5" style={{ color }} />
+                                  ) : (
+                                    <Icon className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color }} />
+                                  )}
+                                  <p className="text-[11px] text-muted-foreground leading-relaxed whitespace-pre-line" style={nunito}>
+                                    {isLoading ? "Generating feedback..." : feedback || "Click to get feedback"}
+                                  </p>
+                                </div>
                               </div>
-                            </div>
-                          </motion.div>
-                        )}
+                            </motion.div>
+                          );
+                        })()}
                       </AnimatePresence>
                     </div>
                   );

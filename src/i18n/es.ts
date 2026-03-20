@@ -232,7 +232,7 @@ const es = {
 
   // Panel
   panel: {
-    myNest: "Mi Nido",
+    myNest: "My Nest",
     panelTitle: "Panel",
     balance: "Balance (compartido)",
     capital: "Capital",
@@ -277,6 +277,7 @@ const es = {
     deleteNestConfirm: "¿Eliminar este nido y todas sus inversiones?",
     maxNests: "Puedes tener hasta 4 nidos",
     renameNest: "Renombrar",
+    talkCoach: "Hablar con Coach",
   },
 
   // Time simulation
@@ -418,13 +419,14 @@ const es = {
 
   // Multiplayer
   multiplayer: {
-    subtitle: "¡Compite con amigos! Elige categorías de activos y sobrevive tormentas del mercado juntos.",
+    subtitle: "¡Compite con amigos! Elige tus tipos de inversión y mira tu dinero crecer — o disminuir — en condiciones reales del mercado.",
     createRoom: "Crear sala",
     joinRoom: "Unirse a sala",
     yourName: "Tu nombre",
     enterCode: "Código de sala",
     back: "Atrás",
-    roomNotFound: "Sala no encontrada o ya está llena",
+    roomNotFound: "Sala no encontrada. Revisa el código e inténtalo de nuevo.",
+    roomFull: "Esta sala está llena (4/4 jugadores). Pide al host que cree una nueva.",
     createError: "Error al crear la sala, inténtalo de nuevo",
     nameRequired: "Por favor ingresa un nombre",
     codeRequired: "Por favor ingresa el código de 6 caracteres",
@@ -443,7 +445,7 @@ const es = {
     waitingHost: "Esperando a que el host inicie...",
     pickAssets: "Elige tus Categorías",
     pickAssetsDesc: "Elige hasta {{max}} categorías. Tu dinero se repartirá equitativamente.",
-    pickCategoriesDesc: "Cada jugador comienza con 1.000 CHF, dividido equitativamente entre tus elecciones.",
+    pickCategoriesDesc: "Cada jugador comienza con 1.000 CHF. Elige hasta {{max}} tipos de inversión — tu dinero se dividirá equitativamente entre ellos. Las opciones más arriesgadas pueden ganar más, pero también pueden perder más.",
     ready: "¡Listo!",
     waitingOthers: "Esperando a los demás jugadores...",
     simulation: "Simulación en vivo",
@@ -458,8 +460,17 @@ const es = {
     simFinished: "¡Simulación completada!",
     waitingResults: "Esperando a que todos terminen...",
     affectsYourPortfolio: "⚠ ¡Este evento afecta tu portafolio!",
+    impactGood: "📈 Bueno para tu portafolio",
+    impactBad: "📉 Malo para tu portafolio",
+    impactMild: "➡️ Efecto leve en tu portafolio",
+    eventTipPositive: "💡 Consejo: Comprar o mantener podría beneficiarte aquí.",
+    eventTipNegative: "💡 Consejo: Vender limita tus pérdidas aquí.",
+    buyButtonLabel: "Comprar (+CHF 100)",
+    buyButtonHint: "invertir más",
     gameOver: "¡Fin del juego!",
     wins: "gana",
+    winsWithLoss: "sobrevive mejor! 🏆 — a veces el objetivo es perder menos.",
+    winWithLoss: "El objetivo: superarlos a todos. Perdiste menos — eso es invertir.",
     you: "tú",
     decisions: "decisiones tomadas",
     insight: "¿Qué aprendiste?",
@@ -469,12 +480,12 @@ const es = {
     eventHistory: "HISTORIAL DE EVENTOS",
     recommended: "Lo mejor era",
     buy: "Comprar",
-    tipHoldWin: "Mantener fue la decisión correcta. El mercado absorbió el golpe y siguió creciendo. Vender habría bloqueado pérdidas innecesarias.",
-    tipHoldOk: "Ambas opciones causaron pérdidas, pero mantener limitó el daño. En crisis, la paciencia suele costar menos que vender.",
-    tipSellWin: "Vender fue inteligente aquí. Las pérdidas reales eran inminentes — salir a tiempo protegió tu capital.",
-    tipSellBad: "Vender bloqueó tus pérdidas. El mercado se recuperó después de este evento, por lo que mantener habría sido mejor.",
-    tipBuyWin: "¡Movida audaz que valió la pena! Comprar durante un evento favorable amplificó tus ganancias.",
-    tipBuyBad: "Comprar aumentó tu riesgo durante una caída. Más exposición significa más pérdida cuando los mercados bajan.",
+    tipHoldWin: "BUENA DECISIÓN\n\nQué pasó: El mercado se recuperó rápidamente después de este golpe.\n\nPor qué ganaste: Al mantener, dejaste tu inversión en su lugar. Cuando el mercado rebotó, tu dinero creció con él.\n\nLección: Durante caídas, la paciencia es un superpoder. Los mercados siempre se han recuperado históricamente.",
+    tipHoldOk: "DECISIÓN DIFÍCIL\n\nQué pasó: Tanto mantener como vender lastimaron tu portafolio, pero elegiste esperar.\n\nPor qué limitaste daño: Vender habría bloqueado pérdidas permanentemente. Al mantener, aunque los precios cayeron más, guardaste el potencial de recuperación.\n\nLección: En un crash, la pregunta no es 'Perderé?', sino 'Vendo y bloqueo, o espero a recuperarme?'",
+    tipSellWin: "DECISIÓN INTELIGENTE\n\nQué pasó: Este evento causaría pérdidas reales y duraderas.\n\nPor qué ganaste: Saliste antes del golpe. Esto protegió tu capital restante para invertir en otra parte después.\n\nLección: A veces, reducir exposición a una inversión dañada es correcto—pero solo si estás seguro de que vienen pérdidas.",
+    tipSellBad: "LECCIÓN DOLOROSA\n\nQué pasó: Vendiste, pero el mercado se recuperó poco después.\n\nPor qué duele: Al vender, bloqueaste pérdidas. Inversionistas que mantuvieron se recuperaron e hicieron dinero. Esta es la trampa del 'pánico de venta'.\n\nLección: Vender por miedo es la #1 forma que pierden dinero los inversores retail. Los mercados están construidos para recuperarse.",
+    tipBuyWin: "ATREVIDO Y RENTABLE\n\nQué pasó: Este evento creó una oportunidad de compra—precios bajos, valor alto.\n\nPor qué ganaste: Invertiste más cuando estaba barato. Cuando precios se recuperaron, tu nueva inversión ganó aún más rápido.\n\nLección: Las mejores oportunidades aparecen durante caídas. 'Compra barato, vende caro' no es teoría—funciona.",
+    tipBuyBad: "RIESGO MAL TIMED\n\nQué pasó: Invertiste más justo antes/durante una caída mayor.\n\nPor qué falló: Más exposición = más pérdidas cuando crash. Amplificaste riesgo en el peor momento.\n\nLección: Comprar puede ser inteligente, pero comprar durante una caída clara sin más capital multiplica tus pérdidas. El timing importa.",
   },
 
   // Multiplayer market events pool
@@ -521,7 +532,7 @@ const es = {
     multiplayerSteps: [
       { title: "Crea o Unete", description: "Crea una sala e invita amigos con un codigo o QR. Hasta 4 jugadores pueden competir." },
       { title: "Elige tus activos", description: "Cada jugador elige hasta 5 categorias de activos. Tu dinero se reparte equitativamente." },
-      { title: "Sobrevive al mercado", description: "Mira 10 anos de mercado con eventos reales. Manten o vende - el mejor portafolio gana!" },
+      { title: "Sobrevive al mercado", description: "Mira 10 años de mercado con eventos reales. Mantén o vende - ¡el mejor portafolio gana!" },
     ],
     next: "Siguiente",
     letsPlay: "A jugar!",
@@ -531,7 +542,7 @@ const es = {
   // Common
   common: {
     loading: "Cargando...",
-    perYear: "/ano",
+    perYear: "/año",
     notFound: {
       title: "404",
       message: "Ups! Pagina no encontrada",

@@ -76,6 +76,7 @@ export function useMultiplayer() {
   const [events, setEvents] = useState<RoomEvent[]>([]);
   const [myPlayer, setMyPlayer] = useState<RoomPlayer | null>(null);
   const [loading, setLoading] = useState(false);
+  const [joinError, setJoinError] = useState<"not_found" | "full" | null>(null);
 
   // Subscribe to room changes
   useEffect(() => {
@@ -165,6 +166,7 @@ export function useMultiplayer() {
   const joinRoom = useCallback(async (code: string, displayName: string) => {
     if (!user) return null;
     setLoading(true);
+    setJoinError(null);
 
     const { data: roomData, error } = await supabase
       .from("multiplayer_rooms")
@@ -172,8 +174,16 @@ export function useMultiplayer() {
       .eq("code", code.toUpperCase())
       .single();
 
-    if (error || !roomData) { setLoading(false); return null; }
-    if (roomData.status !== "waiting") { setLoading(false); return null; }
+    if (error || !roomData) {
+      setLoading(false);
+      setJoinError("not_found");
+      return null;
+    }
+    if (roomData.status !== "waiting") {
+      setLoading(false);
+      setJoinError("not_found");
+      return null;
+    }
 
     // Check player count
     const { count } = await supabase
@@ -181,7 +191,11 @@ export function useMultiplayer() {
       .select("*", { count: "exact", head: true })
       .eq("room_id", roomData.id);
 
-    if ((count || 0) >= roomData.max_players) { setLoading(false); return null; }
+    if ((count || 0) >= roomData.max_players) {
+      setLoading(false);
+      setJoinError("full");
+      return null;
+    }
 
     // Join
     const { error: joinErr } = await supabase.from("room_players").insert({
@@ -190,7 +204,11 @@ export function useMultiplayer() {
       display_name: displayName,
     });
 
-    if (joinErr) { setLoading(false); return null; }
+    if (joinErr) {
+      setLoading(false);
+      setJoinError("not_found");
+      return null;
+    }
 
     setRoom(roomData as any);
     await fetchPlayers(roomData.id);
@@ -269,7 +287,7 @@ export function useMultiplayer() {
   }, []);
 
   return {
-    room, players, events, myPlayer, loading,
+    room, players, events, myPlayer, loading, joinError,
     createRoom, joinRoom, startPicking, updatePortfolio,
     setReady, startSimulation, saveDecision, saveFinalScore,
     finishGame, leaveRoom,

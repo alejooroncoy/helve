@@ -114,6 +114,9 @@ const MultiplayerPicking = ({ mp }: Props) => {
                 <span className="text-sm font-bold text-foreground block" style={nunito}>
                   {t(`allocation.classes.${cls.key}`)}
                 </span>
+                <p className="text-[10px] text-muted-foreground mt-0.5 mb-1" style={nunito}>
+                  {t(`allocation.classDesc.${cls.key}`)}
+                </p>
                 <div className="flex items-center gap-2 mt-1">
                   <span className="text-[10px] font-bold flex-shrink-0" style={{ color }}>
                     {t("portfolio.risk")} {risk}/10

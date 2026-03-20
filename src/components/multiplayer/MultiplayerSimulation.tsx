@@ -362,6 +362,52 @@ const MultiplayerSimulation = ({ mp }: Props) => {
                   );
                 })}
               </div>
+
+              {/* Impact indicator badge — only if event affects user's portfolio */}
+              {(activeEvent!.affectedClasses ?? []).some((cls: string) => myCategories.includes(cls)) && (
+                <div className="mt-3">
+                  {(() => {
+                    const holdImpact = activeEvent!.holdImpact ?? 1;
+                    if (holdImpact > 1.0) {
+                      return (
+                        <span className="text-[11px] font-bold px-3 py-1.5 rounded-full border"
+                          style={{
+                            backgroundColor: "#22c55e15",
+                            borderColor: "#22c55e",
+                            color: "#22c55e",
+                            ...nunito,
+                          }}>
+                          📈 {t("multiplayer.impactGood")}
+                        </span>
+                      );
+                    } else if (holdImpact < 0.95) {
+                      return (
+                        <span className="text-[11px] font-bold px-3 py-1.5 rounded-full border"
+                          style={{
+                            backgroundColor: "#fb923c15",
+                            borderColor: "#fb923c",
+                            color: "#fb923c",
+                            ...nunito,
+                          }}>
+                          📉 {t("multiplayer.impactBad")}
+                        </span>
+                      );
+                    } else {
+                      return (
+                        <span className="text-[11px] font-bold px-3 py-1.5 rounded-full border"
+                          style={{
+                            backgroundColor: "#94a3b815",
+                            borderColor: "#94a3b8",
+                            color: "#94a3b8",
+                            ...nunito,
+                          }}>
+                          ➡️ {t("multiplayer.impactMild")}
+                        </span>
+                      );
+                    }
+                  })()}
+                </div>
+              )}
               {(activeEvent!.affectedClasses ?? []).some((cls: string) => myCategories.includes(cls)) && (
                 <p className="text-[10px] font-bold mt-2" style={{ ...nunito, color: CELESTE }}>
                   {t("multiplayer.affectsYourPortfolio")}
@@ -512,6 +558,22 @@ const MultiplayerSimulation = ({ mp }: Props) => {
               </span>
             </div>
 
+            {/* Context tip — shows above buttons */}
+            {(() => {
+              const holdImpact = activeEvent!.holdImpact ?? 1;
+              const shouldShowTip = (activeEvent!.affectedClasses ?? []).some((cls: string) => myCategories.includes(cls));
+              if (!shouldShowTip) return null;
+              return (
+                <p className="text-[10px] font-bold text-muted-foreground mb-3 text-center" style={nunito}>
+                  {holdImpact > 1.0
+                    ? t("multiplayer.eventTipPositive")
+                    : holdImpact < 0.95
+                    ? t("multiplayer.eventTipNegative")
+                    : ""}
+                </p>
+              );
+            })()}
+
             {/* Buy button (CHF 100 fixed) — top full width */}
             <motion.button
               className="w-full py-3.5 rounded-2xl font-black text-sm flex items-center justify-center gap-2 border-2 mb-3"
@@ -519,7 +581,7 @@ const MultiplayerSimulation = ({ mp }: Props) => {
               onClick={() => handleEventDecision("buy")} whileTap={{ scale: 0.97 }}
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
               <ShoppingCart className="w-4 h-4" />
-              {t("multiplayer.buy")} -CHF {BUY_AMOUNT}
+              {t("multiplayer.buyButtonLabel")}
             </motion.button>
 
             {/* Sell + Hold — side by side */}

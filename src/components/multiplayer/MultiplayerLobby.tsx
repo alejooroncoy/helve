@@ -39,10 +39,21 @@ const MultiplayerLobby = ({ mp }: Props) => {
       setMode("join");
       const name = user?.email?.split("@")[0] || "Player";
       mp.joinRoom(upper, name).then((room) => {
-        if (!room) toast.error(t("multiplayer.roomNotFound"));
+        if (!room) {
+          // Error will be handled by joinError watcher below
+        }
       });
     }
   }, []);
+
+  // Show appropriate error when joinError changes
+  useEffect(() => {
+    if (mp.joinError === "full") {
+      toast.error(t("multiplayer.roomFull"));
+    } else if (mp.joinError === "not_found") {
+      toast.error(t("multiplayer.roomNotFound"));
+    }
+  }, [mp.joinError, t]);
 
   // Stop stream on unmount
   useEffect(() => {
@@ -88,7 +99,9 @@ const MultiplayerLobby = ({ mp }: Props) => {
                 setJoinCode(upper);
                 setMode("join");
                 mp.joinRoom(upper, displayName.trim() || "Player").then((room) => {
-                  if (!room) toast.error(t("multiplayer.roomNotFound"));
+                  if (!room) {
+                    // Error will be handled by joinError watcher
+                  }
                 });
               } else {
                 toast.error(t("multiplayer.invalidQR"));
@@ -133,7 +146,9 @@ const MultiplayerLobby = ({ mp }: Props) => {
       return;
     }
     const room = await mp.joinRoom(joinCode, displayName.trim());
-    if (!room) toast.error(t("multiplayer.roomNotFound"));
+    if (!room) {
+      // Error will be handled by joinError watcher
+    }
   };
 
   const copyCode = () => {

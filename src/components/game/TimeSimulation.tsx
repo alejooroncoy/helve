@@ -492,6 +492,8 @@ export default function TimeSimulation({
   const decisionMultiplier = useRef(1);
   const categoryExposure = useRef<Record<string, number>>({});
   const aiDecisions = useRef<Array<{ step: number; action: string; isGood: boolean; investmentId: string }>>([]);
+  const pendingScenarioQueue = useRef<Array<{ event: ScheduledAIEvent; scenario: AIScenario }>>([]);
+  const isBusyWithScenario = useRef(false);
 
   const dbIds = useMemo(
     () => currentPortfolio.flatMap((investment) => categoryToDbIds[investment.id] || []).filter(Boolean),
@@ -658,9 +660,14 @@ export default function TimeSimulation({
       );
       void ensureScenario(scheduledEvent, newValue).then((scenario) => {
         if (!scenario) return;
-        setActiveAIEvent(scheduledEvent);
-        setAiScenario(scenario);
-        setShowAIEvent(true);
+        if (isBusyWithScenario.current) {
+          pendingScenarioQueue.current.push({ event: scheduledEvent, scenario });
+        } else {
+          isBusyWithScenario.current = true;
+          setActiveAIEvent(scheduledEvent);
+          setAiScenario(scenario);
+          setShowAIEvent(true);
+        }
       });
     } else {
       const previousValue = data[data.length - 1]?.value || startBalance;
@@ -720,7 +727,16 @@ export default function TimeSimulation({
     setAiFeedback(null);
     setAiScenario(null);
     setActiveAIEvent(null);
-    setPlaying(true);
+
+    const next = pendingScenarioQueue.current.shift();
+    if (next) {
+      setActiveAIEvent(next.event);
+      setAiScenario(next.scenario);
+      setShowAIEvent(true);
+    } else {
+      isBusyWithScenario.current = false;
+      setPlaying(true);
+    }
   };
 
   useEffect(() => {
