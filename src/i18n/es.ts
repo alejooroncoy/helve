@@ -547,6 +547,7 @@ const es = {
     next: "Siguiente",
     letsPlay: "A jugar!",
     footer: "HELVE - Aprende a invertir jugando",
+    signOut: "Cerrar sesión",
   },
 
   // Common
