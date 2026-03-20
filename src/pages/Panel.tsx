@@ -899,25 +899,27 @@ const Panel = () => {
           </div>
         </div>
 
-        {/* 2x2 Stats grid */}
-        <div className="grid grid-cols-2 gap-2">
-          <div className="bg-card rounded-2xl px-3 py-2 shadow-sm">
-            <p className="text-[10px] uppercase tracking-wide text-muted-foreground" style={nunito}>{t("panel.capital")}</p>
-            <p className="text-lg font-extrabold text-foreground" style={nunito}>CHF {Math.round(balance).toLocaleString()}</p>
+        {/* 2x2 Stats grid — compact */}
+        <div className="grid grid-cols-2 gap-1.5">
+          <div className="bg-card rounded-xl px-2.5 py-1.5 shadow-sm">
+            <p className="text-[9px] uppercase tracking-wide text-muted-foreground" style={nunito}>{t("panel.capital")}</p>
+            <p className="text-sm font-extrabold text-foreground" style={nunito}>CHF {Math.round(balance).toLocaleString()}</p>
           </div>
-          <div className="bg-card rounded-2xl px-3 py-2 shadow-sm">
-            <p className="text-[10px] uppercase tracking-wide text-muted-foreground" style={nunito}>{t("panel.invested")}</p>
-            <p className="text-lg font-extrabold" style={{ ...nunito, color: CELESTE }}>CHF {Math.round(balance * totalAllocated / 100).toLocaleString()}</p>
+          <div className="bg-card rounded-xl px-2.5 py-1.5 shadow-sm">
+            <p className="text-[9px] uppercase tracking-wide text-muted-foreground" style={nunito}>{t("panel.invested")}</p>
+            <p className="text-sm font-extrabold" style={{ ...nunito, color: CELESTE }}>CHF {Math.round(balance * totalAllocated / 100).toLocaleString()}</p>
           </div>
-          <div className="bg-card rounded-2xl px-3 py-2 shadow-sm">
-            <p className="text-[10px] uppercase tracking-wide text-muted-foreground" style={nunito}>{t("panel.risk")}</p>
-            <p className="text-lg font-extrabold" style={{ ...nunito, color: totalRisk > 60 ? "hsl(var(--destructive))" : totalRisk > 30 ? "hsl(var(--accent-foreground))" : CELESTE }}>{totalRisk}%</p>
-            <p className="text-[10px] text-muted-foreground" style={nunito}>{totalRisk <= 30 ? "Low" : totalRisk <= 60 ? "Medium" : "High"}</p>
+          <div className="bg-card rounded-xl px-2.5 py-1.5 shadow-sm">
+            <p className="text-[9px] uppercase tracking-wide text-muted-foreground" style={nunito}>{t("panel.risk")}</p>
+            <p className="text-sm font-extrabold" style={{ ...nunito, color: totalRisk > 60 ? "hsl(var(--destructive))" : totalRisk > 30 ? "hsl(var(--accent-foreground))" : CELESTE }}>{totalRisk}%
+              <span className="text-[9px] font-normal text-muted-foreground ml-1">{totalRisk <= 30 ? t("portfolio.low") : totalRisk <= 60 ? t("portfolio.medium") : t("portfolio.high")}</span>
+            </p>
           </div>
-          <div className="bg-card rounded-2xl px-3 py-2 shadow-sm">
-            <p className="text-[10px] uppercase tracking-wide text-muted-foreground" style={nunito}>AVG. RETURN</p>
-            <p className="text-lg font-extrabold" style={{ ...nunito, color: CELESTE }}>{avgReturn}%</p>
-            <p className="text-[10px] text-muted-foreground" style={nunito}>Annual</p>
+          <div className="bg-card rounded-xl px-2.5 py-1.5 shadow-sm">
+            <p className="text-[9px] uppercase tracking-wide text-muted-foreground" style={nunito}>{t("panel.returnLabel")}</p>
+            <p className="text-sm font-extrabold" style={{ ...nunito, color: CELESTE }}>{avgReturn}%
+              <span className="text-[9px] font-normal text-muted-foreground ml-1">{t("panel.annual")}</span>
+            </p>
           </div>
         </div>
 
