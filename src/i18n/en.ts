@@ -475,6 +475,7 @@ const en = {
     decisions: "decisions made",
     insight: "What did you learn?",
     insightText: "Long-term investing rewards patience. Panic-selling during crashes often locks in losses, while holding through volatility tends to recover over time.",
+    coachThinking: "Your coach is analyzing your game...",
     playAgain: "Play Again",
     backToNest: "Back to My Nest",
     eventHistory: "EVENT HISTORY",

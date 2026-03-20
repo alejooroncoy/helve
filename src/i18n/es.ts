@@ -475,6 +475,7 @@ const es = {
     decisions: "decisiones tomadas",
     insight: "¿Qué aprendiste?",
     insightText: "Invertir a largo plazo premia la paciencia. Vender por pánico durante caídas suele fijar pérdidas, mientras que mantener en la volatilidad tiende a recuperarse con el tiempo.",
+    coachThinking: "Tu coach está analizando tu partida...",
     playAgain: "Jugar de nuevo",
     backToNest: "Volver a My Nest",
     eventHistory: "HISTORIAL DE EVENTOS",
