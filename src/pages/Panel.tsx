@@ -370,10 +370,10 @@ function ScoutedCard({
 
   return (
     <div
-      className={`bg-card rounded-2xl p-3 shadow-sm border-2 border-dashed border-border ${overlay ? "-rotate-2 cursor-grabbing" : isMobile ? "" : "cursor-grab active:cursor-grabbing"} ${isMobile ? "min-h-0" : "min-h-[110px]"} h-full flex flex-col`}
+      className={`bg-card rounded-2xl p-3 shadow-sm border-2 border-dashed border-border ${overlay ? "-rotate-2 cursor-grabbing" : isMobile ? "" : "cursor-grab active:cursor-grabbing"} h-full flex flex-col`}
       style={overlay ? { boxShadow: `0 0 0 2px ${color}40`, borderColor: `${color}60` } : {}}
     >
-      <div className="flex items-start gap-2">
+      <div className="flex items-center gap-2.5">
         <div
           className="w-9 h-9 bg-secondary rounded-xl flex items-center justify-center flex-shrink-0"
           style={{ color }}
@@ -384,9 +384,17 @@ function ScoutedCard({
           <p className="text-xs font-bold text-foreground leading-snug" style={nunito}>
             {displayName}
           </p>
-          <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-2 leading-tight" style={nunito}>
-            {t(`allocation.classDesc.${inv.id}`, { defaultValue: "" })}
-          </p>
+          <div className="flex items-center gap-1.5 mt-0.5">
+            <span
+              className="text-[10px] font-bold"
+              style={{ color: getRiskBarColor(inv.riskLevel) }}
+            >
+              {t("panel.riskLabel")} {inv.riskLevel}/10
+            </span>
+            <span className="text-[10px] font-bold" style={{ color }}>
+              {inv.annualReturn}% {t("common.perYear")}
+            </span>
+          </div>
         </div>
         <div className="flex items-center gap-1.5 flex-shrink-0">
           {!overlay && onAsk && (
@@ -394,8 +402,8 @@ function ScoutedCard({
               type="button"
               onClick={(e) => { e.stopPropagation(); e.preventDefault(); onAsk(); }}
               onPointerDown={(e) => e.stopPropagation()}
-              className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold cursor-pointer flex-shrink-0"
-              style={{ ...nunito, backgroundColor: `${color}18`, color }}
+              className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold cursor-pointer"
+              style={{ backgroundColor: `${color}18`, color }}
               aria-label="Info"
             >
               ?
@@ -413,24 +421,6 @@ function ScoutedCard({
             </button>
           )}
         </div>
-      </div>
-      {!isMobile && <div className="flex-grow" />}
-      <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-        <span
-          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold"
-          style={{ ...nunito, backgroundColor: `${getRiskBarColor(inv.riskLevel)}18`, color: getRiskBarColor(inv.riskLevel) }}
-        >
-          {t("panel.riskLabel")} {inv.riskLevel}/10
-        </span>
-        <span
-          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold"
-          style={{ ...nunito, backgroundColor: `${color}18`, color }}
-        >
-          {inv.annualReturn}% {t("common.perYear")}
-        </span>
-        {!overlay && !isMobile && (
-          <span className="ml-auto text-sm font-bold" style={{ color }}>+</span>
-        )}
       </div>
     </div>
   );
