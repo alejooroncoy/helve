@@ -278,7 +278,7 @@ function NestCard({
                 CHF {chfAmount}
               </span>
             </div>
-            {isMobile && dragHandleProps && (
+            {!isMobile && dragHandleProps && (
               <button
                 type="button"
                 {...dragHandleProps}
