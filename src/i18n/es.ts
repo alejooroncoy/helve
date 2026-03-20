@@ -430,6 +430,7 @@ const es = {
     decisionMade: "¡Decisión registrada!",
     simFinished: "¡Simulación completada!",
     waitingResults: "Esperando a que todos terminen...",
+    affectsYourPortfolio: "⚠ ¡Este evento afecta tu portafolio!",
     gameOver: "¡Fin del juego!",
     wins: "gana",
     you: "tú",

@@ -342,6 +342,32 @@ const MultiplayerSimulation = ({ mp }: Props) => {
               </div>
               <h2 className="text-lg font-black text-foreground mb-1" style={nunito}>{t(activeEvent!.title)}</h2>
               <p className="text-sm text-muted-foreground leading-relaxed" style={nunito}>{t(activeEvent!.description)}</p>
+
+              {/* Affected asset class chips */}
+              <div className="mt-3 flex flex-wrap justify-center gap-1.5">
+                {(activeEvent!.affectedClasses ?? []).map((cls: string) => {
+                  const isMine = myCategories.includes(cls);
+                  const color = CAT_COLORS[cls] ?? CELESTE;
+                  return (
+                    <span key={cls}
+                      className="text-[10px] font-black px-2.5 py-1 rounded-full border"
+                      style={{
+                        backgroundColor: isMine ? `${color}20` : "hsl(var(--muted) / 0.4)",
+                        borderColor: isMine ? color : "hsl(var(--border))",
+                        color: isMine ? color : "hsl(var(--muted-foreground))",
+                        ...nunito,
+                      }}>
+                      {isMine ? "● " : ""}{t(`allocation.classes.${cls}`)}
+                    </span>
+                  );
+                })}
+              </div>
+              {(activeEvent!.affectedClasses ?? []).some((cls: string) => myCategories.includes(cls)) && (
+                <p className="text-[10px] font-bold mt-2" style={{ ...nunito, color: CELESTE }}>
+                  {t("multiplayer.affectsYourPortfolio")}
+                </p>
+              )}
+
               {/* Reading countdown — only shown during reading phase */}
               {eventPhase === "reading" && (
                 <div className="mt-3 flex items-center justify-center gap-2">

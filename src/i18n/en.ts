@@ -430,6 +430,7 @@ const en = {
     decisionMade: "Decision recorded!",
     simFinished: "Simulation Complete!",
     waitingResults: "Waiting for all players to finish...",
+    affectsYourPortfolio: "⚠ This event affects your portfolio!",
     gameOver: "Game Over!",
     wins: "wins",
     you: "you",
