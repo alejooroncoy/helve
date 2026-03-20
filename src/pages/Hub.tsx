@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
-import { Briefcase, Users, ChevronRight, ArrowRight, X, Map, Lock } from "lucide-react";
+import { Briefcase, Users, ChevronRight, ArrowRight, X, Map, Lock, LogOut } from "lucide-react";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 const nunito = { fontFamily: "'Nunito', sans-serif" };
