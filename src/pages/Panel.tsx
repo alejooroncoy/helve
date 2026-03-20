@@ -586,7 +586,7 @@ const Panel = () => {
   const [renameValue, setRenameValue] = useState("");
   const [riskWarningOpen, setRiskWarningOpen] = useState(false);
   const [riskWarningType, setRiskWarningType] = useState<"tooHigh" | "tooLow" | null>(null);
-  const riskWarningShownRef = useRef<string | null>(null);
+  
   const isMobile = useIsMobile();
 
   const { stats, loading: statsLoading } = useInstrumentStats(allDbIds);
