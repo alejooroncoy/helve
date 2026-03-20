@@ -955,16 +955,18 @@ const Panel = () => {
           <Popover open={coachOpen} onOpenChange={setCoachOpen}>
             <PopoverTrigger asChild>
               <motion.button
-                className="w-full flex items-center gap-3 bg-card rounded-2xl px-4 py-3 shadow-sm mt-2 border border-border hover:border-primary/30 transition-colors"
+                className="w-full flex items-center gap-3 rounded-2xl px-4 py-2.5 shadow-sm mt-2 transition-colors"
                 whileTap={{ scale: 0.97 }}
-                style={nunito}
+                style={{ ...nunito, backgroundColor: CELESTE }}
               >
-                <img src="/perspectiva1.png" alt="Coach" className="w-10 h-10 rounded-full object-cover shadow-sm flex-shrink-0" />
-                <div className="flex-1 text-left">
-                  <p className="text-sm font-bold text-foreground">{t("panel.coachCTA", { defaultValue: "Talk to your Coach" })}</p>
-                  <p className="text-[11px] text-muted-foreground">{t("panel.coachCTASub", { defaultValue: "Get personalized advice" })}</p>
+                <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center flex-shrink-0 shadow-sm">
+                  <img src="/perspectiva1.png" alt="Coach" className="w-7 h-7 rounded-full object-cover" />
                 </div>
-                <MessageCircle className="w-5 h-5 text-primary flex-shrink-0" />
+                <div className="flex-1 text-left">
+                  <p className="text-sm font-bold text-white">{t("panel.talkCoach")}</p>
+                  <p className="text-[10px] text-white/70">{t("panel.coachCTASub", { defaultValue: "Get personalized advice" })}</p>
+                </div>
+                <MessageCircle className="w-5 h-5 text-white/80 flex-shrink-0" />
               </motion.button>
             </PopoverTrigger>
             <PopoverContent side="bottom" align="start" className="w-[380px] h-[500px] p-0 rounded-2xl overflow-hidden">
