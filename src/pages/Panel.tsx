@@ -1127,16 +1127,9 @@ const Panel = () => {
                   {t("panel.buy")}
                 </h2>
                 {/* Mobile: horizontal scroll */}
-                <div
-                  className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide items-stretch md:hidden"
-                  style={{ scrollSnapType: "x mandatory", touchAction: "pan-x" }}
-                >
-                  {suggestions.map((inv) => (
-                    <div
-                      key={inv.id}
-                      className="flex-shrink-0 flex"
-                      style={{ width: 170, minWidth: 160, scrollSnapAlign: "start" }}
-                    >
+                <div className="flex flex-col gap-2 md:hidden">
+                  {suggestions.slice(0, 4).map((inv) => (
+                    <div key={inv.id}>
                       <DraggableCard
                         inv={inv}
                         zone="scouted"
