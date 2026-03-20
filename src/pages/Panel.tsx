@@ -370,10 +370,10 @@ function ScoutedCard({
 
   return (
     <div
-      className={`bg-card rounded-2xl p-3.5 shadow-sm border-2 border-dashed border-border ${overlay ? "-rotate-2 cursor-grabbing" : isMobile ? "" : "cursor-grab active:cursor-grabbing"} h-full flex flex-col`}
+      className={`bg-card rounded-2xl p-2.5 shadow-sm border-2 border-dashed border-border ${overlay ? "-rotate-2 cursor-grabbing" : isMobile ? "" : "cursor-grab active:cursor-grabbing"} h-full flex flex-col`}
       style={overlay ? { boxShadow: `0 0 0 2px ${color}40`, borderColor: `${color}60` } : {}}>
       
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2.5">
         <div
           className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
           style={{ backgroundColor: `${color}18`, color }}>
