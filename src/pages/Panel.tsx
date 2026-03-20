@@ -402,7 +402,7 @@ function ScoutedCard({
         )}
       </div>
       {!isMobile && <div className="flex-grow" />}
-      <div className="flex items-center gap-2 mt-2">
+      <div className="flex items-center gap-1.5 mt-2 flex-wrap">
         <span className="text-[10px] text-muted-foreground" style={nunito}>
           {t("panel.riskLabel")}
         </span>
@@ -410,11 +410,13 @@ function ScoutedCard({
           {inv.riskLevel}/10
         </span>
         <span className="text-muted-foreground text-[10px]">·</span>
-        <span className="text-[10px] font-bold" style={{ ...nunito, color }}>
-          {inv.annualReturn}%
+        <span className="text-[10px] text-muted-foreground" style={nunito}>
+          {t("panel.returnLabel")}
         </span>
-      </div>
-      <div className="flex items-center justify-end mt-1.5 gap-1">
+        <span className="text-[10px] font-bold" style={{ ...nunito, color }}>
+          {inv.annualReturn}%{t("common.perYear")}
+        </span>
+        <span className="flex-grow" />
         {!overlay && onAsk && (
           <span
             onClick={(e) => {
