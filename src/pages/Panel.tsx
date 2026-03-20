@@ -925,40 +925,40 @@ const Panel = () => {
 
         {/* Coach CTA button */}
         {isMobile ?
-          <Drawer open={coachOpen} onOpenChange={setCoachOpen}>
+        <Drawer open={coachOpen} onOpenChange={setCoachOpen}>
             <DrawerTrigger asChild>
               <motion.button
-                className="w-full flex items-center gap-3 rounded-2xl px-4 py-2.5 shadow-sm mt-2 transition-colors"
-                whileTap={{ scale: 0.97 }}
-                style={{ ...nunito, backgroundColor: CELESTE }}
-              >
+              className="w-full flex items-center gap-3 rounded-2xl px-4 py-2.5 shadow-sm mt-2 transition-colors"
+              whileTap={{ scale: 0.97 }}
+              style={{ ...nunito, backgroundColor: CELESTE }}>
+              
                 <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center flex-shrink-0 shadow-sm">
                   <img src="/perspectiva1.png" alt="Coach" className="w-7 h-7 rounded-full object-cover" />
                 </div>
                 <div className="flex-1 text-left">
                   <p className="text-sm font-bold text-white">{t("panel.talkCoach")}</p>
-                  <p className="text-[10px] text-white/70">{t("panel.coachCTASub", { defaultValue: "Get personalized advice" })}</p>
+                  <p className="text-[10px] text-sidebar">{t("panel.coachCTASub", { defaultValue: "Get personalized advice" })}</p>
                 </div>
                 <MessageCircle className="w-5 h-5 text-white/80 flex-shrink-0" />
               </motion.button>
             </DrawerTrigger>
             <DrawerContent className="h-[80vh] p-0">
               <CoachChat
-                onClose={() => {setCoachOpen(false);setCoachInitQ(undefined);}}
-                portfolio={enrichedPortfolio}
-                onAddInvestment={(id) => {const inv = enrichedAvailable.find((i) => i.id === id);if (inv) tryBuyInvestment(inv);}}
-                onRemoveInvestment={(id) => removeInvestment(id)}
-                initialQuestion={coachInitQ}
-                onSwapAccepted={handleSwapFromCoach} />
+              onClose={() => {setCoachOpen(false);setCoachInitQ(undefined);}}
+              portfolio={enrichedPortfolio}
+              onAddInvestment={(id) => {const inv = enrichedAvailable.find((i) => i.id === id);if (inv) tryBuyInvestment(inv);}}
+              onRemoveInvestment={(id) => removeInvestment(id)}
+              initialQuestion={coachInitQ}
+              onSwapAccepted={handleSwapFromCoach} />
             </DrawerContent>
           </Drawer> :
-          <Popover open={coachOpen} onOpenChange={setCoachOpen}>
+        <Popover open={coachOpen} onOpenChange={setCoachOpen}>
             <PopoverTrigger asChild>
               <motion.button
-                className="w-full flex items-center gap-3 rounded-2xl px-4 py-2.5 shadow-sm mt-2 transition-colors"
-                whileTap={{ scale: 0.97 }}
-                style={{ ...nunito, backgroundColor: CELESTE }}
-              >
+              className="w-full flex items-center gap-3 rounded-2xl px-4 py-2.5 shadow-sm mt-2 transition-colors"
+              whileTap={{ scale: 0.97 }}
+              style={{ ...nunito, backgroundColor: CELESTE }}>
+              
                 <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center flex-shrink-0 shadow-sm">
                   <img src="/perspectiva1.png" alt="Coach" className="w-7 h-7 rounded-full object-cover" />
                 </div>
@@ -971,12 +971,12 @@ const Panel = () => {
             </PopoverTrigger>
             <PopoverContent side="bottom" align="start" className="w-[380px] h-[500px] p-0 rounded-2xl overflow-hidden">
               <CoachChat
-                onClose={() => {setCoachOpen(false);setCoachInitQ(undefined);}}
-                portfolio={enrichedPortfolio}
-                onAddInvestment={(id) => {const inv = enrichedAvailable.find((i) => i.id === id);if (inv) tryBuyInvestment(inv);}}
-                onRemoveInvestment={(id) => removeInvestment(id)}
-                initialQuestion={coachInitQ}
-                onSwapAccepted={handleSwapFromCoach} />
+              onClose={() => {setCoachOpen(false);setCoachInitQ(undefined);}}
+              portfolio={enrichedPortfolio}
+              onAddInvestment={(id) => {const inv = enrichedAvailable.find((i) => i.id === id);if (inv) tryBuyInvestment(inv);}}
+              onRemoveInvestment={(id) => removeInvestment(id)}
+              initialQuestion={coachInitQ}
+              onSwapAccepted={handleSwapFromCoach} />
             </PopoverContent>
           </Popover>
         }
@@ -1005,12 +1005,12 @@ const Panel = () => {
                     <div className="flex items-center gap-1.5 w-full">
                       <span className="truncate">{nest.name}</span>
                       {isActive && nests.length > 1 &&
-                        <button
-                          onClick={(e) => {e.stopPropagation();handleDeleteNest(nest.id);}}
-                          className="p-0.5 rounded hover:bg-destructive/20 text-destructive/70 hover:text-destructive transition-colors ml-auto">
+                    <button
+                      onClick={(e) => {e.stopPropagation();handleDeleteNest(nest.id);}}
+                      className="p-0.5 rounded hover:bg-destructive/20 text-destructive/70 hover:text-destructive transition-colors ml-auto">
                           <Trash2 className="w-3 h-3" />
                         </button>
-                      }
+                    }
                     </div>
                   </button>
                 }
