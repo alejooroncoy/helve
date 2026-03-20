@@ -1125,9 +1125,12 @@ const Panel = () => {
                   {t("panel.buy")}
                 </h2>
                 {/* Mobile: full-width vertical list */}
-                <div className="flex flex-col gap-2 md:hidden">
+                <div
+                  className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide md:hidden"
+                  style={{ touchAction: "pan-x" }}
+                >
                   {suggestions.map((inv) => (
-                    <div key={inv.id} className="w-full">
+                    <div key={inv.id} className="flex-shrink-0" style={{ width: 280 }}>
                       <DraggableCard
                         inv={inv}
                         zone="scouted"
