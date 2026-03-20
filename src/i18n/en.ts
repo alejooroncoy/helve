@@ -15,7 +15,8 @@ const en = {
     steps: [
       {
         title: "Set your profile",
-        description: "Tell me how you like to play it — safe and steady, or bold and risky. I'll tailor your journey from there.",
+        description:
+          "Tell me how you like to play it — safe and steady, or bold and risky. I'll tailor your journey from there.",
       },
       {
         title: "Make your moves",
@@ -48,7 +49,8 @@ const en = {
         ],
       },
       {
-        title: "Oh no! A strong storm shakes the tree and the nest where you keep your branches wobbles. What do you do?",
+        title:
+          "Oh no! A strong storm shakes the tree and the nest where you keep your branches wobbles. What do you do?",
         options: [
           "I fly away and find a cave. I lose the nest, but I'd rather be safe from the rain.",
           "I stay calm in the nest and patiently wait for the sun to come back.",
@@ -211,10 +213,14 @@ const en = {
     allSafeInsight: "Playing it safe preserved your money, but growth was limited. A little risk can go a long way.",
     stayInsight: "Staying invested during the storm helped your garden recover and grow stronger.",
     balancedInsight: "A balanced approach gave you steady growth without too many surprises.",
-    tooAggressiveInsight: "Your portfolio was riskier than your profile suggested. The extra volatility can pay off, but make sure you can handle the dips!",
-    tooConservativeInsight: "Your portfolio was safer than needed for your profile. You avoided losses, but also missed potential growth. Finding the right balance is key.",
-    highEquityInsight: "Heavy equity exposure means big upside potential — but also sharper drops during market downturns. Diversification smooths the ride.",
-    highBondsInsight: "Bonds provide stability and predictable income. Great for short-term goals, but long-term growth may require some equity exposure.",
+    tooAggressiveInsight:
+      "Your portfolio was riskier than your profile suggested. The extra volatility can pay off, but make sure you can handle the dips!",
+    tooConservativeInsight:
+      "Your portfolio was safer than needed for your profile. You avoided losses, but also missed potential growth. Finding the right balance is key.",
+    highEquityInsight:
+      "Heavy equity exposure means big upside potential — but also sharper drops during market downturns. Diversification smooths the ride.",
+    highBondsInsight:
+      "Bonds provide stability and predictable income. Great for short-term goals, but long-term growth may require some equity exposure.",
     yourAllocation: "YOUR ALLOCATION",
     riskScore: "Risk score: {{score}}/10",
     aligned: "Aligned with your profile ✅",
@@ -282,9 +288,11 @@ const en = {
     riskProfileIs: "Your risk profile is",
     riskWarning: {
       tooHighTitle: "Be careful!",
-      tooHighDesc: "Your portfolio risk is above what's recommended for your {{profile}} profile. You might be taking on more risk than you should.",
+      tooHighDesc:
+        "Your portfolio risk is above what's recommended for your {{profile}} profile. You might be taking on more risk than you should.",
       tooLowTitle: "You can do more!",
-      tooLowDesc: "Your portfolio risk is below your {{profile}} profile's range. You could afford to take a bit more risk (responsibly!).",
+      tooLowDesc:
+        "Your portfolio risk is below your {{profile}} profile's range. You could afford to take a bit more risk (responsibly!).",
       gotIt: "Got it",
     },
   },
@@ -368,11 +376,7 @@ const en = {
 
   // Bird messages
   birdMessages: {
-    positive: [
-      "Your nest shines!",
-      "The eggs are warm!",
-      "Great flight! You're on the right path.",
-    ],
+    positive: ["Your nest shines!", "The eggs are warm!", "Great flight! You're on the right path."],
     negative: [
       "Hold on! Storms pass.",
       "Strong birds resist the wind.",
@@ -383,10 +387,7 @@ const en = {
       "Patience, little bird. Time is your friend.",
       "Step by step you build the best nest.",
     ],
-    sell: [
-      "Sold! Sometimes it's good to lighten the nest.",
-      "Egg out. Was it a good decision? We'll see...",
-    ],
+    sell: ["Sold! Sometimes it's good to lighten the nest.", "Egg out. Was it a good decision? We'll see..."],
     held: "You held! Brave birds weather the storm.",
   },
 
@@ -428,7 +429,8 @@ const en = {
 
   // Multiplayer
   multiplayer: {
-    subtitle: "Compete with friends! Choose your investment types and watch your money grow — or shrink — in real market conditions.",
+    subtitle:
+      "Compete with friends! Choose your investment types and watch your money grow — or shrink — in real market conditions.",
     createRoom: "Create Room",
     joinRoom: "Join Room",
     yourName: "Your display name",
@@ -454,7 +456,7 @@ const en = {
     waitingHost: "Waiting for host to start...",
     pickAssets: "Pick Your Categories",
     pickAssetsDesc: "Choose up to {{max}} asset categories. Your money will be split equally.",
-    pickCategoriesDesc: "Each player starts with 1,000 CHF. Pick up to {{max}} investment types — your money will be divided equally between them. Riskier options can earn more, but can also lose more.",
+    pickCategoriesDesc: "Each player starts with 1,000 CHF. Pick up to {{max}} investment types.",
     ready: "Ready!",
     waitingOthers: "Waiting for other players...",
     simulation: "Live Simulation",
@@ -483,19 +485,26 @@ const en = {
     you: "you",
     decisions: "decisions made",
     insight: "What did you learn?",
-    insightText: "Long-term investing rewards patience. Panic-selling during crashes often locks in losses, while holding through volatility tends to recover over time.",
+    insightText:
+      "Long-term investing rewards patience. Panic-selling during crashes often locks in losses, while holding through volatility tends to recover over time.",
     coachThinking: "Your coach is analyzing your game...",
     playAgain: "Play Again",
     backToNest: "Back to My Nest",
     eventHistory: "EVENT HISTORY",
     recommended: "Best was",
     buy: "Buy",
-    tipHoldWin: "GOOD DECISION\n\nWhat happened: The market recovered quickly after this shock.\n\nWhy you won: By holding, you kept your investment in place. When the market bounced back, your money grew with it.\n\nLesson: During market downturns, patience is a superpower. Markets have always recovered historically.",
-    tipHoldOk: "TOUGH CALL\n\nWhat happened: Both holding and selling hurt your portfolio, but you chose to wait.\n\nWhy you limited damage: Selling would have locked in losses permanently. By holding, even though prices fell more, you kept the potential to recover.\n\nLesson: In a crash, the question isn't 'Will I lose?' but 'Do I sell and lock it in, or hold and wait for recovery?'",
-    tipSellWin: "SMART DECISION\n\nWhat happened: This event would have caused real, lasting losses.\n\nWhy you won: You got out before the worst hit. This protected your remaining capital to invest elsewhere later.\n\nLesson: Sometimes, reducing exposure to a damaged investment is the right move—but only when you're confident losses are coming.",
-    tipSellBad: "PAINFUL LESSON\n\nWhat happened: You sold, but the market recovered shortly after.\n\nWhy this hurt: By selling, you locked in losses. Investors who held through this recovered and made money. This is the 'sell panic' trap.\n\nLesson: Selling in fear is the #1 way retail investors lose money. Markets are built to recover.",
-    tipBuyWin: "BOLD & PROFITABLE\n\nWhat happened: This event created a buying opportunity—prices were down, value was high.\n\nWhy you won: You invested more when things were cheap. When prices recovered, your new investment gained even faster.\n\nLesson: The best investing opportunities appear during downturns. 'Buy low, sell high' isn't theory—it works.",
-    tipBuyBad: "RISKY TIMING\n\nWhat happened: You invested more right before/during a major downturn.\n\nWhy this backfired: More exposure = more losses when markets crash. You amplified your risk at the worst time.\n\nLesson: Buying can be smart, but buying during a clear downtrend without more capital multiplies your losses. Timing matters.",
+    tipHoldWin:
+      "GOOD DECISION\n\nWhat happened: The market recovered quickly after this shock.\n\nWhy you won: By holding, you kept your investment in place. When the market bounced back, your money grew with it.\n\nLesson: During market downturns, patience is a superpower. Markets have always recovered historically.",
+    tipHoldOk:
+      "TOUGH CALL\n\nWhat happened: Both holding and selling hurt your portfolio, but you chose to wait.\n\nWhy you limited damage: Selling would have locked in losses permanently. By holding, even though prices fell more, you kept the potential to recover.\n\nLesson: In a crash, the question isn't 'Will I lose?' but 'Do I sell and lock it in, or hold and wait for recovery?'",
+    tipSellWin:
+      "SMART DECISION\n\nWhat happened: This event would have caused real, lasting losses.\n\nWhy you won: You got out before the worst hit. This protected your remaining capital to invest elsewhere later.\n\nLesson: Sometimes, reducing exposure to a damaged investment is the right move—but only when you're confident losses are coming.",
+    tipSellBad:
+      "PAINFUL LESSON\n\nWhat happened: You sold, but the market recovered shortly after.\n\nWhy this hurt: By selling, you locked in losses. Investors who held through this recovered and made money. This is the 'sell panic' trap.\n\nLesson: Selling in fear is the #1 way retail investors lose money. Markets are built to recover.",
+    tipBuyWin:
+      "BOLD & PROFITABLE\n\nWhat happened: This event created a buying opportunity—prices were down, value was high.\n\nWhy you won: You invested more when things were cheap. When prices recovered, your new investment gained even faster.\n\nLesson: The best investing opportunities appear during downturns. 'Buy low, sell high' isn't theory—it works.",
+    tipBuyBad:
+      "RISKY TIMING\n\nWhat happened: You invested more right before/during a major downturn.\n\nWhy this backfired: More exposure = more losses when markets crash. You amplified your risk at the worst time.\n\nLesson: Buying can be smart, but buying during a clear downtrend without more capital multiplies your losses. Timing matters.",
   },
 
   // Multiplayer market events pool
@@ -514,7 +523,10 @@ const en = {
     oilSpike: { title: "Oil Price Spike", desc: "Oil prices surge due to supply disruptions." },
     regulation: { title: "New Regulations", desc: "Governments tighten rules on crypto and green energy." },
     aiRevolution: { title: "AI Revolution", desc: "Artificial intelligence transforms industries. Tech stocks rally." },
-    swissFrancSurge: { title: "Swiss Franc Surge", desc: "The franc strengthens sharply. Swiss exporters feel the pinch." },
+    swissFrancSurge: {
+      title: "Swiss Franc Surge",
+      desc: "The franc strengthens sharply. Swiss exporters feel the pinch.",
+    },
     bondDefault: { title: "Major Bond Default", desc: "A large issuer defaults. Bond markets tremble." },
     greenCrash: { title: "Clean Energy Crash", desc: "Green energy subsidies cut. Sector takes a hit." },
     bullRun: { title: "Bull Market Run", desc: "Optimism drives stocks to new all-time highs." },
@@ -540,14 +552,22 @@ const en = {
       desc: "Coming soon",
     },
     multiplayerSteps: [
-      { title: "Create or Join", description: "Start a room and invite friends with a code or QR. Up to 4 players can compete." },
-      { title: "Pick Your Assets", description: "Each player picks up to 5 asset categories. Your money is split equally across them." },
-      { title: "Survive the Market", description: "Watch 10 years unfold with real market events. Hold or sell — the best portfolio wins!" },
+      {
+        title: "Create or Join",
+        description: "Start a room and invite friends with a code or QR. Up to 4 players can compete.",
+      },
+      {
+        title: "Pick Your Assets",
+        description: "Each player picks up to 5 asset categories. Your money is split equally across them.",
+      },
+      {
+        title: "Survive the Market",
+        description: "Watch 10 years unfold with real market events. Hold or sell — the best portfolio wins!",
+      },
     ],
     next: "Next",
     letsPlay: "Let's play!",
     footer: "HELVE - Learn investing by playing",
-    signOut: "Sign out",
   },
 
   // Common
