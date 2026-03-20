@@ -893,6 +893,14 @@ const Panel = () => {
       {/* Header — actions row */}
       <div className="px-5 pt-5 pb-2">
         <div className="flex items-center justify-between mb-3 gap-2">
+          <motion.button
+            onClick={() => navigate("/panel")}
+            className="w-9 h-9 rounded-full bg-card shadow-sm flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+            whileTap={{ scale: 0.9 }}
+            title="Back to hub"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </motion.button>
           {isMobile ? (
             <Drawer open={coachOpen} onOpenChange={setCoachOpen}>
               <DrawerTrigger asChild>
@@ -941,14 +949,6 @@ const Panel = () => {
             </Popover>
           )}
           <div className="flex items-center gap-2">
-            <motion.button
-              onClick={() => navigate("/panel")}
-              className="w-9 h-9 rounded-full bg-card shadow-sm flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
-              whileTap={{ scale: 0.9 }}
-              title="Back to hub"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </motion.button>
             <LanguageSwitcher />
             <motion.button
               onClick={handleSignOut}
