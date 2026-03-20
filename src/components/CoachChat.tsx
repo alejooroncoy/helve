@@ -25,11 +25,19 @@ async function chatWithTools({
   messages: Msg[];
   portfolio?: Investment[];
 }): Promise<{ text: string; actions: CoachAction[] }> {
+  const { data: sessionData } = await supabase.auth.getSession();
+  const accessToken = sessionData.session?.access_token;
+
+  if (!accessToken) {
+    throw new Error("Please sign in again.");
+  }
+
   const resp = await fetch(CHAT_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+      apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+      Authorization: `Bearer ${accessToken}`,
     },
     body: JSON.stringify({ messages, portfolio, language: document.documentElement.lang || localStorage.getItem("i18nextLng") || "en" }),
   });
