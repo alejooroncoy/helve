@@ -47,26 +47,30 @@ const Hub = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
     >
-      {/* Top: language switcher + title */}
-      <div className="flex flex-col items-center text-center px-6 pt-6 pb-2">
+      {/* Top: language switcher */}
+      <div className="flex justify-end px-6 pt-6">
         <LanguageSwitcher />
+      </div>
+
+      {/* Greeting — centered between switcher and cards */}
+      <div className="flex-1 flex flex-col items-center justify-center text-center px-6">
         {(() => {
           const meta = user?.user_metadata;
           const isDemo = user?.email === "demo@helve.app";
           const displayName = isDemo ? null : (meta?.full_name || meta?.name || meta?.email?.split("@")[0] || null);
           const firstName = displayName ? displayName.split(" ")[0] : t("hub.guest");
           return (
-            <h1 className="text-2xl text-foreground mt-4" style={{ ...nunito, fontWeight: 900 }}>
+            <h1 className="text-2xl text-foreground" style={{ ...nunito, fontWeight: 900 }}>
               {t("hub.greeting")}, {firstName}
             </h1>
           );
         })()}
-        <p className="text-xs text-muted-foreground" style={nunito}>
+        <p className="text-xs text-muted-foreground mt-1" style={nunito}>
           {t("hub.subtitle")}
         </p>
       </div>
 
-      {/* Cards — centered in remaining space */}
+      {/* Cards */}
       <div className="flex-1 flex flex-col justify-center px-6 pb-6 max-w-md mx-auto w-full">
         <div className="flex flex-col gap-4">
         {/* Portfolio card */}
