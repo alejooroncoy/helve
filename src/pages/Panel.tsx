@@ -1057,14 +1057,6 @@ const Panel = () => {
                         </span>
                       )}
                     </div>
-                    {ns.count > 0 && (
-                      <div className="flex items-center gap-2 mt-1 text-[10px] font-medium" style={nunito}>
-                        
-                        <span style={{ color: CELESTE }}>
-                          {ns.ret}%/yr
-                        </span>
-                      </div>
-                    )}
                   </button>
                 )}
               </div>
