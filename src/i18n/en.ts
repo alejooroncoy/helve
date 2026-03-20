@@ -547,6 +547,7 @@ const en = {
     next: "Next",
     letsPlay: "Let's play!",
     footer: "HELVE - Learn investing by playing",
+    signOut: "Sign out",
   },
 
   // Common

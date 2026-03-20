@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
-import { Briefcase, Users, ChevronRight, ArrowRight, X, Map, Lock } from "lucide-react";
+import { Briefcase, Users, ChevronRight, ArrowRight, X, Map, Lock, LogOut } from "lucide-react";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 const nunito = { fontFamily: "'Nunito', sans-serif" };
@@ -47,26 +47,30 @@ const Hub = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
     >
-      {/* Top: language switcher + title */}
-      <div className="flex flex-col items-center text-center px-6 pt-6 pb-2">
+      {/* Top: language switcher */}
+      <div className="flex justify-end px-6 pt-6">
         <LanguageSwitcher />
+      </div>
+
+      {/* Greeting — centered between switcher and cards */}
+      <div className="flex-1 flex flex-col items-center justify-center text-center px-6">
         {(() => {
           const meta = user?.user_metadata;
           const isDemo = user?.email === "demo@helve.app";
           const displayName = isDemo ? null : (meta?.full_name || meta?.name || meta?.email?.split("@")[0] || null);
           const firstName = displayName ? displayName.split(" ")[0] : t("hub.guest");
           return (
-            <h1 className="text-2xl text-foreground mt-4" style={{ ...nunito, fontWeight: 900 }}>
+            <h1 className="text-2xl text-foreground" style={{ ...nunito, fontWeight: 900 }}>
               {t("hub.greeting")}, {firstName}
             </h1>
           );
         })()}
-        <p className="text-xs text-muted-foreground" style={nunito}>
+        <p className="text-xs text-muted-foreground mt-1" style={nunito}>
           {t("hub.subtitle")}
         </p>
       </div>
 
-      {/* Cards — centered in remaining space */}
+      {/* Cards */}
       <div className="flex-1 flex flex-col justify-center px-6 pb-6 max-w-md mx-auto w-full">
         <div className="flex flex-col gap-4">
         {/* Portfolio card */}
@@ -281,8 +285,16 @@ const Hub = () => {
         )}
       </AnimatePresence>
 
-      {/* Footer */}
-      <div className="px-6 pb-6 pt-2">
+      {/* Sign out + Footer */}
+      <div className="px-6 pb-6 pt-2 flex flex-col items-center gap-3">
+        <button
+          onClick={signOut}
+          className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors py-2"
+          style={nunito}
+        >
+          <LogOut className="w-3.5 h-3.5" />
+          {t("hub.signOut")}
+        </button>
         <p
           className="text-[10px] text-muted-foreground text-center"
           style={nunito}
