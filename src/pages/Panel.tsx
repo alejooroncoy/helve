@@ -1185,7 +1185,7 @@ const Panel = () => {
           )}
         </div>
         <motion.button
-          className="w-full py-4 rounded-3xl text-base shadow-lg transition-all flex items-center justify-center gap-2 text-white"
+          className="w-full py-3 rounded-3xl text-sm shadow-lg transition-all flex items-center justify-center gap-2 text-white"
           style={{
             ...nunito,
             fontWeight: 900,
