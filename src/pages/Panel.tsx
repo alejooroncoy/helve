@@ -965,6 +965,40 @@ const Panel = () => {
             <p className="text-[10px] text-muted-foreground" style={nunito}>Annual</p>
           </div>
         </div>
+
+        {/* Coach CTA */}
+        {isMobile ?
+          <DrawerTrigger asChild>
+            <motion.button
+              onClick={() => setCoachOpen(true)}
+              className="w-full flex items-center gap-3 bg-card rounded-2xl px-4 py-3 shadow-sm mt-2 border border-border hover:border-primary/30 transition-colors"
+              whileTap={{ scale: 0.97 }}
+              style={nunito}
+            >
+              <img src="/perspectiva1.png" alt="Coach" className="w-10 h-10 rounded-full object-cover shadow-sm flex-shrink-0" />
+              <div className="flex-1 text-left">
+                <p className="text-sm font-bold text-foreground">{t("panel.coachCTA", { defaultValue: "Talk to your Coach" })}</p>
+                <p className="text-[11px] text-muted-foreground">{t("panel.coachCTASub", { defaultValue: "Get personalized advice" })}</p>
+              </div>
+              <MessageCircle className="w-5 h-5 text-primary flex-shrink-0" />
+            </motion.button>
+          </DrawerTrigger> :
+          <PopoverTrigger asChild>
+            <motion.button
+              onClick={() => setCoachOpen(true)}
+              className="w-full flex items-center gap-3 bg-card rounded-2xl px-4 py-3 shadow-sm mt-2 border border-border hover:border-primary/30 transition-colors"
+              whileTap={{ scale: 0.97 }}
+              style={nunito}
+            >
+              <img src="/perspectiva1.png" alt="Coach" className="w-10 h-10 rounded-full object-cover shadow-sm flex-shrink-0" />
+              <div className="flex-1 text-left">
+                <p className="text-sm font-bold text-foreground">{t("panel.coachCTA", { defaultValue: "Talk to your Coach" })}</p>
+                <p className="text-[11px] text-muted-foreground">{t("panel.coachCTASub", { defaultValue: "Get personalized advice" })}</p>
+              </div>
+              <MessageCircle className="w-5 h-5 text-primary flex-shrink-0" />
+            </motion.button>
+          </PopoverTrigger>
+        }
       </div>
 
       {/* Nest Tabs */}
