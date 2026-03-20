@@ -15,7 +15,8 @@ const es = {
     steps: [
       {
         title: "Define tu perfil",
-        description: "Dime cómo te gusta jugar — seguro y constante, o audaz y arriesgado. Personalizaré tu camino desde ahí.",
+        description:
+          "Dime cómo te gusta jugar — seguro y constante, o audaz y arriesgado. Personalizaré tu camino desde ahí.",
       },
       {
         title: "Haz tus jugadas",
@@ -207,14 +208,20 @@ const es = {
     title: "Lo que aprendiste",
     continue: "Continuar",
     sellInsight: "Vender durante una tormenta bloqueó tus pérdidas. La paciencia suele llevar a la recuperación.",
-    allGrowthInsight: "Mayor riesgo trajo mayores recompensas — pero también tormentas más grandes. La diversificación ayuda.",
-    allSafeInsight: "Jugar seguro preservó tu dinero, pero el crecimiento fue limitado. Un poco de riesgo puede dar mucho.",
+    allGrowthInsight:
+      "Mayor riesgo trajo mayores recompensas — pero también tormentas más grandes. La diversificación ayuda.",
+    allSafeInsight:
+      "Jugar seguro preservó tu dinero, pero el crecimiento fue limitado. Un poco de riesgo puede dar mucho.",
     stayInsight: "Mantenerte invertido durante la tormenta ayudó a tu jardín a recuperarse y crecer más fuerte.",
     balancedInsight: "Un enfoque equilibrado te dio un crecimiento constante sin demasiadas sorpresas.",
-    tooAggressiveInsight: "Tu portafolio fue más arriesgado de lo que tu perfil sugería. La volatilidad extra puede dar frutos, ¡pero asegúrate de poder manejar las caídas!",
-    tooConservativeInsight: "Tu portafolio fue más seguro de lo necesario para tu perfil. Evitaste pérdidas, pero también perdiste crecimiento potencial. Encontrar el balance correcto es clave.",
-    highEquityInsight: "Alta exposición a acciones significa gran potencial de subida — pero también caídas más pronunciadas en mercados bajistas. La diversificación suaviza el camino.",
-    highBondsInsight: "Los bonos brindan estabilidad e ingreso predecible. Genial para metas a corto plazo, pero el crecimiento a largo plazo puede requerir algo de exposición a acciones.",
+    tooAggressiveInsight:
+      "Tu portafolio fue más arriesgado de lo que tu perfil sugería. La volatilidad extra puede dar frutos, ¡pero asegúrate de poder manejar las caídas!",
+    tooConservativeInsight:
+      "Tu portafolio fue más seguro de lo necesario para tu perfil. Evitaste pérdidas, pero también perdiste crecimiento potencial. Encontrar el balance correcto es clave.",
+    highEquityInsight:
+      "Alta exposición a acciones significa gran potencial de subida — pero también caídas más pronunciadas en mercados bajistas. La diversificación suaviza el camino.",
+    highBondsInsight:
+      "Los bonos brindan estabilidad e ingreso predecible. Genial para metas a corto plazo, pero el crecimiento a largo plazo puede requerir algo de exposición a acciones.",
     yourAllocation: "TU ASIGNACIÓN",
     riskScore: "Puntaje de riesgo: {{score}}/10",
     aligned: "Alineado con tu perfil ✅",
@@ -282,9 +289,11 @@ const es = {
     riskProfileIs: "Tu perfil de riesgo es",
     riskWarning: {
       tooHighTitle: "¡Ten cuidadito!",
-      tooHighDesc: "El riesgo de tu portafolio está por encima de lo recomendado para tu perfil {{profile}}. Podrías estar tomando más riesgo del que deberías.",
+      tooHighDesc:
+        "El riesgo de tu portafolio está por encima de lo recomendado para tu perfil {{profile}}. Podrías estar tomando más riesgo del que deberías.",
       tooLowTitle: "¡Puedes arriesgar más!",
-      tooLowDesc: "El riesgo de tu portafolio está por debajo del rango de tu perfil {{profile}}. Podrías permitirte tomar un poco más de riesgo (¡con responsabilidad!).",
+      tooLowDesc:
+        "El riesgo de tu portafolio está por debajo del rango de tu perfil {{profile}}. Podrías permitirte tomar un poco más de riesgo (¡con responsabilidad!).",
       gotIt: "Entendido",
     },
   },
@@ -301,7 +310,8 @@ const es = {
     loadingMarket: "Cargando datos reales del mercado...",
     preparingDecision: "Preparando la decisión de mercado...",
     categorySnapshots: "Pulso por categoría",
-    categorySnapshotsHint: "Las categorías con más riesgo tienen más probabilidad de activarte un evento durante la simulación.",
+    categorySnapshotsHint:
+      "Las categorías con más riesgo tienen más probabilidad de activarte un evento durante la simulación.",
     riskLabel: "Riesgo {{level}}/10",
     decisionSummary: "Decisiones: {{good}}/{{total}} acertadas",
     letsStart: "Empecemos. Mira cómo se mueve tu nido antes de lanzarlo en el tiempo.",
@@ -368,11 +378,7 @@ const es = {
 
   // Bird messages
   birdMessages: {
-    positive: [
-      "Tu nido brilla!",
-      "Los huevos estan calentitos!",
-      "Buen vuelo! Vas por buen camino.",
-    ],
+    positive: ["Tu nido brilla!", "Los huevos estan calentitos!", "Buen vuelo! Vas por buen camino."],
     negative: [
       "Aguanta! Las tormentas pasan.",
       "Los pajaros fuertes resisten el viento.",
@@ -383,10 +389,7 @@ const es = {
       "Paciencia, pajarito. El tiempo es tu amigo.",
       "Paso a paso se construye el mejor nido.",
     ],
-    sell: [
-      "Vendiste! A veces es bueno aligerar el nido.",
-      "Fuera. Fue buena decision? Lo veremos...",
-    ],
+    sell: ["Vendiste! A veces es bueno aligerar el nido.", "Fuera. Fue buena decision? Lo veremos..."],
     held: "Mantuviste! Los pajaros valientes aguantan la tormenta.",
   },
 
@@ -428,7 +431,8 @@ const es = {
 
   // Multiplayer
   multiplayer: {
-    subtitle: "¡Compite con amigos! Elige tus tipos de inversión y mira tu dinero crecer — o disminuir — en condiciones reales del mercado.",
+    subtitle:
+      "¡Compite con amigos! Elige tus tipos de inversión y mira tu dinero crecer — o disminuir — en condiciones reales del mercado.",
     createRoom: "Crear sala",
     joinRoom: "Unirse a sala",
     yourName: "Tu nombre",
@@ -454,7 +458,7 @@ const es = {
     waitingHost: "Esperando a que el host inicie...",
     pickAssets: "Elige tus Categorías",
     pickAssetsDesc: "Elige hasta {{max}} categorías. Tu dinero se repartirá equitativamente.",
-    pickCategoriesDesc: "Cada jugador comienza con 1.000 CHF. Elige hasta {{max}} tipos de inversión — tu dinero se dividirá equitativamente entre ellos. Las opciones más arriesgadas pueden ganar más, pero también pueden perder más.",
+    pickCategoriesDesc: "Cada jugador comienza con 1.000 CHF. Elige hasta {{max}} tipos de inversión",
     ready: "¡Listo!",
     waitingOthers: "Esperando a los demás jugadores...",
     simulation: "Simulación en vivo",
@@ -483,19 +487,26 @@ const es = {
     you: "tú",
     decisions: "decisiones tomadas",
     insight: "¿Qué aprendiste?",
-    insightText: "Invertir a largo plazo premia la paciencia. Vender por pánico durante caídas suele fijar pérdidas, mientras que mantener en la volatilidad tiende a recuperarse con el tiempo.",
+    insightText:
+      "Invertir a largo plazo premia la paciencia. Vender por pánico durante caídas suele fijar pérdidas, mientras que mantener en la volatilidad tiende a recuperarse con el tiempo.",
     coachThinking: "Tu coach está analizando tu partida...",
     playAgain: "Jugar de nuevo",
     backToNest: "Volver a My Nest",
     eventHistory: "HISTORIAL DE EVENTOS",
     recommended: "Lo mejor era",
     buy: "Comprar",
-    tipHoldWin: "BUENA DECISIÓN\n\nQué pasó: El mercado se recuperó rápidamente después de este golpe.\n\nPor qué ganaste: Al mantener, dejaste tu inversión en su lugar. Cuando el mercado rebotó, tu dinero creció con él.\n\nLección: Durante caídas, la paciencia es un superpoder. Los mercados siempre se han recuperado históricamente.",
-    tipHoldOk: "DECISIÓN DIFÍCIL\n\nQué pasó: Tanto mantener como vender lastimaron tu portafolio, pero elegiste esperar.\n\nPor qué limitaste daño: Vender habría bloqueado pérdidas permanentemente. Al mantener, aunque los precios cayeron más, guardaste el potencial de recuperación.\n\nLección: En un crash, la pregunta no es 'Perderé?', sino 'Vendo y bloqueo, o espero a recuperarme?'",
-    tipSellWin: "DECISIÓN INTELIGENTE\n\nQué pasó: Este evento causaría pérdidas reales y duraderas.\n\nPor qué ganaste: Saliste antes del golpe. Esto protegió tu capital restante para invertir en otra parte después.\n\nLección: A veces, reducir exposición a una inversión dañada es correcto—pero solo si estás seguro de que vienen pérdidas.",
-    tipSellBad: "LECCIÓN DOLOROSA\n\nQué pasó: Vendiste, pero el mercado se recuperó poco después.\n\nPor qué duele: Al vender, bloqueaste pérdidas. Inversionistas que mantuvieron se recuperaron e hicieron dinero. Esta es la trampa del 'pánico de venta'.\n\nLección: Vender por miedo es la #1 forma que pierden dinero los inversores retail. Los mercados están construidos para recuperarse.",
-    tipBuyWin: "ATREVIDO Y RENTABLE\n\nQué pasó: Este evento creó una oportunidad de compra—precios bajos, valor alto.\n\nPor qué ganaste: Invertiste más cuando estaba barato. Cuando precios se recuperaron, tu nueva inversión ganó aún más rápido.\n\nLección: Las mejores oportunidades aparecen durante caídas. 'Compra barato, vende caro' no es teoría—funciona.",
-    tipBuyBad: "RIESGO MAL TIMED\n\nQué pasó: Invertiste más justo antes/durante una caída mayor.\n\nPor qué falló: Más exposición = más pérdidas cuando crash. Amplificaste riesgo en el peor momento.\n\nLección: Comprar puede ser inteligente, pero comprar durante una caída clara sin más capital multiplica tus pérdidas. El timing importa.",
+    tipHoldWin:
+      "BUENA DECISIÓN\n\nQué pasó: El mercado se recuperó rápidamente después de este golpe.\n\nPor qué ganaste: Al mantener, dejaste tu inversión en su lugar. Cuando el mercado rebotó, tu dinero creció con él.\n\nLección: Durante caídas, la paciencia es un superpoder. Los mercados siempre se han recuperado históricamente.",
+    tipHoldOk:
+      "DECISIÓN DIFÍCIL\n\nQué pasó: Tanto mantener como vender lastimaron tu portafolio, pero elegiste esperar.\n\nPor qué limitaste daño: Vender habría bloqueado pérdidas permanentemente. Al mantener, aunque los precios cayeron más, guardaste el potencial de recuperación.\n\nLección: En un crash, la pregunta no es 'Perderé?', sino 'Vendo y bloqueo, o espero a recuperarme?'",
+    tipSellWin:
+      "DECISIÓN INTELIGENTE\n\nQué pasó: Este evento causaría pérdidas reales y duraderas.\n\nPor qué ganaste: Saliste antes del golpe. Esto protegió tu capital restante para invertir en otra parte después.\n\nLección: A veces, reducir exposición a una inversión dañada es correcto—pero solo si estás seguro de que vienen pérdidas.",
+    tipSellBad:
+      "LECCIÓN DOLOROSA\n\nQué pasó: Vendiste, pero el mercado se recuperó poco después.\n\nPor qué duele: Al vender, bloqueaste pérdidas. Inversionistas que mantuvieron se recuperaron e hicieron dinero. Esta es la trampa del 'pánico de venta'.\n\nLección: Vender por miedo es la #1 forma que pierden dinero los inversores retail. Los mercados están construidos para recuperarse.",
+    tipBuyWin:
+      "ATREVIDO Y RENTABLE\n\nQué pasó: Este evento creó una oportunidad de compra—precios bajos, valor alto.\n\nPor qué ganaste: Invertiste más cuando estaba barato. Cuando precios se recuperaron, tu nueva inversión ganó aún más rápido.\n\nLección: Las mejores oportunidades aparecen durante caídas. 'Compra barato, vende caro' no es teoría—funciona.",
+    tipBuyBad:
+      "RIESGO MAL TIMED\n\nQué pasó: Invertiste más justo antes/durante una caída mayor.\n\nPor qué falló: Más exposición = más pérdidas cuando crash. Amplificaste riesgo en el peor momento.\n\nLección: Comprar puede ser inteligente, pero comprar durante una caída clara sin más capital multiplica tus pérdidas. El timing importa.",
   },
 
   // Multiplayer market events pool
@@ -505,21 +516,48 @@ const es = {
     goldRush: { title: "Fiebre del Oro", desc: "Inversores buscan refugio en el oro. Los precios se disparan." },
     pandemic: { title: "Pandemia Global", desc: "Una crisis de salud sacude las economias. Los mercados caen." },
     cryptoBoom: { title: "Boom Crypto", desc: "Las monedas digitales se disparan. Los early adopters celebran." },
-    cryptoCrash: { title: "Crash Crypto", desc: "La burbuja crypto explota. Los valores colapsan de la noche a la manana." },
-    inflation: { title: "Inflacion Alta", desc: "Los precios al consumidor se disparan. El poder adquisitivo se erosiona." },
+    cryptoCrash: {
+      title: "Crash Crypto",
+      desc: "La burbuja crypto explota. Los valores colapsan de la noche a la manana.",
+    },
+    inflation: {
+      title: "Inflacion Alta",
+      desc: "Los precios al consumidor se disparan. El poder adquisitivo se erosiona.",
+    },
     greenBoom: { title: "Boom de Energia Verde", desc: "El sector renovable se dispara con nuevas politicas." },
-    currencyWar: { title: "Guerra de Divisas", desc: "Los paises devaluan sus monedas. Los mercados FX se descontrolan." },
+    currencyWar: {
+      title: "Guerra de Divisas",
+      desc: "Los paises devaluan sus monedas. Los mercados FX se descontrolan.",
+    },
     dividend: { title: "Temporada de Dividendos", desc: "Las principales empresas anuncian dividendos record." },
-    recession: { title: "Recesion Global", desc: "La desaceleracion economica golpea todos los sectores. Los mercados se congelan." },
+    recession: {
+      title: "Recesion Global",
+      desc: "La desaceleracion economica golpea todos los sectores. Los mercados se congelan.",
+    },
     oilSpike: { title: "Alza del Petroleo", desc: "Los precios del petroleo se disparan por problemas de suministro." },
-    regulation: { title: "Nuevas Regulaciones", desc: "Los gobiernos endurecen las normas sobre crypto y energia verde." },
-    aiRevolution: { title: "Revolucion IA", desc: "La inteligencia artificial transforma industrias. Las acciones tech suben." },
-    swissFrancSurge: { title: "Alza del Franco Suizo", desc: "El franco se fortalece fuertemente. Los exportadores suizos sufren." },
+    regulation: {
+      title: "Nuevas Regulaciones",
+      desc: "Los gobiernos endurecen las normas sobre crypto y energia verde.",
+    },
+    aiRevolution: {
+      title: "Revolucion IA",
+      desc: "La inteligencia artificial transforma industrias. Las acciones tech suben.",
+    },
+    swissFrancSurge: {
+      title: "Alza del Franco Suizo",
+      desc: "El franco se fortalece fuertemente. Los exportadores suizos sufren.",
+    },
     bondDefault: { title: "Impago de Bonos", desc: "Un gran emisor incumple. Los mercados de bonos tiemblan." },
     greenCrash: { title: "Caida Energia Limpia", desc: "Recortes de subsidios a energia verde. El sector sufre." },
     bullRun: { title: "Mercado Alcista", desc: "El optimismo lleva las acciones a nuevos maximos historicos." },
-    geopolitics: { title: "Crisis Geopolitica", desc: "Las tensiones internacionales escalan. Los mercados buscan refugio." },
-    stablePeriod: { title: "Periodo de Estabilidad", desc: "La economia crece de forma estable. Baja volatilidad, ganancias constantes." },
+    geopolitics: {
+      title: "Crisis Geopolitica",
+      desc: "Las tensiones internacionales escalan. Los mercados buscan refugio.",
+    },
+    stablePeriod: {
+      title: "Periodo de Estabilidad",
+      desc: "La economia crece de forma estable. Baja volatilidad, ganancias constantes.",
+    },
   },
 
   // Hub screen
@@ -540,14 +578,22 @@ const es = {
       desc: "Próximamente",
     },
     multiplayerSteps: [
-      { title: "Crea o Unete", description: "Crea una sala e invita amigos con un codigo o QR. Hasta 4 jugadores pueden competir." },
-      { title: "Elige tus activos", description: "Cada jugador elige hasta 5 categorias de activos. Tu dinero se reparte equitativamente." },
-      { title: "Sobrevive al mercado", description: "Mira 10 años de mercado con eventos reales. Mantén o vende - ¡el mejor portafolio gana!" },
+      {
+        title: "Crea o Unete",
+        description: "Crea una sala e invita amigos con un codigo o QR. Hasta 4 jugadores pueden competir.",
+      },
+      {
+        title: "Elige tus activos",
+        description: "Cada jugador elige hasta 5 categorias de activos. Tu dinero se reparte equitativamente.",
+      },
+      {
+        title: "Sobrevive al mercado",
+        description: "Mira 10 años de mercado con eventos reales. Mantén o vende - ¡el mejor portafolio gana!",
+      },
     ],
     next: "Siguiente",
     letsPlay: "A jugar!",
     footer: "HELVE - Aprende a invertir jugando",
-    signOut: "Cerrar sesión",
   },
 
   // Common
