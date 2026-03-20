@@ -905,12 +905,12 @@ const Panel = () => {
             <Drawer open={coachOpen} onOpenChange={setCoachOpen}>
               <DrawerTrigger asChild>
                 <motion.button
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-card shadow-md border-2"
+                  className="flex items-center gap-1 px-2 py-1 rounded-md bg-card shadow-md border-2"
                   style={{ borderColor: `${CELESTE}40` }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <img src="/perspectiva1.png" alt="Coach" className="w-6 h-6 rounded object-cover" />
-                  <span className="text-xs font-medium text-foreground">{t("panel.talkCoach")}</span>
+                  <img src="/perspectiva1.png" alt="Coach" className="w-5 h-5 rounded object-cover" />
+                  <span className="text-[10px] font-medium text-foreground">{t("panel.talkCoach")}</span>
                 </motion.button>
               </DrawerTrigger>
               <DrawerContent className="h-[80vh] p-0">
@@ -928,12 +928,12 @@ const Panel = () => {
             <Popover open={coachOpen} onOpenChange={setCoachOpen}>
               <PopoverTrigger asChild>
                 <motion.button
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-card shadow-md border-2"
+                  className="flex items-center gap-1 px-2 py-1 rounded-md bg-card shadow-md border-2"
                   style={{ borderColor: `${CELESTE}40` }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <img src="/perspectiva1.png" alt="Coach" className="w-6 h-6 rounded object-cover" />
-                  <span className="text-xs font-medium text-foreground">{t("panel.talkCoach")}</span>
+                  <img src="/perspectiva1.png" alt="Coach" className="w-5 h-5 rounded object-cover" />
+                  <span className="text-[10px] font-medium text-foreground">{t("panel.talkCoach")}</span>
                 </motion.button>
               </PopoverTrigger>
               <PopoverContent side="bottom" align="start" className="w-[380px] h-[500px] p-0 rounded-2xl overflow-hidden">
