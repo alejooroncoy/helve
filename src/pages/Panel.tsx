@@ -990,21 +990,7 @@ const Panel = () => {
             const isActive = activeNestId === nest.id;
             return (
               <div key={nest.id} className="flex-shrink-0 relative">
-                {renamingNest === nest.id ?
-                <form
-                  onSubmit={(e) => {e.preventDefault();handleRenameNest(nest.id, renameValue);}}
-                  className="flex items-center">
-                  
-                    <input
-                    autoFocus
-                    value={renameValue}
-                    onChange={(e) => setRenameValue(e.target.value)}
-                    onBlur={() => handleRenameNest(nest.id, renameValue)}
-                    className="text-xs font-bold px-3 py-2 rounded-2xl bg-card border-2 outline-none w-24"
-                    style={{ ...nunito, borderColor: CELESTE }} />
-                  
-                  </form> :
-
+                {renamingNest === nest.id ? null :
                 <button
                   onClick={() => handleTabClick(nest)}
                   className="flex flex-col items-start px-3 py-2 rounded-2xl text-xs transition-all border-2 min-w-[90px]"
@@ -1018,24 +1004,13 @@ const Panel = () => {
                   
                     <div className="flex items-center gap-1.5 w-full">
                       <span className="truncate">{nest.name}</span>
-                      {isActive &&
-                    <span className="flex items-center gap-0.5 ml-auto">
-                          <button
-                        onClick={(e) => {e.stopPropagation();setRenamingNest(nest.id);setRenameValue(nest.name);}}
-                        className="p-0.5 rounded hover:bg-black/10 transition-colors">
-                        
-                            <Pencil className="w-3 h-3" />
-                          </button>
-                          {nests.length > 1 &&
-                      <button
-                        onClick={(e) => {e.stopPropagation();handleDeleteNest(nest.id);}}
-                        className="p-0.5 rounded hover:bg-destructive/20 text-destructive/70 hover:text-destructive transition-colors">
-                        
-                              <Trash2 className="w-3 h-3" />
-                            </button>
+                      {isActive && nests.length > 1 &&
+                        <button
+                          onClick={(e) => {e.stopPropagation();handleDeleteNest(nest.id);}}
+                          className="p-0.5 rounded hover:bg-destructive/20 text-destructive/70 hover:text-destructive transition-colors ml-auto">
+                          <Trash2 className="w-3 h-3" />
+                        </button>
                       }
-                        </span>
-                    }
                     </div>
                   </button>
                 }
