@@ -723,27 +723,24 @@ const Panel = () => {
   ) :
   0;
 
-  // Risk alignment warning — check if portfolio risk is outside profile range
-  useEffect(() => {
-    if (enrichedPortfolio.length === 0 || totalAllocated === 0) return;
+  // Risk alignment check helper — only called after buy
+  const checkRiskAfterBuy = useCallback((portfolio: Investment[]) => {
+    if (portfolio.length === 0) return;
     const profileRanges: Record<string, [number, number]> = {
       conservative: [10, 35],
       balanced: [30, 55],
       growth: [50, 90],
     };
     const range = profileRanges[profile] || [30, 55];
-    const warningKey = `${profile}-${totalRisk}`;
-    if (riskWarningShownRef.current === warningKey) return;
-    if (totalRisk > range[1]) {
+    const newRisk = Math.round(portfolio.reduce((s, i) => s + i.riskLevel, 0) / portfolio.length * 10);
+    if (newRisk > range[1]) {
       setRiskWarningType("tooHigh");
       setRiskWarningOpen(true);
-      riskWarningShownRef.current = warningKey;
-    } else if (totalRisk < range[0]) {
+    } else if (newRisk < range[0]) {
       setRiskWarningType("tooLow");
       setRiskWarningOpen(true);
-      riskWarningShownRef.current = warningKey;
     }
-  }, [totalRisk, profile, enrichedPortfolio.length, totalAllocated]);
+  }, [profile]);
 
   const monthlyIncome = enrichedPortfolio.reduce((s, i) => {
     const pct = allocations[i.id] ?? 0;
