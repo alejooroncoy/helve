@@ -15,8 +15,8 @@ const tools = [
       parameters: {
         type: "object",
         properties: {
-          title: { type: "string", description: "Short dramatic event title (3-6 words)" },
-          description: { type: "string", description: "1-2 sentence vivid description of what's happening" },
+          title: { type: "string", description: "Short headline-style title (3-6 words), plain language, no jargon" },
+          description: { type: "string", description: "2 sentences max. Sentence 1: what real-world event caused this market move (plain language, relatable analogy). Sentence 2: why it matters for this user's specific portfolio right now, in the context of an accelerated time simulation." },
           options: {
             type: "array",
             items: {
@@ -75,28 +75,30 @@ serve(async (req) => {
 
     const impactLabel = focusImpactPct != null ? `${focusImpactPct > 0 ? "+" : ""}${focusImpactPct}%` : "";
 
-    const systemPrompt = `You are a financial market event generator for an educational investment game.
-You create realistic but simplified market scenarios that teach beginners about investing.
+    const systemPrompt = `You are a storyteller inside an educational investment simulation where time is accelerated — years pass in minutes. Real market history is compressed so users can feel the long-term impact of their portfolio decisions.
+
+Your job is to narrate a realistic market moment in plain, friendly language that a complete beginner can understand instantly. No jargon. Imagine explaining it to a friend over coffee.
 
 RULES:
 - Respond ALWAYS in ${lang}
-- Create a scenario specifically centered on ${focusedCategory}
-- The scenario MUST clearly mention ${focusedCategory} in the title or description
-- The current trigger for this category is: ${directionHint}
-- CRITICAL: The exact price movement is ${impactLabel}. You MUST use this EXACT percentage in your description (e.g. "a ${impactLabel} ${focusDirection === "drop" ? "drop" : focusDirection === "surge" ? "surge" : "swing"}"). Do NOT invent a different number.
+- The scenario MUST be about ${focusedCategory}
+- The current market trigger for ${focusedCategory} is: ${directionHint}
+- CRITICAL: The exact price movement is ${impactLabel}. You MUST use this EXACT percentage in your description. Do NOT invent a different number.
+- Title: short and vivid (3-6 words), like a newspaper headline anyone can understand
+- Description (2 sentences max):
+    • Sentence 1 — what is happening in the world right now that caused this move (use a real-world analogy like "oil prices spiked because...", "investors rushed to safety when...", "tech stocks surged after..."). Make it feel like a real market phase.
+    • Sentence 2 — connect it directly to the user's nest: why does this matter for what they chose to invest in, and what is at stake right now as time flies forward in the simulation.
 - Each scenario must have exactly 3 options: hold, sell, buy
-- Exactly ONE option should be marked as is_best=true (the wisest choice for a long-term investor)
-- Make the options feel tied to the focused category. Example: if gold falls, user considers buying more, selling, or holding
-- feedback_good: celebrate the smart choice, explain briefly why it's wise
-- feedback_bad: be supportive ("Don't worry, this happens to everyone"), explain what went wrong, give a concrete tip for next time
-- Use the bird/nest metaphor lightly: portfolio = nest, investments = eggs
-- Keep it simple, no jargon
-- NEVER mention AI or that this is generated
-- Vary the best action depending on context
-- Consider the user's actual portfolio when crafting the scenario
-- Higher risk categories can justify sharper moves, but advice should still fit a beginner long-term investor`;
+- Exactly ONE option should be marked is_best=true (the wisest long-term choice)
+- Options labels: short and action-oriented (2-4 words), no jargon
+- feedback_good: confirm why the choice was smart in the long run, connect it to what a patient investor would do
+- feedback_bad: be warm and supportive, explain simply what the risk was, give one concrete takeaway for next time
+- Portfolio = nest, investments = eggs (use this lightly, do not overdo it)
+- NEVER mention AI, simulations, or that this is generated
+- Vary the best action based on context and risk level
+- Higher risk assets justify sharper moves; always frame advice for a beginner learning long-term investing`;
 
-    const userPrompt = `The user's nest has: ${portfolioDesc}. Current balance: CHF ${balance}. Time: ${monthLabel}. Focus category: ${focusedCategory}. Category risk level: ${focusRiskLevel ?? "unknown"}/10. Generate a surprising but believable event with decision buttons for this category.`;
+    const userPrompt = `The user's nest holds: ${portfolioDesc}. Current balance: CHF ${balance}. Simulated time point: ${monthLabel} (remember: time is accelerated, this could represent years of real market history). Focus asset: ${focusedCategory} (risk level: ${focusRiskLevel ?? "unknown"}/10). Generate a vivid, beginner-friendly event for this asset with 3 decision buttons.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
