@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Send, Volume2, VolumeX, TrendingUp, ArrowRightLeft, Lightbulb, Mic, MicOff, MessageCircle, Check, ArrowRight, Trash2 } from "lucide-react";
+import { X, Send, Volume2, VolumeX, TrendingUp, ArrowRightLeft, Lightbulb, Mic, MicOff, MessageCircle, Check, ArrowRight, Trash2, Plus, Minus, Package } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import type { Investment } from "@/game/types";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,6 +13,31 @@ interface CoachAction {
   type: "add" | "remove";
   investmentId: string;
 }
+
+// Map investment IDs to display names
+const INVESTMENT_NAMES: Record<string, string> = {
+  "ch-bond-aaa": "Swiss Bond AAA-BBB",
+  "global-bond": "Bloomberg Global Bond",
+  "ch-govt-10y": "Swiss Govt Bond 10Y",
+  "smi-index": "SMI Index",
+  "eurostoxx50": "EuroStoxx 50",
+  "gold-chf": "Gold (CHF)",
+  "nestle": "Nestlé S.A.",
+  "novartis": "Novartis AG",
+  "green-energy": "Green Energy Fund",
+  "djia-index": "Dow Jones",
+  "dax-index": "DAX",
+  "apple": "Apple Inc.",
+  "microsoft": "Microsoft Corp.",
+  "nvidia": "NVIDIA Corp.",
+  "logitech": "Logitech",
+  "ubs": "UBS Group AG",
+  "amazon": "Amazon.com",
+  "retirement-low": "Retirement Insurance",
+  "nikkei225": "Nikkei 225",
+  "roche": "Roche Holding",
+  "jpmorgan": "JPMorgan Chase",
+};
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/coach-chat`;
 const TTS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/coach-tts`;
@@ -263,8 +288,20 @@ export default function CoachChat({ onClose, portfolio, onAddInvestment, onRemov
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [initSent, setInitSent] = useState(false);
   const [playingIdx, setPlayingIdx] = useState<number | null>(null);
+  const [pendingActions, setPendingActions] = useState<CoachAction[]>([]);
+  const [actionsApplied, setActionsApplied] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const applyPendingActions = useCallback(() => {
+    for (const action of pendingActions) {
+      if (action.type === "add" && onAddInvestment) onAddInvestment(action.investmentId);
+      else if (action.type === "remove" && onRemoveInvestment) onRemoveInvestment(action.investmentId);
+    }
+    setActionsApplied(true);
+    setPendingActions([]);
+    setTimeout(() => onClose(), 800);
+  }, [pendingActions, onAddInvestment, onRemoveInvestment, onClose]);
 
   // Load chat history from DB
   useEffect(() => {
@@ -331,9 +368,9 @@ export default function CoachChat({ onClose, portfolio, onAddInvestment, onRemov
     setLoading(true);
     try {
       const { text: responseText, actions } = await chatWithTools({ messages: [...messages, userMsg], portfolio });
-      for (const action of actions) {
-        if (action.type === "add" && onAddInvestment) onAddInvestment(action.investmentId);
-        else if (action.type === "remove" && onRemoveInvestment) onRemoveInvestment(action.investmentId);
+      // Don't auto-apply actions; store them as pending for user confirmation
+      if (actions.length > 0) {
+        setPendingActions(actions);
       }
       const assistantMsg: Msg = { role: "assistant", content: responseText };
       setMessages((prev) => [...prev, assistantMsg]);
@@ -455,6 +492,66 @@ export default function CoachChat({ onClose, portfolio, onAddInvestment, onRemov
             </motion.div>
           );
         })}
+
+        {/* Pending actions card */}
+        {pendingActions.length > 0 && !actionsApplied && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex justify-start"
+          >
+            <div className="max-w-[90%]">
+              <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-7 h-7 rounded-full flex items-center justify-center" style={{ backgroundColor: `${CELESTE}15` }}>
+                    <Package className="w-3.5 h-3.5" style={{ color: CELESTE }} />
+                  </div>
+                  <p className="text-xs font-bold text-foreground" style={nunito}>
+                    {t("coach.proposedChanges", "Proposed Changes")}
+                  </p>
+                </div>
+                <div className="space-y-1.5 mb-3">
+                  {pendingActions.map((action, i) => (
+                    <div key={i} className="flex items-center gap-2 text-xs" style={nunito}>
+                      {action.type === "add" ? (
+                        <Plus className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                      ) : (
+                        <Minus className="w-3.5 h-3.5 text-destructive flex-shrink-0" />
+                      )}
+                      <span className={action.type === "add" ? "text-foreground" : "text-muted-foreground line-through"}>
+                        {INVESTMENT_NAMES[action.investmentId] || action.investmentId}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <motion.button
+                  onClick={applyPendingActions}
+                  className="w-full py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5"
+                  style={{ backgroundColor: CELESTE, color: "white", ...nunito }}
+                  whileTap={{ scale: 0.96 }}
+                >
+                  <Check className="w-3.5 h-3.5" />
+                  {t("coach.applyChanges", "Apply Changes")}
+                </motion.button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {actionsApplied && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="flex justify-start"
+          >
+            <div className="rounded-2xl bg-primary/10 px-4 py-2.5 flex items-center gap-2">
+              <Check className="w-4 h-4 text-primary" />
+              <span className="text-xs font-medium text-primary" style={nunito}>
+                {t("coach.changesApplied", "Changes applied!")}
+              </span>
+            </div>
+          </motion.div>
+        )}
 
         {loading && messages[messages.length - 1]?.role !== "assistant" && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start">
