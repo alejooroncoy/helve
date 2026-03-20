@@ -914,15 +914,7 @@ const Panel = () => {
             whileTap={{ scale: 0.9 }}>
             <ChevronLeft className="w-4 h-4" />
           </motion.button>
-          <div className="flex items-center gap-1.5">
-            <LanguageSwitcher />
-            <motion.button
-              onClick={handleSignOut}
-              className="w-8 h-8 rounded-full bg-card shadow-sm flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors"
-              whileTap={{ scale: 0.9 }}>
-              <LogOut className="w-4 h-4" />
-            </motion.button>
-          </div>
+          <LanguageSwitcher />
         </div>
 
         {/* 2x2 Stats grid — compact */}
