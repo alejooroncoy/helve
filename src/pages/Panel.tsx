@@ -370,10 +370,10 @@ function ScoutedCard({
 
   return (
     <div
-      className={`bg-card rounded-2xl p-3.5 shadow-sm border-2 border-dashed border-border ${overlay ? "-rotate-2 cursor-grabbing" : isMobile ? "" : "cursor-grab active:cursor-grabbing"} h-full flex flex-col`}
+      className={`bg-card rounded-2xl p-2.5 shadow-sm border-2 border-dashed border-border ${overlay ? "-rotate-2 cursor-grabbing" : isMobile ? "" : "cursor-grab active:cursor-grabbing"} h-full flex flex-col`}
       style={overlay ? { boxShadow: `0 0 0 2px ${color}40`, borderColor: `${color}60` } : {}}>
       
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2.5">
         <div
           className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
           style={{ backgroundColor: `${color}18`, color }}>
@@ -899,25 +899,27 @@ const Panel = () => {
           </div>
         </div>
 
-        {/* 2x2 Stats grid */}
-        <div className="grid grid-cols-2 gap-2">
-          <div className="bg-card rounded-2xl px-3 py-2 shadow-sm">
-            <p className="text-[10px] uppercase tracking-wide text-muted-foreground" style={nunito}>{t("panel.capital")}</p>
-            <p className="text-lg font-extrabold text-foreground" style={nunito}>CHF {Math.round(balance).toLocaleString()}</p>
+        {/* 2x2 Stats grid — compact */}
+        <div className="grid grid-cols-2 gap-1.5">
+          <div className="bg-card rounded-xl px-2.5 py-1.5 shadow-sm">
+            <p className="text-[9px] uppercase tracking-wide text-muted-foreground" style={nunito}>{t("panel.capital")}</p>
+            <p className="text-sm font-extrabold text-foreground" style={nunito}>CHF {Math.round(balance).toLocaleString()}</p>
           </div>
-          <div className="bg-card rounded-2xl px-3 py-2 shadow-sm">
-            <p className="text-[10px] uppercase tracking-wide text-muted-foreground" style={nunito}>{t("panel.invested")}</p>
-            <p className="text-lg font-extrabold" style={{ ...nunito, color: CELESTE }}>CHF {Math.round(balance * totalAllocated / 100).toLocaleString()}</p>
+          <div className="bg-card rounded-xl px-2.5 py-1.5 shadow-sm">
+            <p className="text-[9px] uppercase tracking-wide text-muted-foreground" style={nunito}>{t("panel.invested")}</p>
+            <p className="text-sm font-extrabold" style={{ ...nunito, color: CELESTE }}>CHF {Math.round(balance * totalAllocated / 100).toLocaleString()}</p>
           </div>
-          <div className="bg-card rounded-2xl px-3 py-2 shadow-sm">
-            <p className="text-[10px] uppercase tracking-wide text-muted-foreground" style={nunito}>{t("panel.risk")}</p>
-            <p className="text-lg font-extrabold" style={{ ...nunito, color: totalRisk > 60 ? "hsl(var(--destructive))" : totalRisk > 30 ? "hsl(var(--accent-foreground))" : CELESTE }}>{totalRisk}%</p>
-            <p className="text-[10px] text-muted-foreground" style={nunito}>{totalRisk <= 30 ? "Low" : totalRisk <= 60 ? "Medium" : "High"}</p>
+          <div className="bg-card rounded-xl px-2.5 py-1.5 shadow-sm">
+            <p className="text-[9px] uppercase tracking-wide text-muted-foreground" style={nunito}>{t("panel.risk")}</p>
+            <p className="text-sm font-extrabold" style={{ ...nunito, color: totalRisk > 60 ? "hsl(var(--destructive))" : totalRisk > 30 ? "hsl(var(--accent-foreground))" : CELESTE }}>{totalRisk}%
+              <span className="text-[9px] font-normal text-muted-foreground ml-1">{totalRisk <= 30 ? t("portfolio.low") : totalRisk <= 60 ? t("portfolio.medium") : t("portfolio.high")}</span>
+            </p>
           </div>
-          <div className="bg-card rounded-2xl px-3 py-2 shadow-sm">
-            <p className="text-[10px] uppercase tracking-wide text-muted-foreground" style={nunito}>AVG. RETURN</p>
-            <p className="text-lg font-extrabold" style={{ ...nunito, color: CELESTE }}>{avgReturn}%</p>
-            <p className="text-[10px] text-muted-foreground" style={nunito}>Annual</p>
+          <div className="bg-card rounded-xl px-2.5 py-1.5 shadow-sm">
+            <p className="text-[9px] uppercase tracking-wide text-muted-foreground" style={nunito}>{t("panel.returnLabel")}</p>
+            <p className="text-sm font-extrabold" style={{ ...nunito, color: CELESTE }}>{avgReturn}%
+              <span className="text-[9px] font-normal text-muted-foreground ml-1">{t("panel.annual")}</span>
+            </p>
           </div>
         </div>
 
@@ -926,16 +928,18 @@ const Panel = () => {
           <Drawer open={coachOpen} onOpenChange={setCoachOpen}>
             <DrawerTrigger asChild>
               <motion.button
-                className="w-full flex items-center gap-3 bg-card rounded-2xl px-4 py-3 shadow-sm mt-2 border border-border hover:border-primary/30 transition-colors"
+                className="w-full flex items-center gap-3 rounded-2xl px-4 py-2.5 shadow-sm mt-2 transition-colors"
                 whileTap={{ scale: 0.97 }}
-                style={nunito}
+                style={{ ...nunito, backgroundColor: CELESTE }}
               >
-                <img src="/perspectiva1.png" alt="Coach" className="w-10 h-10 rounded-full object-cover shadow-sm flex-shrink-0" />
-                <div className="flex-1 text-left">
-                  <p className="text-sm font-bold text-foreground">{t("panel.coachCTA", { defaultValue: "Talk to your Coach" })}</p>
-                  <p className="text-[11px] text-muted-foreground">{t("panel.coachCTASub", { defaultValue: "Get personalized advice" })}</p>
+                <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center flex-shrink-0 shadow-sm">
+                  <img src="/perspectiva1.png" alt="Coach" className="w-7 h-7 rounded-full object-cover" />
                 </div>
-                <MessageCircle className="w-5 h-5 text-primary flex-shrink-0" />
+                <div className="flex-1 text-left">
+                  <p className="text-sm font-bold text-white">{t("panel.talkCoach")}</p>
+                  <p className="text-[10px] text-white/70">{t("panel.coachCTASub", { defaultValue: "Get personalized advice" })}</p>
+                </div>
+                <MessageCircle className="w-5 h-5 text-white/80 flex-shrink-0" />
               </motion.button>
             </DrawerTrigger>
             <DrawerContent className="h-[80vh] p-0">
@@ -951,16 +955,18 @@ const Panel = () => {
           <Popover open={coachOpen} onOpenChange={setCoachOpen}>
             <PopoverTrigger asChild>
               <motion.button
-                className="w-full flex items-center gap-3 bg-card rounded-2xl px-4 py-3 shadow-sm mt-2 border border-border hover:border-primary/30 transition-colors"
+                className="w-full flex items-center gap-3 rounded-2xl px-4 py-2.5 shadow-sm mt-2 transition-colors"
                 whileTap={{ scale: 0.97 }}
-                style={nunito}
+                style={{ ...nunito, backgroundColor: CELESTE }}
               >
-                <img src="/perspectiva1.png" alt="Coach" className="w-10 h-10 rounded-full object-cover shadow-sm flex-shrink-0" />
-                <div className="flex-1 text-left">
-                  <p className="text-sm font-bold text-foreground">{t("panel.coachCTA", { defaultValue: "Talk to your Coach" })}</p>
-                  <p className="text-[11px] text-muted-foreground">{t("panel.coachCTASub", { defaultValue: "Get personalized advice" })}</p>
+                <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center flex-shrink-0 shadow-sm">
+                  <img src="/perspectiva1.png" alt="Coach" className="w-7 h-7 rounded-full object-cover" />
                 </div>
-                <MessageCircle className="w-5 h-5 text-primary flex-shrink-0" />
+                <div className="flex-1 text-left">
+                  <p className="text-sm font-bold text-white">{t("panel.talkCoach")}</p>
+                  <p className="text-[10px] text-white/70">{t("panel.coachCTASub", { defaultValue: "Get personalized advice" })}</p>
+                </div>
+                <MessageCircle className="w-5 h-5 text-white/80 flex-shrink-0" />
               </motion.button>
             </PopoverTrigger>
             <PopoverContent side="bottom" align="start" className="w-[380px] h-[500px] p-0 rounded-2xl overflow-hidden">
@@ -984,21 +990,7 @@ const Panel = () => {
             const isActive = activeNestId === nest.id;
             return (
               <div key={nest.id} className="flex-shrink-0 relative">
-                {renamingNest === nest.id ?
-                <form
-                  onSubmit={(e) => {e.preventDefault();handleRenameNest(nest.id, renameValue);}}
-                  className="flex items-center">
-                  
-                    <input
-                    autoFocus
-                    value={renameValue}
-                    onChange={(e) => setRenameValue(e.target.value)}
-                    onBlur={() => handleRenameNest(nest.id, renameValue)}
-                    className="text-xs font-bold px-3 py-2 rounded-2xl bg-card border-2 outline-none w-24"
-                    style={{ ...nunito, borderColor: CELESTE }} />
-                  
-                  </form> :
-
+                {renamingNest === nest.id ? null :
                 <button
                   onClick={() => handleTabClick(nest)}
                   className="flex flex-col items-start px-3 py-2 rounded-2xl text-xs transition-all border-2 min-w-[90px]"
@@ -1012,24 +1004,13 @@ const Panel = () => {
                   
                     <div className="flex items-center gap-1.5 w-full">
                       <span className="truncate">{nest.name}</span>
-                      {isActive &&
-                    <span className="flex items-center gap-0.5 ml-auto">
-                          <button
-                        onClick={(e) => {e.stopPropagation();setRenamingNest(nest.id);setRenameValue(nest.name);}}
-                        className="p-0.5 rounded hover:bg-black/10 transition-colors">
-                        
-                            <Pencil className="w-3 h-3" />
-                          </button>
-                          {nests.length > 1 &&
-                      <button
-                        onClick={(e) => {e.stopPropagation();handleDeleteNest(nest.id);}}
-                        className="p-0.5 rounded hover:bg-destructive/20 text-destructive/70 hover:text-destructive transition-colors">
-                        
-                              <Trash2 className="w-3 h-3" />
-                            </button>
+                      {isActive && nests.length > 1 &&
+                        <button
+                          onClick={(e) => {e.stopPropagation();handleDeleteNest(nest.id);}}
+                          className="p-0.5 rounded hover:bg-destructive/20 text-destructive/70 hover:text-destructive transition-colors ml-auto">
+                          <Trash2 className="w-3 h-3" />
+                        </button>
                       }
-                        </span>
-                    }
                     </div>
                   </button>
                 }
@@ -1204,7 +1185,7 @@ const Panel = () => {
           )}
         </div>
         <motion.button
-          className="w-full py-4 rounded-3xl text-base shadow-lg transition-all flex items-center justify-center gap-2 text-white"
+          className="w-full py-3 rounded-3xl text-sm shadow-lg transition-all flex items-center justify-center gap-2 text-white"
           style={{
             ...nunito,
             fontWeight: 900,
