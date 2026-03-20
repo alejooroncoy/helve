@@ -356,9 +356,9 @@ export default function CoachChat({ onClose, portfolio, onAddInvestment, onRemov
     setLoading(true);
     try {
       const { text: responseText, actions } = await chatWithTools({ messages: [...messages, userMsg], portfolio });
-      for (const action of actions) {
-        if (action.type === "add" && onAddInvestment) onAddInvestment(action.investmentId);
-        else if (action.type === "remove" && onRemoveInvestment) onRemoveInvestment(action.investmentId);
+      // Don't auto-apply actions; store them as pending for user confirmation
+      if (actions.length > 0) {
+        setPendingActions(actions);
       }
       const assistantMsg: Msg = { role: "assistant", content: responseText };
       setMessages((prev) => [...prev, assistantMsg]);
