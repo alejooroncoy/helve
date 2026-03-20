@@ -285,8 +285,16 @@ const Hub = () => {
         )}
       </AnimatePresence>
 
-      {/* Footer */}
-      <div className="px-6 pb-6 pt-2">
+      {/* Sign out + Footer */}
+      <div className="px-6 pb-6 pt-2 flex flex-col items-center gap-3">
+        <button
+          onClick={signOut}
+          className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors py-2"
+          style={nunito}
+        >
+          <LogOut className="w-3.5 h-3.5" />
+          {t("hub.signOut")}
+        </button>
         <p
           className="text-[10px] text-muted-foreground text-center"
           style={nunito}
