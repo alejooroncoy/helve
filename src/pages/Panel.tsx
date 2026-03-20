@@ -960,44 +960,34 @@ const Panel = () => {
           </div>
         </div>
 
-        {/* Stat Cards — Capital & Invested (global), Risk & Return (per nest) */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-          <div className="bg-card rounded-2xl p-3 shadow-sm flex items-stretch gap-3 col-span-2 sm:col-span-1">
-            <div className="flex-1 min-w-0">
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium" style={nunito}>
-                {t("panel.capital")}
-              </p>
-              <p className="text-lg font-bold text-foreground mt-0.5" style={nunito}>
-                CHF {Math.round(balance * (100 - totalAllocated) / 100).toLocaleString()}
-              </p>
-            </div>
-            <Separator orientation="vertical" />
-            <div className="flex-1 min-w-0">
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium" style={nunito}>
-                {t("panel.invested")}
-              </p>
-              <p className="text-lg font-bold mt-0.5" style={{ ...nunito, color: CELESTE }}>
-                CHF {Math.round(balance * totalAllocated / 100).toLocaleString()}
-              </p>
-            </div>
+        {/* Compact stats bar */}
+        <div className="bg-card rounded-2xl px-4 py-2.5 shadow-sm flex items-center justify-between gap-1">
+          <div className="flex items-center gap-1.5">
+            <Wallet className="w-3.5 h-3.5 text-muted-foreground" />
+            <span className="text-xs font-bold text-foreground" style={nunito}>
+              CHF {Math.round(balance * (100 - totalAllocated) / 100).toLocaleString()}
+            </span>
           </div>
-          <div className="bg-card rounded-2xl p-3 shadow-sm">
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium" style={nunito}>
-              {t("panel.risk")}
-            </p>
-            <p className="text-lg font-bold mt-0.5" style={{ ...nunito, color: totalRisk > 60 ? "hsl(var(--destructive))" : totalRisk > 30 ? "hsl(var(--accent-foreground))" : CELESTE }}>
+          <div className="w-px h-4 bg-border" />
+          <div className="flex items-center gap-1">
+            <span className="text-[10px] text-muted-foreground" style={nunito}>{t("panel.invested")}</span>
+            <span className="text-xs font-bold" style={{ ...nunito, color: CELESTE }}>
+              CHF {Math.round(balance * totalAllocated / 100).toLocaleString()}
+            </span>
+          </div>
+          <div className="w-px h-4 bg-border" />
+          <div className="flex items-center gap-1">
+            <span className="text-[10px] text-muted-foreground" style={nunito}>{t("panel.risk")}</span>
+            <span className="text-xs font-bold" style={{ ...nunito, color: totalRisk > 60 ? "hsl(var(--destructive))" : totalRisk > 30 ? "hsl(var(--accent-foreground))" : CELESTE }}>
               {totalRisk}%
-            </p>
-            <p className="text-[10px] text-muted-foreground" style={nunito}>{getRiskLabelLocal(totalRisk)}</p>
+            </span>
           </div>
-          <div className="bg-card rounded-2xl p-3 shadow-sm">
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium" style={nunito}>
-              {t("panel.returnLabel")}
-            </p>
-            <p className="text-lg font-bold mt-0.5" style={{ ...nunito, color: CELESTE }}>
+          <div className="w-px h-4 bg-border" />
+          <div className="flex items-center gap-1">
+            <TrendingUp className="w-3 h-3" style={{ color: CELESTE }} />
+            <span className="text-xs font-bold" style={{ ...nunito, color: CELESTE }}>
               {avgReturn}%
-            </p>
-            <p className="text-[10px] text-muted-foreground" style={nunito}>{t("panel.annual")}</p>
+            </span>
           </div>
         </div>
       </div>
