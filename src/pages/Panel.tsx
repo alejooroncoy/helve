@@ -1059,9 +1059,7 @@ const Panel = () => {
                     </div>
                     {ns.count > 0 && (
                       <div className="flex items-center gap-2 mt-1 text-[10px] font-medium" style={nunito}>
-                        <span style={{ color: ns.risk > 60 ? "hsl(var(--destructive))" : ns.risk > 30 ? "hsl(var(--accent-foreground))" : CELESTE }}>
-                          R {ns.risk}%
-                        </span>
+                        
                         <span style={{ color: CELESTE }}>
                           {ns.ret}%/yr
                         </span>
