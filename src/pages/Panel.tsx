@@ -914,15 +914,7 @@ const Panel = () => {
             whileTap={{ scale: 0.9 }}>
             <ChevronLeft className="w-4 h-4" />
           </motion.button>
-          <div className="flex items-center gap-1.5">
-            <LanguageSwitcher />
-            <motion.button
-              onClick={handleSignOut}
-              className="w-8 h-8 rounded-full bg-card shadow-sm flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors"
-              whileTap={{ scale: 0.9 }}>
-              <LogOut className="w-4 h-4" />
-            </motion.button>
-          </div>
+          <LanguageSwitcher />
         </div>
 
         {/* 2x2 Stats grid — compact */}
@@ -1014,15 +1006,15 @@ const Panel = () => {
           className="w-full rounded-xl px-3 py-1.5 text-center border"
           style={{
             ...nunito,
-            borderColor: profile === "conservative" ? CELESTE : profile === "growth" ? "hsl(var(--destructive) / 0.4)" : "hsl(var(--accent) / 0.5)",
-            backgroundColor: profile === "conservative" ? `${CELESTE}10` : profile === "growth" ? "hsl(var(--destructive) / 0.06)" : "hsl(var(--accent) / 0.08)",
+            borderColor: profile === "conservative" ? "hsl(145, 58%, 36%, 0.4)" : profile === "growth" ? "hsl(var(--destructive) / 0.4)" : "hsl(var(--accent) / 0.5)",
+            backgroundColor: profile === "conservative" ? "hsl(145, 58%, 36%, 0.06)" : profile === "growth" ? "hsl(var(--destructive) / 0.06)" : "hsl(var(--accent) / 0.08)",
           }}
         >
           <p className="text-[11px] font-semibold text-foreground" style={nunito}>
             {t("panel.riskProfileIs")}{" "}
             <span style={{
               fontWeight: 800,
-              color: profile === "conservative" ? CELESTE : profile === "growth" ? "hsl(var(--destructive))" : "hsl(var(--accent-foreground))",
+              color: profile === "conservative" ? "hsl(145, 58%, 36%)" : profile === "growth" ? "hsl(0, 72%, 51%)" : "hsl(38, 92%, 50%)",
             }}>
               {profile === "conservative" ? t("portfolio.low") : profile === "growth" ? t("portfolio.high") : t("portfolio.medium")}
             </span>
