@@ -370,10 +370,10 @@ function ScoutedCard({
 
   return (
     <div
-      className={`bg-card rounded-2xl p-3 shadow-sm border-2 border-dashed border-border ${overlay ? "-rotate-2 cursor-grabbing" : isMobile ? "" : "cursor-grab active:cursor-grabbing"} ${isMobile ? "min-h-0" : "min-h-[110px]"} h-full flex flex-col`}
+      className={`bg-card rounded-2xl p-3 shadow-sm border-2 border-dashed border-border ${overlay ? "-rotate-2 cursor-grabbing" : isMobile ? "" : "cursor-grab active:cursor-grabbing"} h-full flex flex-col`}
       style={overlay ? { boxShadow: `0 0 0 2px ${color}40`, borderColor: `${color}60` } : {}}
     >
-      <div className="flex items-start gap-2">
+      <div className="flex items-center gap-2.5">
         <div
           className="w-9 h-9 bg-secondary rounded-xl flex items-center justify-center flex-shrink-0"
           style={{ color }}
@@ -384,9 +384,17 @@ function ScoutedCard({
           <p className="text-xs font-bold text-foreground leading-snug" style={nunito}>
             {displayName}
           </p>
-          <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-2 leading-tight" style={nunito}>
-            {t(`allocation.classDesc.${inv.id}`, { defaultValue: "" })}
-          </p>
+          <div className="flex items-center gap-1.5 mt-0.5">
+            <span
+              className="text-[10px] font-bold"
+              style={{ color: getRiskBarColor(inv.riskLevel) }}
+            >
+              {t("panel.riskLabel")} {inv.riskLevel}/10
+            </span>
+            <span className="text-[10px] font-bold" style={{ color }}>
+              {inv.annualReturn}% {t("common.perYear")}
+            </span>
+          </div>
         </div>
         <div className="flex items-center gap-1.5 flex-shrink-0">
           {!overlay && onAsk && (
@@ -394,8 +402,8 @@ function ScoutedCard({
               type="button"
               onClick={(e) => { e.stopPropagation(); e.preventDefault(); onAsk(); }}
               onPointerDown={(e) => e.stopPropagation()}
-              className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold cursor-pointer flex-shrink-0"
-              style={{ ...nunito, backgroundColor: `${color}18`, color }}
+              className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold cursor-pointer"
+              style={{ backgroundColor: `${color}18`, color }}
               aria-label="Info"
             >
               ?
@@ -413,24 +421,6 @@ function ScoutedCard({
             </button>
           )}
         </div>
-      </div>
-      {!isMobile && <div className="flex-grow" />}
-      <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-        <span
-          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold"
-          style={{ ...nunito, backgroundColor: `${getRiskBarColor(inv.riskLevel)}18`, color: getRiskBarColor(inv.riskLevel) }}
-        >
-          {t("panel.riskLabel")} {inv.riskLevel}/10
-        </span>
-        <span
-          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold"
-          style={{ ...nunito, backgroundColor: `${color}18`, color }}
-        >
-          {inv.annualReturn}% {t("common.perYear")}
-        </span>
-        {!overlay && !isMobile && (
-          <span className="ml-auto text-sm font-bold" style={{ color }}>+</span>
-        )}
       </div>
     </div>
   );
@@ -960,44 +950,34 @@ const Panel = () => {
           </div>
         </div>
 
-        {/* Stat Cards — Capital & Invested (global), Risk & Return (per nest) */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-          <div className="bg-card rounded-2xl p-3 shadow-sm flex items-stretch gap-3 col-span-2 sm:col-span-1">
-            <div className="flex-1 min-w-0">
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium" style={nunito}>
-                {t("panel.capital")}
-              </p>
-              <p className="text-lg font-bold text-foreground mt-0.5" style={nunito}>
-                CHF {Math.round(balance * (100 - totalAllocated) / 100).toLocaleString()}
-              </p>
-            </div>
-            <Separator orientation="vertical" />
-            <div className="flex-1 min-w-0">
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium" style={nunito}>
-                {t("panel.invested")}
-              </p>
-              <p className="text-lg font-bold mt-0.5" style={{ ...nunito, color: CELESTE }}>
-                CHF {Math.round(balance * totalAllocated / 100).toLocaleString()}
-              </p>
-            </div>
+        {/* Compact stats bar */}
+        <div className="bg-card rounded-2xl px-4 py-2.5 shadow-sm flex items-center justify-between gap-1">
+          <div className="flex items-center gap-1.5">
+            <Wallet className="w-3.5 h-3.5 text-muted-foreground" />
+            <span className="text-xs font-bold text-foreground" style={nunito}>
+              CHF {Math.round(balance * (100 - totalAllocated) / 100).toLocaleString()}
+            </span>
           </div>
-          <div className="bg-card rounded-2xl p-3 shadow-sm">
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium" style={nunito}>
-              {t("panel.risk")}
-            </p>
-            <p className="text-lg font-bold mt-0.5" style={{ ...nunito, color: totalRisk > 60 ? "hsl(var(--destructive))" : totalRisk > 30 ? "hsl(var(--accent-foreground))" : CELESTE }}>
+          <div className="w-px h-4 bg-border" />
+          <div className="flex items-center gap-1">
+            <span className="text-[10px] text-muted-foreground" style={nunito}>{t("panel.invested")}</span>
+            <span className="text-xs font-bold" style={{ ...nunito, color: CELESTE }}>
+              CHF {Math.round(balance * totalAllocated / 100).toLocaleString()}
+            </span>
+          </div>
+          <div className="w-px h-4 bg-border" />
+          <div className="flex items-center gap-1">
+            <span className="text-[10px] text-muted-foreground" style={nunito}>{t("panel.risk")}</span>
+            <span className="text-xs font-bold" style={{ ...nunito, color: totalRisk > 60 ? "hsl(var(--destructive))" : totalRisk > 30 ? "hsl(var(--accent-foreground))" : CELESTE }}>
               {totalRisk}%
-            </p>
-            <p className="text-[10px] text-muted-foreground" style={nunito}>{getRiskLabelLocal(totalRisk)}</p>
+            </span>
           </div>
-          <div className="bg-card rounded-2xl p-3 shadow-sm">
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium" style={nunito}>
-              {t("panel.returnLabel")}
-            </p>
-            <p className="text-lg font-bold mt-0.5" style={{ ...nunito, color: CELESTE }}>
+          <div className="w-px h-4 bg-border" />
+          <div className="flex items-center gap-1">
+            <TrendingUp className="w-3 h-3" style={{ color: CELESTE }} />
+            <span className="text-xs font-bold" style={{ ...nunito, color: CELESTE }}>
               {avgReturn}%
-            </p>
-            <p className="text-[10px] text-muted-foreground" style={nunito}>{t("panel.annual")}</p>
+            </span>
           </div>
         </div>
       </div>
@@ -1084,11 +1064,6 @@ const Panel = () => {
             {/* My Nest */}
             <div className="flex-1 min-h-0 md:pr-2 flex flex-col overflow-hidden">
               <DropZone id="nest">
-                <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-sm font-bold text-foreground uppercase tracking-wide" style={nunito}>
-                    {nests.find((n) => n.id === activeNestId)?.name || t("panel.myNest")}
-                  </h2>
-                </div>
                 {enrichedPortfolio.length === 0 ? (
                   <div className="bg-card/50 rounded-3xl p-5 text-center border-2 border-dashed border-border flex flex-col items-center justify-center gap-2">
                     <Inbox className="w-8 h-8 text-muted-foreground/50" />
@@ -1152,16 +1127,9 @@ const Panel = () => {
                   {t("panel.buy")}
                 </h2>
                 {/* Mobile: horizontal scroll */}
-                <div
-                  className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide items-stretch md:hidden"
-                  style={{ scrollSnapType: "x mandatory", touchAction: "pan-x" }}
-                >
-                  {suggestions.map((inv) => (
-                    <div
-                      key={inv.id}
-                      className="flex-shrink-0 flex"
-                      style={{ width: 170, minWidth: 160, scrollSnapAlign: "start" }}
-                    >
+                <div className="flex flex-col gap-2 md:hidden">
+                  {suggestions.slice(0, 4).map((inv) => (
+                    <div key={inv.id}>
                       <DraggableCard
                         inv={inv}
                         zone="scouted"
