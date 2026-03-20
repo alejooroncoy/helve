@@ -1008,6 +1008,28 @@ const Panel = () => {
         }
       </div>
 
+      {/* Risk profile banner */}
+      <div className="px-4 pt-2">
+        <div
+          className="w-full rounded-xl px-3 py-1.5 text-center border"
+          style={{
+            ...nunito,
+            borderColor: profile === "conservative" ? CELESTE : profile === "growth" ? "hsl(var(--destructive) / 0.4)" : "hsl(var(--accent) / 0.5)",
+            backgroundColor: profile === "conservative" ? `${CELESTE}10` : profile === "growth" ? "hsl(var(--destructive) / 0.06)" : "hsl(var(--accent) / 0.08)",
+          }}
+        >
+          <p className="text-[11px] font-semibold text-foreground" style={nunito}>
+            {t("panel.riskProfileIs")}{" "}
+            <span style={{
+              fontWeight: 800,
+              color: profile === "conservative" ? CELESTE : profile === "growth" ? "hsl(var(--destructive))" : "hsl(var(--accent-foreground))",
+            }}>
+              {profile === "conservative" ? t("portfolio.low") : profile === "growth" ? t("portfolio.high") : t("portfolio.medium")}
+            </span>
+          </p>
+        </div>
+      </div>
+
       {/* Nest Tabs */}
       <div className="px-4 pb-2">
         <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-1 mt-[13px]">
