@@ -414,7 +414,7 @@ function ScoutedCard({
           {t("panel.returnLabel")}
         </span>
         <span className="text-[10px] font-bold" style={{ ...nunito, color }}>
-          {inv.annualReturn}%{t("common.perYear")}
+          {inv.annualReturn}%
         </span>
         <span className="flex-grow" />
         {!overlay && onAsk && (
