@@ -5,6 +5,7 @@ import ReactMarkdown from "react-markdown";
 import type { Investment } from "@/game/types";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useTranslation } from "react-i18next";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -204,7 +205,7 @@ function MicButton({ onTranscript, disabled }: { onTranscript: (text: string) =>
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) { alert("Your browser doesn't support voice recognition. Try Chrome."); return; }
     const recognition = new SpeechRecognition();
-    recognition.lang = "es-ES";
+    recognition.lang = (document.documentElement.lang || localStorage.getItem("i18nextLng") || "en") === "es" ? "es-ES" : "en-US";
     recognition.interimResults = true;
     recognition.continuous = true;
     recognitionRef.current = recognition;
@@ -247,6 +248,7 @@ interface CoachChatProps {
 
 export default function CoachChat({ onClose, portfolio, onAddInvestment, onRemoveInvestment, initialQuestion, onSwapAccepted }: CoachChatProps) {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -353,8 +355,8 @@ export default function CoachChat({ onClose, portfolio, onAddInvestment, onRemov
   }, [onAddInvestment, onRemoveInvestment, onSwapAccepted, onClose]);
 
   const quickQuestions = portfolio && portfolio.length > 0
-    ? ["How is my nest doing?", "Should I diversify?", "What's my risk level?"]
-    : ["What is risk?", "How do I start investing?", "What is an ETF?"];
+    ? (t("coach.quickQuestions.withPortfolio", { returnObjects: true }) as string[])
+    : (t("coach.quickQuestions.withoutPortfolio", { returnObjects: true }) as string[]);
 
   return (
     <div className="flex flex-col h-full bg-background">
@@ -364,11 +366,11 @@ export default function CoachChat({ onClose, portfolio, onAddInvestment, onRemov
           <img src="/perspectiva1.png" alt="Coach" className="w-full h-full object-cover" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-bold text-foreground" style={nunito}>Helve Coach</p>
+          <p className="text-sm font-bold text-foreground" style={nunito}>{t("coach.title")}</p>
           <p className="text-[10px] font-medium" style={{ color: CELESTE, ...nunito }}>
             {portfolio && portfolio.length > 0
-              ? `Analyzing ${portfolio.length} investment${portfolio.length > 1 ? "s" : ""}`
-              : "Your investment guide"}
+              ? t("coach.analyzing", { count: portfolio.length, plural: portfolio.length > 1 ? "s" : "" })
+              : t("coach.yourGuide")}
           </p>
         </div>
         {messages.length > 0 && (
@@ -388,11 +390,11 @@ export default function CoachChat({ onClose, portfolio, onAddInvestment, onRemov
             <div className="w-14 h-14 rounded-full mx-auto mb-3 flex items-center justify-center" style={{ backgroundColor: `${CELESTE}15` }}>
               <MessageCircle className="w-7 h-7" style={{ color: CELESTE }} />
             </div>
-            <p className="text-sm font-bold text-foreground" style={nunito}>Hi! I'm your coach</p>
+            <p className="text-sm font-bold text-foreground" style={nunito}>{t("coach.greeting")}</p>
             <p className="text-xs text-muted-foreground mt-1" style={nunito}>
               {portfolio && portfolio.length > 0
-                ? "I can analyze your nest and give you recommendations"
-                : "Ask me anything about investing"}
+                ? t("coach.analyzeNest")
+                : t("coach.askAnything")}
             </p>
             <div className="mt-4 flex flex-wrap gap-2 justify-center">
               {quickQuestions.map((q) => (
@@ -438,7 +440,7 @@ export default function CoachChat({ onClose, portfolio, onAddInvestment, onRemov
                     className="mt-1.5 flex items-center gap-1 text-[10px] text-muted-foreground transition-colors"
                     style={nunito}
                   >
-                    {playingIdx === i ? <><VolumeX className="w-3 h-3" /> Stop</> : <><Volume2 className="w-3 h-3" /> Listen</>}
+                    {playingIdx === i ? <><VolumeX className="w-3 h-3" /> {t("coach.stop")}</> : <><Volume2 className="w-3 h-3" /> {t("coach.listen")}</>}
                   </motion.button>
                 )}
               </div>
@@ -466,7 +468,7 @@ export default function CoachChat({ onClose, portfolio, onAddInvestment, onRemov
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Write or use the microphone..."
+            placeholder={t("coach.inputPlaceholder")}
             className="flex-1 bg-muted rounded-2xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground outline-none"
             style={{ ...nunito, boxShadow: `0 0 0 0px ${CELESTE}` }}
             onFocus={(e) => e.target.style.boxShadow = `0 0 0 2px ${CELESTE}40`}
