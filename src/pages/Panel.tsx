@@ -159,7 +159,7 @@ function DraggableCard({
     data: { inv, zone },
   });
 
-  const dragHandleProps = isMobile ? { ref: setActivatorNodeRef, ...listeners, ...attributes } : undefined;
+  const dragHandleProps = undefined;
 
   const rootDragProps = isMobile ? {} : { ...listeners, ...attributes };
 
@@ -278,7 +278,7 @@ function NestCard({
                 CHF {chfAmount}
               </span>
             </div>
-            {isMobile && dragHandleProps && (
+            {!isMobile && dragHandleProps && (
               <button
                 type="button"
                 {...dragHandleProps}
@@ -386,7 +386,7 @@ function ScoutedCard({
             </p>
           </div>
         </div>
-        {!overlay && isMobile && dragHandleProps && (
+        {!overlay && !isMobile && dragHandleProps && (
           <button
             type="button"
             {...dragHandleProps}
