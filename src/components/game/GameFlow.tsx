@@ -138,6 +138,9 @@ const GameFlow = () => {
           <LoopScreen
             key="loop"
             result={state.simulationResult}
+            allocation={state.assetAllocation}
+            profile={state.profile}
+            stormChoice={state.stormChoice}
             onTryAgain={resetFull}
             onAdjust={resetToPortfolio}
           />
