@@ -1126,32 +1126,33 @@ const Panel = () => {
                 >
                   {t("panel.buy")}
                 </h2>
-                {/* Mobile: horizontal scroll */}
+                {/* Mobile: 2-row horizontal scroll grid */}
                 <div
-                  className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide items-stretch md:hidden"
-                  style={{ scrollSnapType: "x mandatory", touchAction: "pan-x" }}
+                  className="overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide md:hidden"
+                  style={{ touchAction: "pan-x" }}
                 >
-                  {suggestions.map((inv) => (
-                    <div
-                      key={inv.id}
-                      className="flex-shrink-0 flex"
-                      style={{ width: 170, minWidth: 160, scrollSnapAlign: "start" }}
-                    >
-                      <DraggableCard
-                        inv={inv}
-                        zone="scouted"
-                        onClick={() => tryBuyInvestment(inv)}
-                        t={t}
-                        isMobile={isMobile}
-                        onAsk={() => {
-                          setCoachInitQ(
-                            `Explica brevemente qué es ${t(`allocation.classes.${inv.id}`)} y si encaja con mi perfil`,
-                          );
-                          setCoachOpen(true);
-                        }}
-                      />
-                    </div>
-                  ))}
+                  <div
+                    className="grid grid-flow-col grid-rows-2 gap-2"
+                    style={{ gridAutoColumns: "160px" }}
+                  >
+                    {suggestions.map((inv) => (
+                      <div key={inv.id} className="flex">
+                        <DraggableCard
+                          inv={inv}
+                          zone="scouted"
+                          onClick={() => tryBuyInvestment(inv)}
+                          t={t}
+                          isMobile={isMobile}
+                          onAsk={() => {
+                            setCoachInitQ(
+                              `Explica brevemente qué es ${t(`allocation.classes.${inv.id}`)} y si encaja con mi perfil`,
+                            );
+                            setCoachOpen(true);
+                          }}
+                        />
+                      </div>
+                    ))}
+                  </div>
                 </div>
                 {/* Desktop */}
                 <ScrollArea className="hidden md:block flex-1 min-h-0">
