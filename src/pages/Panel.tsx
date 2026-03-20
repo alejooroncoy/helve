@@ -48,6 +48,7 @@ import {
   DollarSign,
   Info,
   Wallet,
+  ChevronLeft,
   GripVertical,
   Plus,
   Trash2,
@@ -374,67 +375,61 @@ function ScoutedCard({
     >
       <div className="flex items-start gap-2">
         <div
-          className="w-9 h-9 bg-secondary rounded-xl flex items-center justify-center text-muted-foreground flex-shrink-0"
+          className="w-9 h-9 bg-secondary rounded-xl flex items-center justify-center flex-shrink-0"
           style={{ color }}
         >
           {getCategoryIcon(inv.id)}
         </div>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5">
-            <p className="text-xs font-bold text-foreground leading-snug" style={nunito}>
-              {displayName}
-            </p>
-          </div>
+          <p className="text-xs font-bold text-foreground leading-snug" style={nunito}>
+            {displayName}
+          </p>
           <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-2 leading-tight" style={nunito}>
             {t(`allocation.classDesc.${inv.id}`, { defaultValue: "" })}
           </p>
         </div>
-        {!overlay && !isMobile && dragHandleProps && (
-          <button
-            type="button"
-            {...dragHandleProps}
-            onClick={(e) => e.stopPropagation()}
-            className="w-8 h-8 rounded-xl bg-muted text-muted-foreground flex items-center justify-center flex-shrink-0"
-            aria-label={t("panel.buy")}
-          >
-            <GripVertical className="w-4 h-4" />
-          </button>
-        )}
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          {!overlay && onAsk && (
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); e.preventDefault(); onAsk(); }}
+              onPointerDown={(e) => e.stopPropagation()}
+              className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold cursor-pointer flex-shrink-0"
+              style={{ ...nunito, backgroundColor: `${color}18`, color }}
+              aria-label="Info"
+            >
+              ?
+            </button>
+          )}
+          {!overlay && !isMobile && dragHandleProps && (
+            <button
+              type="button"
+              {...dragHandleProps}
+              onClick={(e) => e.stopPropagation()}
+              className="w-8 h-8 rounded-xl bg-muted text-muted-foreground flex items-center justify-center"
+              aria-label={t("panel.buy")}
+            >
+              <GripVertical className="w-4 h-4" />
+            </button>
+          )}
+        </div>
       </div>
       {!isMobile && <div className="flex-grow" />}
       <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-        <span className="text-[10px] text-muted-foreground" style={nunito}>
-          {t("panel.riskLabel")}
+        <span
+          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold"
+          style={{ ...nunito, backgroundColor: `${getRiskBarColor(inv.riskLevel)}18`, color: getRiskBarColor(inv.riskLevel) }}
+        >
+          {t("panel.riskLabel")} {inv.riskLevel}/10
         </span>
-        <span className="text-[10px] font-bold" style={{ ...nunito, color: getRiskBarColor(inv.riskLevel) }}>
-          {inv.riskLevel}/10
+        <span
+          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold"
+          style={{ ...nunito, backgroundColor: `${color}18`, color }}
+        >
+          {inv.annualReturn}% {t("common.perYear")}
         </span>
-        <span className="text-muted-foreground text-[10px]">·</span>
-        <span className="text-[10px] text-muted-foreground" style={nunito}>
-          {t("panel.returnLabel")}
-        </span>
-        <span className="text-[10px] font-bold" style={{ ...nunito, color }}>
-          {inv.annualReturn}%
-        </span>
-        <span className="flex-grow" />
-        {!overlay && onAsk && (
-          <span
-            onClick={(e) => {
-              e.stopPropagation();
-              e.preventDefault();
-              onAsk();
-            }}
-            onPointerDown={(e) => e.stopPropagation()}
-            className="w-6 h-6 rounded-full bg-accent/10 text-accent flex items-center justify-center text-[10px] font-bold cursor-pointer"
-            style={nunito}
-          >
-            ?
-          </span>
-        )}
         {!overlay && !isMobile && (
-          <span className="text-sm font-bold" style={{ color }}>
-            +
-          </span>
+          <span className="ml-auto text-sm font-bold" style={{ color }}>+</span>
         )}
       </div>
     </div>
@@ -897,24 +892,17 @@ const Panel = () => {
     >
       {/* Header — actions row */}
       <div className="px-5 pt-5 pb-2">
-        <div className="flex items-center justify-end mb-3 gap-2">
-          <LanguageSwitcher />
-          <motion.button
-            onClick={handleSignOut}
-            className="w-9 h-9 rounded-full bg-card shadow-sm flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors"
-            whileTap={{ scale: 0.9 }}
-          >
-            <LogOut className="w-4 h-4" />
-          </motion.button>
+        <div className="flex items-center justify-between mb-3 gap-2">
           {isMobile ? (
             <Drawer open={coachOpen} onOpenChange={setCoachOpen}>
               <DrawerTrigger asChild>
                 <motion.button
-                  className="w-11 h-11 rounded-full bg-card shadow-md overflow-hidden border-2"
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-card shadow-md border-2"
                   style={{ borderColor: `${CELESTE}40` }}
-                  whileTap={{ scale: 0.9 }}
+                  whileTap={{ scale: 0.95 }}
                 >
-                  <img src="/perspectiva1.png" alt="Coach" className="w-full h-full object-cover" />
+                  <img src="/perspectiva1.png" alt="Coach" className="w-6 h-6 rounded object-cover" />
+                  <span className="text-xs font-medium text-foreground">{t("panel.talkCoach")}</span>
                 </motion.button>
               </DrawerTrigger>
               <DrawerContent className="h-[80vh] p-0">
@@ -932,14 +920,15 @@ const Panel = () => {
             <Popover open={coachOpen} onOpenChange={setCoachOpen}>
               <PopoverTrigger asChild>
                 <motion.button
-                  className="w-11 h-11 rounded-full bg-card shadow-md overflow-hidden border-2"
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-card shadow-md border-2"
                   style={{ borderColor: `${CELESTE}40` }}
-                  whileTap={{ scale: 0.9 }}
+                  whileTap={{ scale: 0.95 }}
                 >
-                  <img src="/perspectiva1.png" alt="Coach" className="w-full h-full object-cover" />
+                  <img src="/perspectiva1.png" alt="Coach" className="w-6 h-6 rounded object-cover" />
+                  <span className="text-xs font-medium text-foreground">{t("panel.talkCoach")}</span>
                 </motion.button>
               </PopoverTrigger>
-              <PopoverContent side="bottom" align="end" className="w-[380px] h-[500px] p-0 rounded-2xl overflow-hidden">
+              <PopoverContent side="bottom" align="start" className="w-[380px] h-[500px] p-0 rounded-2xl overflow-hidden">
                 <CoachChat
                   onClose={() => { setCoachOpen(false); setCoachInitQ(undefined); }}
                   portfolio={enrichedPortfolio}
@@ -951,6 +940,24 @@ const Panel = () => {
               </PopoverContent>
             </Popover>
           )}
+          <div className="flex items-center gap-2">
+            <motion.button
+              onClick={() => navigate("/panel")}
+              className="w-9 h-9 rounded-full bg-card shadow-sm flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+              whileTap={{ scale: 0.9 }}
+              title="Back to hub"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </motion.button>
+            <LanguageSwitcher />
+            <motion.button
+              onClick={handleSignOut}
+              className="w-9 h-9 rounded-full bg-card shadow-sm flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors"
+              whileTap={{ scale: 0.9 }}
+            >
+              <LogOut className="w-4 h-4" />
+            </motion.button>
+          </div>
         </div>
 
         {/* Stat Cards — Capital & Invested (global), Risk & Return (per nest) */}
@@ -1091,9 +1098,6 @@ const Panel = () => {
                   <h2 className="text-sm font-bold text-foreground uppercase tracking-wide" style={nunito}>
                     {nests.find((n) => n.id === activeNestId)?.name || t("panel.myNest")}
                   </h2>
-                  <span className="text-xs text-muted-foreground" style={nunito}>
-                    {enrichedPortfolio.length}
-                  </span>
                 </div>
                 {enrichedPortfolio.length === 0 ? (
                   <div className="bg-card/50 rounded-3xl p-5 text-center border-2 border-dashed border-border flex flex-col items-center justify-center gap-2">
@@ -1106,7 +1110,7 @@ const Panel = () => {
                     </p>
                   </div>
                 ) : (
-                <ScrollArea className="flex-1 min-h-0 max-h-[40vh]">
+                <ScrollArea className="flex-1 min-h-0 md:max-h-[40vh]">
                   <div className="space-y-2 pr-2">
                     <AnimatePresence>
                       {enrichedPortfolio.map((inv) => (
