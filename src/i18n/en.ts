@@ -238,7 +238,7 @@ const en = {
     capital: "Capital",
     invested: "Invested",
     risk: "Risk",
-    returnLabel: "Return",
+    returnLabel: "Avg. return",
     annual: "Annual",
     lastSim: "last sim.",
     perMonth: "/mo",

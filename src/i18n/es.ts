@@ -238,7 +238,7 @@ const es = {
     capital: "Capital",
     invested: "Invertido",
     risk: "Riesgo",
-    returnLabel: "Retorno",
+    returnLabel: "Ret. anual",
     annual: "Anual",
     lastSim: "última sim.",
     perMonth: "/mes",
