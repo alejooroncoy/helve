@@ -880,39 +880,21 @@ const Panel = () => {
     >
       {/* Header — actions row */}
       <div className="px-4 pt-4 pb-1">
-        {/* Single compact header: back + stats inline + actions */}
-        <div className="flex items-center gap-2">
+        {/* Header: back + actions */}
+        <div className="flex items-center justify-between mb-2">
           <motion.button
             onClick={() => navigate("/panel")}
-            className="w-8 h-8 rounded-full bg-card shadow-sm flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
+            className="w-8 h-8 rounded-full bg-card shadow-sm flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
             whileTap={{ scale: 0.9 }}
           >
             <ChevronLeft className="w-4 h-4" />
           </motion.button>
-
-          {/* Inline stats */}
-          <div className="flex items-center gap-2 flex-1 min-w-0 overflow-x-auto scrollbar-hide">
-            <span className="text-xs font-bold text-foreground whitespace-nowrap" style={nunito}>
-              CHF {Math.round(balance * (100 - totalAllocated) / 100).toLocaleString()}
-            </span>
-            <span className="text-[10px] text-muted-foreground whitespace-nowrap">|</span>
-            <span className="text-xs font-bold whitespace-nowrap" style={{ ...nunito, color: CELESTE }}>
-              {avgReturn}%
-            </span>
-            <span className="text-[10px] text-muted-foreground whitespace-nowrap">|</span>
-            <span className="text-xs font-bold whitespace-nowrap" style={{ ...nunito, color: totalRisk > 60 ? "hsl(var(--destructive))" : CELESTE }}>
-              {t("panel.risk")} {totalRisk}%
-            </span>
-          </div>
-
-          {/* Actions */}
-          <div className="flex items-center gap-1.5 flex-shrink-0">
+          <div className="flex items-center gap-1.5">
             {isMobile ? (
               <Drawer open={coachOpen} onOpenChange={setCoachOpen}>
                 <DrawerTrigger asChild>
                   <motion.button
                     className="w-8 h-8 rounded-full bg-card shadow-sm flex items-center justify-center"
-                    style={{ borderColor: `${CELESTE}40` }}
                     whileTap={{ scale: 0.95 }}
                   >
                     <img src="/perspectiva1.png" alt="Coach" className="w-5 h-5 rounded object-cover" />
@@ -934,7 +916,6 @@ const Panel = () => {
                 <PopoverTrigger asChild>
                   <motion.button
                     className="w-8 h-8 rounded-full bg-card shadow-sm flex items-center justify-center"
-                    style={{ borderColor: `${CELESTE}40` }}
                     whileTap={{ scale: 0.95 }}
                   >
                     <img src="/perspectiva1.png" alt="Coach" className="w-5 h-5 rounded object-cover" />
@@ -960,6 +941,28 @@ const Panel = () => {
             >
               <LogOut className="w-4 h-4" />
             </motion.button>
+          </div>
+        </div>
+
+        {/* 2x2 Stats grid */}
+        <div className="grid grid-cols-2 gap-2">
+          <div className="bg-card rounded-2xl px-3 py-2 shadow-sm">
+            <p className="text-[10px] uppercase tracking-wide text-muted-foreground" style={nunito}>{t("panel.capital")}</p>
+            <p className="text-lg font-extrabold text-foreground" style={nunito}>CHF {Math.round(balance).toLocaleString()}</p>
+          </div>
+          <div className="bg-card rounded-2xl px-3 py-2 shadow-sm">
+            <p className="text-[10px] uppercase tracking-wide text-muted-foreground" style={nunito}>{t("panel.invested")}</p>
+            <p className="text-lg font-extrabold" style={{ ...nunito, color: CELESTE }}>CHF {Math.round(balance * totalAllocated / 100).toLocaleString()}</p>
+          </div>
+          <div className="bg-card rounded-2xl px-3 py-2 shadow-sm">
+            <p className="text-[10px] uppercase tracking-wide text-muted-foreground" style={nunito}>{t("panel.risk")}</p>
+            <p className="text-lg font-extrabold" style={{ ...nunito, color: totalRisk > 60 ? "hsl(var(--destructive))" : totalRisk > 30 ? "hsl(var(--accent-foreground))" : CELESTE }}>{totalRisk}%</p>
+            <p className="text-[10px] text-muted-foreground" style={nunito}>{totalRisk <= 30 ? "Low" : totalRisk <= 60 ? "Medium" : "High"}</p>
+          </div>
+          <div className="bg-card rounded-2xl px-3 py-2 shadow-sm">
+            <p className="text-[10px] uppercase tracking-wide text-muted-foreground" style={nunito}>AVG. RETURN</p>
+            <p className="text-lg font-extrabold" style={{ ...nunito, color: CELESTE }}>{avgReturn}%</p>
+            <p className="text-[10px] text-muted-foreground" style={nunito}>Annual</p>
           </div>
         </div>
       </div>
