@@ -745,6 +745,7 @@ const Panel = () => {
     }
   }, [totalRisk, profile, enrichedPortfolio.length, totalAllocated]);
 
+  const monthlyIncome = enrichedPortfolio.reduce((s, i) => {
     const pct = allocations[i.id] ?? 0;
     return s + Math.round(balance * pct / 100 * i.annualReturn / 100 / 12);
   }, 0);
