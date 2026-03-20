@@ -1124,33 +1124,25 @@ const Panel = () => {
                 >
                   {t("panel.buy")}
                 </h2>
-                {/* Mobile: 2-row horizontal scroll grid */}
-                <div
-                  className="overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide md:hidden"
-                  style={{ touchAction: "pan-x" }}
-                >
-                  <div
-                    className="grid grid-flow-col grid-rows-2 gap-2"
-                    style={{ gridAutoColumns: "160px" }}
-                  >
-                    {suggestions.map((inv) => (
-                      <div key={inv.id} className="flex">
-                        <DraggableCard
-                          inv={inv}
-                          zone="scouted"
-                          onClick={() => tryBuyInvestment(inv)}
-                          t={t}
-                          isMobile={isMobile}
-                          onAsk={() => {
-                            setCoachInitQ(
-                              `Explica brevemente qué es ${t(`allocation.classes.${inv.id}`)} y si encaja con mi perfil`,
-                            );
-                            setCoachOpen(true);
-                          }}
-                        />
-                      </div>
-                    ))}
-                  </div>
+                {/* Mobile: full-width vertical list */}
+                <div className="flex flex-col gap-2 md:hidden">
+                  {suggestions.map((inv) => (
+                    <div key={inv.id} className="w-full">
+                      <DraggableCard
+                        inv={inv}
+                        zone="scouted"
+                        onClick={() => tryBuyInvestment(inv)}
+                        t={t}
+                        isMobile={isMobile}
+                        onAsk={() => {
+                          setCoachInitQ(
+                            `Explica brevemente qué es ${t(`allocation.classes.${inv.id}`)} y si encaja con mi perfil`,
+                          );
+                          setCoachOpen(true);
+                        }}
+                      />
+                    </div>
+                  ))}
                 </div>
                 {/* Desktop */}
                 <ScrollArea className="hidden md:block flex-1 min-h-0">
