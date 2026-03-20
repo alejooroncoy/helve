@@ -40,7 +40,7 @@ const CHIP_BUY  = { bg: "#a78bfa18", border: "#a78bfa", color: "#a78bfa" };
 
 const STEP_INTERVAL = 1100;
 const READING_TIME = 2;
-const EVENT_TIMER = 4;
+const EVENT_TIMER = 5;
 const NUM_EVENTS = 5;
 
 function generateEventTicks(totalTicks: number, count: number): number[] {
@@ -328,7 +328,7 @@ const MultiplayerSimulation = ({ mp }: Props) => {
       {/* Balance card — flips to show event info during reading phase */}
       <div style={{ perspective: "900px" }} className="mb-4">
         <AnimatePresence mode="wait">
-          {eventActive && eventPhase === "reading" ? (
+          {eventActive ? (
             <motion.div key="event-card"
               className="bg-card rounded-3xl p-5 shadow-xl text-center"
               initial={{ rotateX: -90, opacity: 0 }}
@@ -342,13 +342,15 @@ const MultiplayerSimulation = ({ mp }: Props) => {
               </div>
               <h2 className="text-lg font-black text-foreground mb-1" style={nunito}>{t(activeEvent!.title)}</h2>
               <p className="text-sm text-muted-foreground leading-relaxed" style={nunito}>{t(activeEvent!.description)}</p>
-              {/* Reading countdown */}
-              <div className="mt-3 flex items-center justify-center gap-2">
-                <div className="flex-1 max-w-[160px] h-1.5 rounded-full overflow-hidden" style={{ background: "hsl(var(--muted))" }}>
-                  <motion.div className="h-full rounded-full" style={{ width: `${(readingTimer / READING_TIME) * 100}%`, backgroundColor: CELESTE }} />
+              {/* Reading countdown — only shown during reading phase */}
+              {eventPhase === "reading" && (
+                <div className="mt-3 flex items-center justify-center gap-2">
+                  <div className="flex-1 max-w-[160px] h-1.5 rounded-full overflow-hidden" style={{ background: "hsl(var(--muted))" }}>
+                    <motion.div className="h-full rounded-full" style={{ width: `${(readingTimer / READING_TIME) * 100}%`, backgroundColor: CELESTE }} />
+                  </div>
+                  <span className="text-xs font-bold tabular-nums" style={{ ...nunito, color: CELESTE }}>{readingTimer}s</span>
                 </div>
-                <span className="text-xs font-bold tabular-nums" style={{ ...nunito, color: CELESTE }}>{readingTimer}s</span>
-              </div>
+              )}
             </motion.div>
           ) : (
             <motion.div key="balance-card"
@@ -491,7 +493,7 @@ const MultiplayerSimulation = ({ mp }: Props) => {
               onClick={() => handleEventDecision("buy")} whileTap={{ scale: 0.97 }}
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
               <ShoppingCart className="w-4 h-4" />
-              {t("multiplayer.buy")} CHF {BUY_AMOUNT}
+              {t("multiplayer.buy")} -CHF {BUY_AMOUNT}
             </motion.button>
 
             {/* Sell + Hold — side by side */}
