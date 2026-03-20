@@ -651,23 +651,24 @@ export default function TimeSimulation({
 
     const scheduledEvent = aiEventMap[nextStep];
     if (scheduledEvent) {
+      // Stop playback SYNCHRONOUSLY to prevent the next timeout from firing
+      setPlaying(false);
+      setBirdMsg(
+        t("timeSim.movingSharp", { name: scheduledEvent.investmentName }),
+      );
       void ensureScenario(scheduledEvent, newValue).then((scenario) => {
         if (!scenario) return;
-        setPlaying(false);
         setActiveAIEvent(scheduledEvent);
         setAiScenario(scenario);
         setShowAIEvent(true);
-        setBirdMsg(
-          t("timeSim.movingSharp", { name: scheduledEvent.investmentName }),
-        );
       });
+    } else {
+      const previousValue = data[data.length - 1]?.value || startBalance;
+      const stepReturn = previousValue > 0 ? newValue / previousValue - 1 : 0;
+      const msgType = stepReturn > 0.02 ? "positive" : stepReturn < -0.02 ? "negative" : "neutral";
+      const localBirdMsgs = getBirdMessages(t);
+      setBirdMsg(pickRandom(localBirdMsgs[msgType]));
     }
-
-    const previousValue = data[data.length - 1]?.value || startBalance;
-    const stepReturn = previousValue > 0 ? newValue / previousValue - 1 : 0;
-    const msgType = stepReturn > 0.02 ? "positive" : stepReturn < -0.02 ? "negative" : "neutral";
-    const localBirdMsgs = getBirdMessages(t);
-    setBirdMsg(pickRandom(localBirdMsgs[msgType]));
     setCurrentStep(nextStep);
   }, [
     currentStep,
