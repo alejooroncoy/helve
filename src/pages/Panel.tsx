@@ -964,8 +964,8 @@ const Panel = () => {
         </div>
       </div>
 
-      {/* Nest Tabs with per-nest stats */}
-      <div className="px-5 pb-3">
+      {/* Nest Tabs */}
+      <div className="px-4 pb-2">
         <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-1">
           {nests.map((nest) => {
             const ns = getNestStats(nest);
